@@ -74,7 +74,7 @@
   <section>
     <input type="text" name="b_send" id="chat_content">
     <button type="button" id="bbbutton" onclick="b_send()">Bee!</button>
-    <div id=main_conttt><p id="conttt"><li id="list2">SesstionStart.</li></p></div>
+    <div id=main_conttt><p id="conttt">SesstionBegin.</p></div>
     </div>
   </section>
 </body>
@@ -83,6 +83,8 @@
   conttt = document.getElementById('conttt');
   time_b = document.getElementById('time_b');
   s_cnt = 0;
+  last_date = 0;
+  dis_update = 0;
   document.addEventListener("DOMContentLoaded", function main() {
     var b_req = new XMLHttpRequest();
     b_req.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
@@ -92,9 +94,9 @@
     b_req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
     b_req.timeout = 3003; // HEX(BBB)
     if (s_cnt == 0) {
-      b_req.send('b_req=bbb');
+      b_req.send('b_req=bbb&last_date='+last_date);
     } else {
-      b_req.send('b_req=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB');
+      b_req.send('b_req=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB&last_date='+last_date);
     }
     b_req.onreadystatechange = function() {
       if (b_req.readyState === 4) {
@@ -103,24 +105,29 @@
           var b_data = b_req.responseText;
           if (b_data == 'B') {
             b_data = sessionStorage.getItem('receive_data');
+            dis_update = 1;
             console.log('session');
           } else {
             sessionStorage.setItem('receive_data', b_data);
+            dis_update = 0;
           }
           var con_b_data = b_data.split(/\r?\n/g);
-          for(var i=0; i<con_b_data.length; i++ ) {
+          last_date = con_b_data[0];
+          for(var i=1; i<con_b_data.length; i++ ) {
             var arr_b_data = con_b_data[i].split(/\t/);
             con_b_data[i] = arr_b_data[0]+"<span id=date>"+arr_b_data[1]+"</span>";
           }
           var out_data='';
-          for(var i=0; i<con_b_data.length-1; i++) {
+          for(var i=1; i<con_b_data.length-1; i++) {
               if (i == con_b_data.length-2) {
                 out_data = "<li id=list2>"+con_b_data[i]+"</li>" + out_data;
               } else {
                 out_data = "<li id=list>"+con_b_data[i]+"</li>" + out_data;
               }
             }
-          conttt.innerHTML = out_data;
+          if (dis_update == 0) {
+            conttt.innerHTML = out_data;
+          }
           s_cnt = 1;
           // console.log(b_data);
         }
@@ -158,12 +165,14 @@
           if (b_post.status === 200) {
             var b_data = b_post.responseText;
             var con_b_data = b_data.split(/\r?\n/g);
-            for(var i=0; i<con_b_data.length; i++ ) {
+            last_date = con_b_data[0];
+            for(var i=1; i<con_b_data.length; i++ ) {
+            // for(var i=0; i<con_b_data.length; i++ ) {
               var arr_b_data = con_b_data[i].split(/\t/);
               con_b_data[i] = arr_b_data[0]+"<span id=date>"+arr_b_data[1]+"</span>";
             }
             var out_data='';
-            for(var i=0; i<con_b_data.length-1; i++) {
+            for(var i=1; i<con_b_data.length-1; i++) {
               if (i == con_b_data.length-2) {
                 out_data = "<li id=list2>"+con_b_data[i]+"</li>" + out_data;
               } else {
@@ -171,6 +180,7 @@
               }
             }
             conttt.innerHTML = out_data;
+            s_cnt = 0;
             console.log('POST_OK!');
           }
         }
