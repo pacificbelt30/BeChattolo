@@ -74,7 +74,7 @@
   <section>
     <input type="text" name="b_send" id="chat_content">
     <button type="button" id="bbbutton" onclick="b_send()">Bee!</button>
-    <div id=main_conttt><p id="conttt"></p></div>
+    <div id=main_conttt><p id="conttt"><li id="list2">SesstionStart.</li></p></div>
     </div>
   </section>
 </body>
@@ -85,14 +85,14 @@
   s_cnt = 0;
   document.addEventListener("DOMContentLoaded", function main() {
     var b_req = new XMLHttpRequest();
-    // b_req.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
-    b_req.open('POST', 'chat.php', true);
+    b_req.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
+    // b_req.open('POST', 'chat.php', true);
     b_req.setRequestHeader('Pragma', 'no-cache');
     b_req.setRequestHeader('Cache-Control', 'no-cach');
     b_req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
     b_req.timeout = 3003; // HEX(BBB)
     if (s_cnt == 0) {
-      b_req.send('b_req=BrainF*ck');
+      b_req.send('b_req=bbb');
     } else {
       b_req.send('b_req=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB');
     }
@@ -146,8 +146,8 @@
       console.log(send_data);
       div_top.value = '';
       var b_post = new XMLHttpRequest();
-      // b_post.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
-      b_post.open('POST', 'chat.php', true);
+      b_post.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
+      // b_post.open('POST', 'chat.php', true);
       b_post.setRequestHeader('Pragma', 'no-cache');
       b_post.setRequestHeader('Cache-Control', 'no-cach');
       b_post.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');

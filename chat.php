@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['b_send'])) {
     setcookie("last_date",$set_time);
   }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['b_req'])) {
-  if(isset($_COOKIE["last_date"]) && $_POST['b_req'] != 'BrainF*ck') { // 前の更新日時と同じとき、再送しない
+  if(isset($_COOKIE["last_date"]) && $_POST['b_req'] != 'bbb') { // 前の更新日時と同じとき、再送しない
     if($_COOKIE["last_date"] == date("ymdHis",filemtime($save_file))) {
       echo 'B';
     } else {
