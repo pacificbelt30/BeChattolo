@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BeeChat</title>
+<style>
+  body {
+    margin: 0 5px;
+    background: #222;
+    color: #BBB;
+  }
+  h1 {
+    text-align: center;
+  }
+  #main_conttt {
+    list-style-type: georgian;
+  }
+  #list {
+    color: #FFF;
+    margin: 5px 10px;
+    padding: 5px 10px;
+    border:solid 1px #666;
+    word-break: break-all;
+  }
+  #list2 {
+    color: #FFF;
+    margin: 5px 10px;
+    padding: 5px 10px;
+    border:solid 1px rgb(83, 158, 117);
+    word-break: break-all;
+    animation:3s linear 0s infinite alternate animation_b;
+  }
+
+  #date {
+    font-size: 0.7em;
+    color: #999;
+  }
+  #date::before {
+  content: "\A" ;
+  white-space: pre;
+  }
+  #chat_content {
+    width: calc(100% - 90px);
+    padding: 5px;
+    margin: 0;
+    font-size: 1.2em;
+    height: 1.5rem;
+  }
+  #bbbutton {
+    width: 70px;
+    padding: 0;
+    margin: 0;
+    height: 2rem;
+    background: #666;
+    border: none;
+    color: #FFF;
+  }
+</style>
+</head>
+
+<body>
+  <header>
+    <h1 style="font-size: 1em;">Bさんの<ruby><rb>非同期劘蔿<rb><rp>(</rp><rt>Beeeeeee------</rt><rp>)</rp></ruby>リアルタイムちゃっとぉ</h1>
+    <!-- <p id="time_b">BB</p> -->
+  </header>
+  <section>
+    <input type="text" name="b_send" id="chat_content">
+    <button type="button" id="bbbutton" onclick="b_send()">Bee!</button>
+    <div id=main_conttt><p id="conttt"></p></div>
+    </div>
+  </section>
+</body>
+<script>
+  console.log('B!'); // B! B! B!
+  conttt = document.getElementById('conttt');
+  time_b = document.getElementById('time_b');
+  document.addEventListener("DOMContentLoaded", function main() {
+    var b_req = new XMLHttpRequest();
+    b_req.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
+    b_req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+    b_req.timeout = 3003; // HEX(BBB)
+    b_req.send('b_req=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB');
+    b_req.onreadystatechange = function() {
+      if (b_req.readyState === 4) {
+        if (b_req.status === 200) {
+          // b_data = b_post.responseText.parse(json);
+          var b_data = b_req.responseText;
+          var con_b_data = b_data.split(/\r?\n/g);
+          for(var i=0; i<con_b_data.length; i++ ) {
+            var arr_b_data = con_b_data[i].split(/\t/);
+            con_b_data[i] = arr_b_data[0]+"<span id=date>"+arr_b_data[1]+"</span>";
+          }
+          var out_data='';
+          for(var i=0; i<con_b_data.length-1; i++) {
+              if (i == con_b_data.length-2) {
+                out_data = "<li id=list2>"+con_b_data[i]+"</li>" + out_data;
+              } else {
+                out_data = "<li id=list>"+con_b_data[i]+"</li>" + out_data;
+              }
+            }
+          conttt.innerHTML = out_data;
+          console.log(b_data);
+        }
+      }
+    }
+    console.log('>');
+/*
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    time_b.innerHTML = "a";
+*/
+    window.setTimeout(main, 5000);
+  });
+
+  div_top = document.getElementById('chat_content');
+  function b_send() { // Beeeeeeeeeeeeeeeeeeeeeeeeeeeeee!
+    var send_data = div_top.value;
+    if (send_data.length >= 1011 || send_data.length <= 0) {
+      console.log("POST_SIZE OVER bbbbbbb");
+      return B;
+    } else {
+      console.log(send_data);
+      div_top.value = '';
+      var b_post = new XMLHttpRequest();
+      b_post.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
+      b_post.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+      b_post.timeout = 3003; // HEX(BBB)
+      b_post.send('b_send='+send_data);
+      b_post.onreadystatechange = function() {
+        if (b_post.readyState === 4) {
+          if (b_post.status === 200) {
+            var b_data = b_post.responseText;
+            var con_b_data = b_data.split(/\r?\n/g);
+            for(var i=0; i<con_b_data.length; i++ ) {
+              var arr_b_data = con_b_data[i].split(/\t/);
+              con_b_data[i] = arr_b_data[0]+"<span id=date>"+arr_b_data[1]+"</span>";
+            }
+            var out_data='';
+            for(var i=0; i<con_b_data.length-1; i++) {
+              if (i == con_b_data.length-2) {
+                out_data = "<li id=list2>"+con_b_data[i]+"</li>" + out_data;
+              } else {
+                out_data = "<li id=list>"+con_b_data[i]+"</li>" + out_data;
+              }
+            }
+            conttt.innerHTML = out_data;
+            console.log('POST_OK!');
+          }
+        }
+      }
+    }
+  }
+</script>
