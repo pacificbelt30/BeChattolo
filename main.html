@@ -2,12 +2,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BeeChat</title>
+  <title>Bちゃっとぉ</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-122638281-2"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-122638281-2');
+</script>
 <style>
   body {
     margin: 0 5px;
     background: #222;
     color: #BBB;
+    font-size: 0.9em;
+  }
+  a {
+      color: #00a0e9;
+      text-decoration: none;
+      font-weight: 900;
   }
   h1 {
     text-align: center;
@@ -68,8 +82,9 @@
   <header>
     <h2 style="font-size: 0.5em;" id="update_notice">アップデートがあります. リロードしてください.</h2>
     </h2>
-    <h1 style="font-size: 1em;">Bさんの<ruby><rb>非同期劘蔿<rb><rp>(</rp><rt>Beeeeeee------</rt><rp>)</rp></ruby>リアルタイムちゃっとぉ</h1>
-    <!-- <p id="time_b">BB</p> -->
+    <!-- <h1 style="font-size: 1em;">Bさんの<ruby><rb>非同期劘蔿<rb><rp>(</rp><rt>Beeeeeee------</rt><rp>)</rp></ruby>リアルタイムちゃっとぉ</h1> -->
+    <h1 style="font-size: 1em;">Bちゃっとぉ</h1>
+      <!-- <p id="time_b">BB</p> -->
   </header>
   <section>
     <input type="text" name="b_send" id="chat_content">
@@ -79,56 +94,57 @@
   </section>
 </body>
 <script>
-  console.log('B!'); // B! B! B!
-  conttt = document.getElementById('conttt');
-  time_b = document.getElementById('time_b');
-  s_cnt = 0;
-  last_date = 0;
-  dis_update = 0;
-  document.addEventListener("DOMContentLoaded", function main() {
+// ----- Javascript部分 -----
+  console.log('B!');
+  conttt = document.getElementById('conttt'); // メッセージ内容の表示部分
+  time_b = document.getElementById('time_b'); // 時刻表示用(仮)
+  s_cnt = 0; // 処理カウント用
+  last_date = 0; // 前回更新日時
+  dis_update = 0; // 更新するかしないかのフラグ
+  document.addEventListener("DOMContentLoaded", function main() { // ロード時開始
     var b_req = new XMLHttpRequest();
-    b_req.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
-    // b_req.open('POST', 'chat.php', true);
-    b_req.setRequestHeader('Pragma', 'no-cache');
+    // b_req.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
+    b_req.open('POST', 'chat.php', true);
+    b_req.setRequestHeader('Pragma', 'no-cache'); // キャッシュを無効にするためのヘッダ指定
     b_req.setRequestHeader('Cache-Control', 'no-cach');
     b_req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
     b_req.timeout = 3003; // HEX(BBB)
     if (s_cnt == 0) {
-      b_req.send('b_req=bbb&last_date='+last_date);
+      b_req.send('b_req=bbb&last_date='+last_date); // b_req=bbbを指定することで更新日時の判定なしで、データを取得します
     } else {
-      b_req.send('b_req=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB&last_date='+last_date);
+      b_req.send('b_req=BBBBB&last_date='+last_date); // b_req≠bbbの時は、ファイルの更新日時による判定で、更新がある場合のみ取得します
     }
-    b_req.onreadystatechange = function() {
+    b_req.onreadystatechange = function() { // 通信ステータスが変わったとき実行
       if (b_req.readyState === 4) {
         if (b_req.status === 200) {
           // b_data = b_post.responseText.parse(json);
           var b_data = b_req.responseText;
-          if (b_data == 'B') {
-            b_data = sessionStorage.getItem('receive_data');
-            dis_update = 1;
+          if (b_data == 'B') { // Bが返された場合は、ファイルの更新はありません
+            b_data = sessionStorage.getItem('receive_data'); // 更新がない場合、SessionStorageからデータを取得します
+            dis_update = 1; // dip_update = 1 の時は、メッセージ内容の更新を行いません
             console.log('session');
           } else {
             sessionStorage.setItem('receive_data', b_data);
             dis_update = 0;
           }
-          var con_b_data = b_data.split(/\r?\n/g);
-          last_date = con_b_data[0];
-          for(var i=1; i<con_b_data.length; i++ ) {
+          var con_b_data = b_data.split(/\r?\n/g); // 改行で区切り、配列にします
+          last_date = con_b_data[0]; // 配列の最初はファイルの更新日時が入っています
+          for(var i=1; i<con_b_data.length; i++ ) { // Tab区切りで配列にし、HTMLタグを加えます
             var arr_b_data = con_b_data[i].split(/\t/);
             con_b_data[i] = arr_b_data[0]+"<span id=date>"+arr_b_data[1]+"</span>";
           }
           var out_data='';
-          for(var i=1; i<con_b_data.length-1; i++) {
+          for(var i=1; i<con_b_data.length-1; i++) { // メッセージ内容の表示部分に出力するために順番を入れ替え、HTMLタグを加えます
               if (i == con_b_data.length-2) {
                 out_data = "<li id=list2>"+con_b_data[i]+"</li>" + out_data;
               } else {
                 out_data = "<li id=list>"+con_b_data[i]+"</li>" + out_data;
               }
             }
-          if (dis_update == 0) {
-            conttt.innerHTML = out_data;
+          if (dis_update == 0) { // dis_update == 0 の時にメッセージ内容の表示の更新を行います
+            conttt.innerHTML = AutoLink(out_data);
           }
-          s_cnt = 1;
+          s_cnt = 1; // s_cnt = 0 の時は初回ロード時と同じ動作になります
           // console.log(b_data);
         }
       }
@@ -140,21 +156,22 @@
     var day = date.getDate();
     time_b.innerHTML = "a";
 */
-    window.setTimeout(main, 3000);
+    window.setTimeout(main, 3000); // 一定時間ごと main関数を実行します
   });
 
+// -----
   div_top = document.getElementById('chat_content');
-  function b_send() { // Beeeeeeeeeeeeeeeeeeeeeeeeeeeeee!
-    var send_data = div_top.value;
-    if (send_data.length >= 1011 || send_data.length <= 0) {
-      console.log("POST_SIZE OVER bbbbbbb");
+  function b_send() { // データをサーバに送信する関数
+    var send_data = div_top.value; // inputに入っている値を$send_dataに代入します
+    if (send_data.length >= 1011 || send_data.length <= 0) { // データサイズのチェックです
+      console.log("POST_SIZE OVER bbbbbbb"); // データサイズが大きすぎる場合は拒否
       return B;
-    } else {
+    } else { // 以下main関数とほぼ同様
       console.log(send_data);
       div_top.value = '';
       var b_post = new XMLHttpRequest();
-      b_post.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
-      // b_post.open('POST', 'chat.php', true);
+      // b_post.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
+      b_post.open('POST', 'chat.php', true);
       b_post.setRequestHeader('Pragma', 'no-cache');
       b_post.setRequestHeader('Cache-Control', 'no-cach');
       b_post.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
@@ -179,7 +196,7 @@
                 out_data = "<li id=list>"+con_b_data[i]+"</li>" + out_data;
               }
             }
-            conttt.innerHTML = out_data;
+            conttt.innerHTML = AutoLink(out_data);
             s_cnt = 0;
             console.log('POST_OK!');
           }
@@ -187,4 +204,23 @@
       }
     }
   }
+
+// ----- キー入力処理部分 -----
+  document.onkeydown = keydown;
+
+  function keydown() {
+    if(event.altKey == true && event.keyCode == 13) { // Alt + Enter で送信
+      b_send();
+    }
+  }
+
+// ----- 自動リンク化 -----
+  function AutoLink(str) {
+      var regexp_url = /((h?)(ttps?:\/\/[a-zA-Z0-9.\-_@:/~?%&;=+#',()*!]+))/g; // ']))/;
+      var regexp_makeLink = function(all, url, h, href) {
+    return '<a href="h' + href + '">' + url + '</a>';
+      }
+      return str.replace(regexp_url, regexp_makeLink);
+  }
+
 </script>
