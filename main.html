@@ -97,7 +97,7 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.12/push.min.js"></script>
 <script>
 // ----- Javascript部分 -----
-  console.log('B!');
+  console.log('Beちゃっとぉ Ver.0.4.3 20200229');
   conttt = document.getElementById('conttt'); // メッセージ内容の表示部分
   time_b = document.getElementById('time_b'); // 時刻表示用(仮)
   s_cnt = 0; // 処理カウント用
@@ -161,7 +161,7 @@
     window.setTimeout(main, 3000); // 一定時間ごと main関数を実行します
   });
 
-// -----
+// ----- サーバにメッセージ内容を送信する関数 -----
   div_top = document.getElementById('chat_content');
   function b_send() { // データをサーバに送信する関数
     var send_data = div_top.value; // inputに入っている値を$send_dataに代入します
@@ -207,20 +207,21 @@
     }
   }
 
-// ----- キー入力処理部分 -----
+// ----- キー入力を処理する関数 -----
+// Alt+Enter(keyCode==13)が入力されたとき、b_send()を実行します
   document.onkeydown = keydown;
-
   function keydown() {
     if(event.altKey == true && event.keyCode == 13) { // Alt + Enter で送信
       b_send();
     }
   }
 
-// ----- 自動リンク化 -----
+// ----- 自動リンク化する関数 -----
+// $strに入れると、リンク部分が<a>で囲われてreturnされます
   function AutoLink(str) {
       var regexp_url = /((h?)(ttps?:\/\/[a-zA-Z0-9.\-_@:/~?%&;=+#',()*!]+))/g; // ']))/;
       var regexp_makeLink = function(all, url, h, href) {
-    return '<a href="h' + href + '">' + url + '</a>';
+    return '<a href="h' + href + '"  target="_blank">' + url + '</a>';
       }
       return str.replace(regexp_url, regexp_makeLink);
   }
