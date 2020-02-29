@@ -1,0 +1,78 @@
+@charset "UTF-8";
+
+body {
+  margin: 0 5px;
+  background: #1B1B1B;
+  color: #BBB;
+  font-size: 0.9em;
+}
+
+a {
+  color: #00a0e9;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+h1 {
+  text-align: center;
+}
+
+#main_conttt {
+  list-style-type: none;
+}
+
+#list {
+  color: #FFF;
+  margin: 5px 10px;
+  padding: 5px 10px 0 10px;
+  border: none;
+  border-top: solid 1px #444;
+  word-break: break-all;
+}
+
+#list2 {
+  color: #FFF;
+  margin: 5px 10px;
+  padding: 5px 10px;
+  border: solid 1px #00a0e9;
+  word-break: break-all;
+}
+
+#date {
+  font-size: 0.7em;
+  color: #999;
+}
+
+#date::before {
+  content: "\A";
+  white-space: pre;
+}
+
+#chat_content {
+  width: calc(100% - 90px);
+  padding: 5px;
+  margin: 0;
+  font-size: 1.2em;
+  background: #0B0B0B;
+  color: #FFF;
+  border: solid 1px #000;
+  border-radius: 2px;
+}
+
+#bbbutton {
+  width: 70px;
+  padding: 5px;
+  margin: 0;
+  font-size: 1.1em;
+  background: #666;
+  border: solid 1px #222;
+  border-radius: 2px;
+  color: #FFF;
+}
+
+#update_notice {
+  background: orange;
+  color: #FFF;
+  text-align: center;
+  display: none;
+}
