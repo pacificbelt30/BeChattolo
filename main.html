@@ -32,8 +32,9 @@
   #list {
     color: #FFF;
     margin: 5px 10px;
-    padding: 5px 10px;
-    border:solid 1px #666;
+    padding: 5px 10px 0 10px;
+    border: none;
+    border-top :solid 1px #444;
     word-break: break-all;
   }
   #list2 {
@@ -93,6 +94,7 @@
     </div>
   </section>
 </body>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.12/push.min.js"></script>
 <script>
 // ----- Javascript部分 -----
   console.log('B!');
@@ -103,8 +105,8 @@
   dis_update = 0; // 更新するかしないかのフラグ
   document.addEventListener("DOMContentLoaded", function main() { // ロード時開始
     var b_req = new XMLHttpRequest();
-    b_req.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
-    // b_req.open('POST', 'chat.php', true);
+    // b_req.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
+    b_req.open('POST', 'chat.php', true);
     b_req.setRequestHeader('Pragma', 'no-cache'); // キャッシュを無効にするためのヘッダ指定
     b_req.setRequestHeader('Cache-Control', 'no-cach');
     b_req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
@@ -170,8 +172,8 @@
       console.log(send_data);
       div_top.value = '';
       var b_post = new XMLHttpRequest();
-      b_post.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
-      // b_post.open('POST', 'chat.php', true);
+      // b_post.open('POST', 'https://u2net.azurewebsites.net/chat/chat.php', true);
+      b_post.open('POST', 'chat.php', true);
       b_post.setRequestHeader('Pragma', 'no-cache');
       b_post.setRequestHeader('Cache-Control', 'no-cach');
       b_post.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
