@@ -38,7 +38,7 @@ Ajaxで基本的なチャット
 // ----- PHPini設定 -----
 ini_set("max_execution_time",240); // 最大タイムアウト時間の指定
 // ----- 定数定義 -----
-define("HOLDING_TIMER", "180"); // リクエストの保持ループ回数
+define("HOLDING_TIMER", "120"); // リクエストの保持ループ回数
 define("TIMER_DENOMINATOR", "1"); // 更新チェック実行間隔(s)
 //>> (HOLDING_TIMER×TIMER_DENOMINATOR≠保持時間(s))
 
@@ -65,7 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['b_send'])) {
   } else {
     echo date("ymdHis",filemtime($save_file))."\n".file_get_contents($save_file);
     $set_time = date("ymdHis",filemtime($save_file));
-    setcookie("last_date",$set_time,time()+60*60*24*7);
   }
 // ----- メッセージがREQUESTされたとき -----
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['b_req'])) {

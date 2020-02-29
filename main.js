@@ -5,7 +5,7 @@
 //----- 定数定義 -----
 const CONTTT = document.getElementById('conttt'); // メッセージ内容の表示部分
 const TIME_B = document.getElementById('time_b'); // 時刻表示用(仮)
-const XHR_TIMEOUT = 1000 * 62; // サーバリクエストのタイムアウト時間(ms)
+const XHR_TIMEOUT = 1000 * 123; // サーバリクエストのタイムアウト時間(ms)
 const MAINLOOP_TIMER = 200; // メイン関数の実行間隔の時間 (ms)
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTするサーバURL
 const SEND_SERVER = 'chat.php';
@@ -14,7 +14,9 @@ const SEND_SERVER = 'chat.php';
 let s_cnt = 0; // 処理カウント用
 let last_date = 0; // 前回更新日時
 let dis_update = 0; // 更新するかしないかのフラグ
-let push_timer = 500; // Push通知の表示時間(ms)
+// let push_timer = 1500; // 通知の表示時間(ms)
+let push_timer = 4000; // 通知の表示時間(ms)
+let dsp_active = 1; // タブの状態を代入する変数
 
 function nowD() {
   const DATE = new Date();
@@ -53,8 +55,7 @@ document.addEventListener("DOMContentLoaded", function main() { // ロード時�
         if (dis_update == 0) { // dis_update == 0 の時にメッセージ内容の表示の更新を行います
           CONTTT.innerHTML = AutoLink(out_data);
           if (s_cnt !== 0) { // 初回読み込み時以外で、更新があった場合はPush通知を行う
-            push_notice(); // Push通知を行う
-            document.title = '🟧Beちゃっとぉ';
+            notice('',push_timer); // 通知を行う
           }
         }
         s_cnt++;
@@ -141,20 +142,32 @@ function keydown() {
   }
 }
 
-// ----- Push通知を行う関数 -----
-function push_notice(message, timer) {
-  if (!message) {
-    message = 'New message received!';
-  }
-  Push.create(message, {
-    timeout: timer,
-    onClick: function () {
-      window.focus();
-      this.close();
+// ----- 通知を行う関数 -----
+function notice(message, timer) {
+  if (document.hidden) {
+    if (!message) {
+      message = 'New message received!';
     }
-  });
-
+    Push.create(message, {
+      timeout: timer,
+      onClick: function () {
+        window.focus();
+        this.close();
+      }
+    });
+    document.title = '🟧Beちゃっとぉ';
+  }
 }
+
+// ----- タブの状態を取得 -----
+document.addEventListener('visibilitychange', function(){
+  if (document.Hidden) {
+    dsp_active = 0;
+  } else {
+    dsp_active = 1;
+    document.title = 'Beちゃっとぉ';
+  }
+}, false);
 
 // ----- 自動リンク化する関数 -----
 // $strに入れると、リンク部分が<a>で囲われてreturn
