@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function main() { // ロード時�
           }
         }
         s_cnt++;
-        console.log(s_cnt);
+        // console.log(s_cnt);
         // main();
         setTimeout(main, MAINLOOP_TIMER);
       // console.log(b_data);
