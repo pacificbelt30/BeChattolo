@@ -29,10 +29,27 @@
   </header>
   <section>
     <div id="first_sc">
-      <H1>ようこそ Ｂｅちゃっとぉ へ</H1>
+      <h1>ようこそ Ｂｅちゃっとぉ へ</h1>
       <p><br><br>Bなリアルタイムチャットを今すぐ始めよう！<br><br>サーバの性能などの都合上<br>Cometができなくて開発者は不満な様子だ..</p>
       <input type="text" id="user_name" placeholder="ユーザー名を入力">
       <button type="button" id="submit_b" onclick="user_submit()">></button>
+    </div>
+    <div id="enter_setting" onclick="e_setting()">
+      <p>⚙</p>
+    </div>
+    <div id="setting" style="display: none;">
+      <h2>設定</h2>
+      <h3>ユーザー名</h3>
+      <input type="text" id="user_name2" placeholder="ユーザー名を入力">
+      <h3>Notice (Passive)</h3>
+      <input type="checkbox" id="notification" class="notice"><label for="notification" class="notice">Enable</label>
+      <input type="checkbox" id="notification2" class="notice"><label for="notification2" class="notice">Special</label>
+      <h3>ConnectionInterval</h3>
+      <p>未実装</p>
+      <h3>Theme</h3>
+      <p>未実装</p>
+      <h3>FontSize</h3>
+      <p>未実装</p>
     </div>
     <!-- <input type="text" name="b_send" id="chat_content" placeholder="Name"> -->
     <div id="input_area">
@@ -56,3 +73,4 @@
 </body>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.12/push.min.js"></script>
 <script type="text/javascript" src="main.js"></script>
+<script type="text/javascript" src="m_notice.js"></script>

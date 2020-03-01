@@ -63,9 +63,14 @@ date_default_timezone_set('Asia/Tokyo');
 // ----- メッセージがPOSTされたとき -----
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (isset($_POST['b_send'])) {
+    if (isset($_POST['user'])) { // ユーザー名が設定されているか
+      $userN = htmlspecialchars($_POST['user'], ENT_QUOTES, "UTF-8");
+    } else {
+      $userN = 'Anonym';
+    }
     $put_data = htmlspecialchars($_POST['b_send'], ENT_QUOTES, "UTF-8");
-    $push_data = $put_data."\t".date('Y-m-d H:i:s')."\n";
-    $push_data2 = $put_data."\t".date('Y-m-d H:i:s')."\t".$_SERVER["REMOTE_ADDR"]."\n";
+    $push_data = $put_data."\t".$userN."\t".date('Y-m-d H:i:s')."\n";
+    $push_data2 = $put_data."\t".$userN."\t".date('Y-m-d H:i:s')."\t".$_SERVER["REMOTE_ADDR"]."\n";
     file_put_contents($save_file, $push_data, FILE_APPEND | LOCK_EX);
     file_put_contents($save2_file, $push_data2, FILE_APPEND | LOCK_EX);
     clearstatcache(false, $save_file);
