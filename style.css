@@ -1,10 +1,13 @@
 @charset "UTF-8";
 
 body {
-  margin: 0 5px;
+  width: 98%;
+  margin: 0;
+  margin-left: 1%;
   background: #1B1B1B;
   color: #BBB;
   font-size: 0.9em;
+  font-family: Whitney, "Hiragino Sans", "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", メイリオ, Meiryo, Osaka, "MS PGothic", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 a {
@@ -23,7 +26,7 @@ h1 {
 
 #list {
   color: #FFF;
-  margin: 5px 10px;
+  margin: 5px 0;
   padding: 5px 10px 0 10px;
   border: none;
   border-top: solid 1px #444;
@@ -32,7 +35,7 @@ h1 {
 
 #list2 {
   color: #FFF;
-  margin: 5px 10px;
+  margin: 5px 0;
   padding: 5px 10px;
   border: solid 1px #00a0e9;
   word-break: break-all;
@@ -48,26 +51,47 @@ h1 {
   white-space: pre;
 }
 
+#input_area {
+  position: relative;
+}
+
 #chat_content {
-  width: calc(100% - 90px);
+  font-family: inherit;
+  width: calc(100% - 80px);
   padding: 5px;
   margin: 0;
-  font-size: 1.2em;
-  background: #0B0B0B;
-  color: #FFF;
-  border: solid 1px #000;
-  border-radius: 2px;
+  /* background: #0B0B0B; */
+  background: #eee;
+  color: #000;
+  border: solid 1px #444;
+  border-radius: 3px;
+  height: 50px;
+  resize: none;
+
+  position: absolute;
+  top: 0;
 }
 
 #bbbutton {
-  width: 70px;
+  width: 64px;
+  height: 58px;
   padding: 5px;
   margin: 0;
-  font-size: 1.1em;
-  background: #666;
+  font-size: 2em;
+  font-weight: 100;
+  background: #444;
   border: solid 1px #222;
-  border-radius: 2px;
-  color: #FFF;
+  border-radius: 3px;
+  color: #bbb;
+
+  position: absolute;
+  top: 1px;
+  right: 0;
+}
+
+#main_contents {
+  position: relative;
+  top: 80px;
 }
 
 #update_notice {
@@ -75,4 +99,39 @@ h1 {
   color: #FFF;
   text-align: center;
   display: none;
+}
+
+#first_sc {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  background: #222;
+  color: #aaa;
+  text-align: center;
+  /* display: none; */
+}
+
+#first_sc h1 {
+  color: #FFF;
+  font-size: 1.7em;
+  font-weight: 100;
+}
+
+#user_name {
+  padding: 10px 15px;
+  font-size: 1.5em;
+  margin-top: 20px;
+  background: #555;
+  border: solid 1px #bbb;
+  border-radius: 2px;
+}
+
+#submit_b {
+  font-size: 1.5em;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 3px;
 }

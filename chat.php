@@ -24,6 +24,12 @@ From: Markdownチートシート
 ## これはH2タグ
 
 // ----- 更新履歴 -----
+Ver.0.6
+やっぱりサーバの負荷がかかるからAjaxにもどす
+改行などを使えるようにする
+\n → \\n
+
+
 Ver.0.5
 Cometによって効率化
 
@@ -35,58 +41,61 @@ URL自動リンク化
 Ajaxで基本的なチャット
 */
 
-// ----- PHPini設定 -----
-ini_set("max_execution_time",240); // 最大タイムアウト時間の指定
+// ----- PHP設定 -----
+// ini_set("max_execution_time",240); // 最大タイムアウト時間の指定
+
 // ----- 定数定義 -----
-define("HOLDING_TIMER", "120"); // リクエストの保持ループ回数
-define("TIMER_DENOMINATOR", "1"); // 更新チェック実行間隔(s)
+define("HOLDING_TIMER", "1"); // リクエストの保持ループ回数
+define("TIMER_DENOMINATOR", "0"); // 更新チェック実行間隔(s)
 //>> (HOLDING_TIMER×TIMER_DENOMINATOR≠保持時間(s))
 
 // ----- 変数 -----
 
-$date_temp = 'date_temp.txt';
-file_put_contents($put_data,'',FILE_APPEND);
 $save_file = 'bbs.txt';
 $save2_file = 'bbb.dat';
 $break_flag = 0;
 
 // タイムゾーン指定 (Asia/Tokyo)
 date_default_timezone_set('Asia/Tokyo');
-header("Access-Control-Allow-Origin: *"); // CORS対策
+// header("Access-Control-Allow-Origin: *"); // CORS対策
 
 // ----- メイン処理 -----
 // ----- メッセージがPOSTされたとき -----
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['b_send'])) {
-  $now_date = date("ymdHis");
-  $put_data = htmlspecialchars($_POST['b_send'], ENT_QUOTES, "UTF-8");
-  $push_data = $put_data."\t".date('Y-m-d H:i:s')."\n";
-  $push_data2 = $put_data."\t".date('Y-m-d H:i:s')."\t".$_SERVER["REMOTE_ADDR"]."\n";
-  file_put_contents($save_file, $push_data, FILE_APPEND | LOCK_EX);
-  file_put_contents($save2_file, $push_data2, FILE_APPEND | LOCK_EX);
-  file_put_contents($date_temp, $now_date);
-  echo $now_date."\n".file_get_contents($save_file);
-// ----- メッセージがREQUESTされたとき -----
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['b_req'])) {
-  if(isset($_POST["last_date"]) && $_POST['b_req'] !== 'bbb') { // 前の更新日時と同じとき、再送しない
-    // サーバでリクエストの保持
-    $rec_date = $_POST["last_date"];
-    for($i=0; $i<HOLDING_TIMER; $i++) { // REQUESTの保持ループ
-      $file_date = file_get_contents($date_temp);
-      // echo $file_date."\n".$rec_date."\n";
-      if($rec_date !== $file_date) { // 更新があったら内容出力
-        $break_flag= 1;
-          break;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  if (isset($_POST['b_send'])) {
+    $put_data = htmlspecialchars($_POST['b_send'], ENT_QUOTES, "UTF-8");
+    $push_data = $put_data."\t".date('Y-m-d H:i:s')."\n";
+    $push_data2 = $put_data."\t".date('Y-m-d H:i:s')."\t".$_SERVER["REMOTE_ADDR"]."\n";
+    file_put_contents($save_file, $push_data, FILE_APPEND | LOCK_EX);
+    file_put_contents($save2_file, $push_data2, FILE_APPEND | LOCK_EX);
+    clearstatcache(false, $save_file);
+    echo date("YmdHis",filemtime($save_file))."\n".file_get_contents($save_file);
+  // ----- メッセージがREQUESTされたとき -----
+  } elseif (isset($_POST['b_req'])) {
+    if(isset($_POST["last_date"]) && $_POST['b_req'] !== 'bbb') { // 前の更新日時と同じとき、再送しない
+      // サーバでリクエストの保持
+      $rec_date = $_POST["last_date"];
+      for($i=0; $i<HOLDING_TIMER; $i++) { // REQUESTの保持ループ
+        clearstatcache(false, $save_file);
+        $file_date = date("YmdHis",filemtime($save_file));
+        if($rec_date != $file_date) { // 更新があったら内容出力
+          $break_flag = 1;
+            break;
+        }
+        sleep(TIMER_DENOMINATOR);
       }
-      sleep(TIMER_DENOMINATOR);
-    }
-    if($break_flag===0) {
-      echo 'B';
+      if($break_flag===0) {
+        echo 'B';
+        exit;
+      } else {
+        echo date("YmdHis",filemtime($save_file))."\n".file_get_contents($save_file);
+        exit;
+      }
     } else {
-      echo file_get_contents($date_temp)."\n".file_get_contents($save_file);
+      // 初回ロード時など、即レスポンスする
+      echo date("YmdHis",filemtime($save_file))."\n".file_get_contents($save_file);
+      exit;
     }
-  } else {
-    // 初回ロード時など、即レスポンスする
-    echo file_get_contents($date_temp)."\n".file_get_contents($save_file);
   }
 }
 

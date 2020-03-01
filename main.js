@@ -5,10 +5,11 @@
 //----- 定数定義 -----
 const CONTTT = document.getElementById('conttt'); // メッセージ内容の表示部分
 const TIME_B = document.getElementById('time_b'); // 時刻表示用(仮)
-const XHR_TIMEOUT = 1000 * 123; // サーバリクエストのタイムアウト時間(ms)
-const MAINLOOP_TIMER = 200; // メイン関数の実行間隔の時間 (ms)
+const XHR_TIMEOUT = 1000 * 3; // サーバリクエストのタイムアウト時間(ms)
+const MAINLOOP_TIMER = 1000 * 3; // メイン関数の実行間隔の時間 (ms)
 const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat2.php'; // POSTするサーバURL
+// const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTするサーバURL
 
 // ----- 変数定義 -----
 let s_cnt = 0; // 処理カウント用
@@ -31,11 +32,14 @@ function nowD() {
 
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.5.4 20200301', 'color: #fff; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.6.0 20200302', 'color: #fff; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
 
 // ----- メイン処理 -----
-document.addEventListener("DOMContentLoaded", function main() { // ロード時開始
-  console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
+  document.addEventListener("DOMContentLoaded", function main() { // ロード時開始
+  cuser_name(); // ユーザー確認
+
+  // console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
   const b_req = new XMLHttpRequest();
   b_req.open('POST', SEND_SERVER, true);
   b_req.setRequestHeader('Pragma', 'no-cache'); // キャッシュを無効にするためのヘッダ指定
@@ -77,12 +81,13 @@ document.addEventListener("DOMContentLoaded", function main() { // ロード時�
 div_top = document.getElementById('chat_content');
 
 function b_send() { // データをサーバに送信する関数
-  var send_data = div_top.value; // inputに入っている値を$send_dataに代入します
+  var send_data = esc(div_top.value, 0); // inputに入っている値を$send_dataに代入します
   if (send_data.length >= 1011 || send_data.length <= 0) { // データサイズのチェックです
-    console.log("POST_SIZE > OVER <"); // データサイズが大きすぎる場合は拒否
+    console.log('%cPOST_SIZE %c> OVER <','color: #fff;','color: red;'); // データサイズが大きすぎる場合は拒否
     return B;
   } else { // 以下main関数とほぼ同様
-    console.log(send_data);
+    console.log('%cPOST_DATA %c> ' + send_data, 'color: orange;', 'color: #bbb;');
+    // console.log(send_data);
     div_top.value = '';
     var b_post = new XMLHttpRequest();
     b_post.open('POST', SEND_SERVER, true);
@@ -95,7 +100,7 @@ function b_send() { // データをサーバに送信する関数
       if (b_post.readyState === 4) {
         if (b_post.status === 200) {
           CONTTT.innerHTML = AutoLink(AppAdjust(b_post.responseText));
-          console.log('POST_OK!');
+          console.log('%cPOST_OK!','color: #00a0e9;');
         }
       }
     }
@@ -103,6 +108,21 @@ function b_send() { // データをサーバに送信する関数
 }
 
 // ----- メッセージ内容表示用にHTMLタグ付けする関数 -----
+/*
+// データ形式について (Ver.0.6現在)
+・基本パターン
+メッセージ \t 名前 \t 時間 \n
+メッセージ \t 名前 \t 時間 \n
+メッセージ \t 名前 \t 時間 \n
+
+・改行拡張パターン
+メッセージ \t 名前 \t 時間 \n
+メッセージ \n メッセージ メッセージ \t 名前 \t 時間 \n
+メッセージ \t 名前 \t 時間 \n
+
+\t > \t > \n の組み合わせ順で1つのメッセージと判断
+\nでsplitした時点で\tがないものは後ろの配列と結合し、slice > spliceする
+*/
 function AppAdjust(OriginalText) {
   if (OriginalText == 'B') { // 'B'が渡された場合は、ファイルの更新はありません
     OriginalText = sessionStorage.getItem('receive_data'); // 更新がない場合、SessionStorageからデータを取得します
@@ -116,7 +136,13 @@ function AppAdjust(OriginalText) {
   last_date = con_b_data[0]; // 配列の最初はファイルの更新日時が入っています
   for (var i = 1; i < con_b_data.length; i++) { // Tab区切りで配列にし、HTMLタグを加えます
     var arr_b_data = con_b_data[i].split(/\t/);
-    con_b_data[i] = arr_b_data[0] + "<span id=date>" + arr_b_data[1] + "</span>";
+    if (arr_b_data[1]) { // 基本パターン
+      con_b_data[i] = arr_b_data[0] + "<span id=date>" + arr_b_data[1] + "</span>";
+    } else if(i < con_b_data.length-1){ // 改行拡張パターン
+      con_b_data[i+1] = con_b_data[i]+'<br>'+con_b_data[i+1];
+      con_b_data.splice(i,1);
+      i--;
+    }
   }
   var out_data = '';
   for (var i = 1; i < con_b_data.length - 1; i++) { // メッセージ内容の表示部分に出力するために順番を入れ替え、HTMLタグを加えます
@@ -177,4 +203,42 @@ function AutoLink(str) {
     return '<a href="h' + href + '"  target="_blank">' + url + '</a>';
   }
   return str.replace(regexp_url, regexp_makeLink);
+}
+
+// ----- 文字のエスケープ/アンエスケープ処理 -----
+function esc(str,mode) { // mode = 0の時エスケープ、それ以外はアンエスケープ(アンエスケープは未使用)
+  if (mode === 0) {
+    return str
+    // .replace(/&/g, '&amp;')
+    .replace(/&/g, '%26')
+    // .replace(/ /g, '%20')
+    // .replace(/\+/g, '&#43;');
+    .replace(/\r?\n/g, '%0D%0A')
+    .replace(/\+/g, '%2B');
+  } else {
+    return str
+    // .replace(/(&#43;)/g, '+')
+    .replace(/(&ensp;)/g, ' ')
+    // .replace(/(&amp;)/g, '&');
+    .replace(/(%26;)/g, '&');
+  }
+}
+
+// ----- 最初のユーザー名の設定 -----
+first_sc = document.getElementById('first_sc');
+function cuser_name() {
+  if(!localStorage.getItem("userName")){
+    first_sc.style.display="block";
+  } else {
+    first_sc.style.display="none";
+  }
+}
+
+// ----- ユーザー名をSessioinStrageに保存 -----
+user_name = document.getElementById('user_name');
+function user_submit() {
+  if(user_name.value) {
+    localStorage.setItem('userName', user_name.value);
+    cuser_name();
+  }
 }
