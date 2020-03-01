@@ -8,7 +8,7 @@ const TIME_B = document.getElementById('time_b'); // 時刻表示用(仮)
 const XHR_TIMEOUT = 1000 * 3; // サーバリクエストのタイムアウト時間(ms)
 const MAINLOOP_TIMER = 1000 * 3; // メイン関数の実行間隔の時間 (ms)
 const SEND_SERVER = 'chat.php';
-// const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat2.php'; // POSTするサーバURL
+// const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTするサーバURL
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTするサーバURL
 
 // ----- 変数定義 -----
@@ -34,7 +34,7 @@ function nowD() {
 
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.6.0 20200302', 'color: #fff; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.6.2 20200302', 'color: #fff; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
 
 if (!localStorage.getItem("Notice")) { // 通知の設定の確認
@@ -279,7 +279,7 @@ function e_setting() { // 設定関係
     setting.style.display = "block";
     CONTTT.style.display = "none";
     setting_toggle = 1;
-    if(localStorage.getItem("Notice")==='1') { // 通知のチェックボックス更新
+    if (localStorage.getItem("Notice") === '1') { // 通知のチェックボックス更新
       notification_set.checked = true;
     } else {
       notification_set.checked = false;
@@ -289,27 +289,27 @@ function e_setting() { // 設定関係
     } else {
       notification2_set.checked = false;
     }
-  } else {  // 設定を閉じたとき (設定更新)
+  } else { // 設定を閉じたとき (設定更新)
     setting.style.display = "none";
     CONTTT.style.display = "block";
     setting_toggle = 0;
     // 設定更新
     localStorage.setItem('userName', user_name2.value);
     cuser_name();
-    if(notification_set.checked) {
-      localStorage.setItem("Notice", "1");
-      notice_set=1;
-      Push.Permission.request(onGranted, onDenied); // 通知の許可リクエスト
-    } else {
-      localStorage.setItem("Notice", "0");
-      notice_set=0;
-    }
-    if(notification2_set.checked) {
+    if (notification2_set.checked) {
       localStorage.setItem("Notice2", "1");
       notice2_set = 1;
     } else {
       localStorage.setItem("Notice2", "0");
       notice2_set = 0;
     }
+    if (notification_set.checked) {
+      localStorage.setItem("Notice", "1");
+      notice_set = 1;
+      Push.Permission.request(onGranted, onDenied); // 通知の許可リクエスト
+    } else {
+      localStorage.setItem("Notice", "0");
+      notice_set = 0;
     }
+  }
 }
