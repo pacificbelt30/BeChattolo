@@ -7,8 +7,8 @@ const CONTTT = document.getElementById('conttt'); // メッセージ内容の表
 const TIME_B = document.getElementById('time_b'); // 時刻表示用(仮)
 const XHR_TIMEOUT = 1000 * 123; // サーバリクエストのタイムアウト時間(ms)
 const MAINLOOP_TIMER = 200; // メイン関数の実行間隔の時間 (ms)
-// const SEND_SERVER = 'chat.php';
-const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTするサーバURL
+const SEND_SERVER = 'chat.php';
+// const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat2.php'; // POSTするサーバURL
 
 // ----- 変数定義 -----
 let s_cnt = 0; // 処理カウント用
@@ -31,7 +31,7 @@ function nowD() {
 
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.5.3 20200301', 'color: #fff; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.5.4 20200301', 'color: #fff; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 
 // ----- メイン処理 -----
 document.addEventListener("DOMContentLoaded", function main() { // ロード時開始
@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", function main() { // ロード時�
   b_req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
   b_req.timeout = XHR_TIMEOUT; // サーバリクエストのタイムアウト時間の指定
   if (s_cnt == 0) {
-    b_req.send('b_req=bbb&last_date=' + last_date); // b_req=bbbを指定することで更新日時の判定なしで、即レスポンスを行い、データを取得します
+    b_req.send('b_req=bbb'); // b_req=bbbを指定することで更新日時の判定なしで、即レスポンスを行い、データを取得します
   } else {
     b_req.send('b_req=BBBBB&last_date=' + last_date); // b_req≠bbbの時は、ファイルの更新日時による判定で、更新がある場合のみ取得します
   }
