@@ -7,8 +7,8 @@ const CONTTT = document.getElementById('conttt'); // メッセージ内容の表
 const TIME_B = document.getElementById('time_b'); // 時刻表示用(仮)
 const XHR_TIMEOUT = 1000 * 3; // サーバリクエストのタイムアウト時間(ms)
 const MAINLOOP_TIMER = 1000 * 3; // メイン関数の実行間隔の時間 (ms)
-const SEND_SERVER = 'chat.php';
-// const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTするサーバURL
+// const SEND_SERVER = 'chat.php';
+const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTするサーバURL
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTするサーバURL
 
 // ----- 変数定義 -----
@@ -306,7 +306,8 @@ function e_setting() { // 設定関係
     if (notification_set.checked) {
       localStorage.setItem("Notice", "1");
       notice_set = 1;
-      Push.Permission.request(onGranted, onDenied); // 通知の許可リクエスト
+      // Push.Permission.request(onGranted, onDenied); // 通知の許可リクエスト
+      notice('通知が有効になりました', push_timer);
     } else {
       localStorage.setItem("Notice", "0");
       notice_set = 0;
