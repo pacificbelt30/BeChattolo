@@ -305,9 +305,9 @@ function e_setting() { // 設定関係
     }
     if (notification_set.checked) {
       localStorage.setItem("Notice", "1");
-      notice_set = 1;
       // Push.Permission.request(onGranted, onDenied); // 通知の許可リクエスト
       notice('通知が有効になりました', push_timer);
+      notice_set = 1;
     } else {
       localStorage.setItem("Notice", "0");
       notice_set = 0;
