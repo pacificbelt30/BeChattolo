@@ -7,6 +7,14 @@ RealtimeWebChatSystem
 最低限必要ファイル構成↓
 
 -----
+#### ＊Ver.0.7.0～
+// 他修正・機能(Theme/Notice/Shortcut)追加
+// Roomを作りました
+// 試験的にRoomの作成もできます<br>
++edit.php
++dir群
+
+-----
 #### ＊Ver.0.6.1～
 // 設定など随時追加
 // 特殊な通知を行うため、別のm_notice.jsを追加
