@@ -6,6 +6,7 @@ GET ?room= xxx の指定により、開くページを指定できます
 */
 
 // ----- Javascript部分 -----
+sessionStorage.clear() // sessionStrageのクリア
 
 //----- 定数定義 -----
 const CONTTT = document.getElementById('conttt'); // メッセージ内容の表示部分
@@ -208,6 +209,7 @@ function AppAdjust(OriginalText) {
       var mdata_split = con_b_data[i].split("\t");
       descr.innerHTML = mdata_split[0];
       last_date = mdata_split[1];
+      sessionStorage.setItem('%s_'+room_n,last_date); // サブ用の更新日時も更新
       break;
     }
   }
@@ -478,14 +480,14 @@ function get_room_list() { // データをサーバに送信する関数
 
 // ----- 開かれていないRoomの更新の監視 -----
 var sub_cnt=1; // サブルーチンのカウント
-var sub_stuck = 0;
+var sub_stuck = 0; // 重複実行防止フラグ
 function sub() {
-  if (get_list.length<2) { // get_room_list()が終了する前に実行してしまうのを避ける
+  if (get_list.length<2 && sub_stuck === 0) { // get_room_list()が終了する前に実行してしまうのを避ける
     setTimeout(sub, 100);
     return;
   } else {
     if (sub_stuck === 0) {
-      sub_stuck++;
+      sub_stuck=1;
       for(var i=0; i<get_list.length-1; i++) {
         setTimeout(sub, 100*i);
       }
@@ -541,7 +543,8 @@ function sub() {
         if (b_res2[0] === 'β') {
         // } else if (b_req2[0] == 'β' && b_req2[1]) {
         //   sessionStorage.setItem('%s_'+sub_req_room,b_res2[1]);
-        } else if (b_res2[0]!=='B' && sessionStorage.getItem('%s_'+sub_req_room)) {
+        sub_stuck++;
+      } else if (b_res2[0]!=='B' && sessionStorage.getItem('%s_'+sub_req_room) && sub_stuck>get_list.length) {
           // console.log(b_res2[0]);
           var cg_room = document.getElementById("ro"+sub_req_room);
           cg_room.setAttribute("class", "new_mes");
@@ -549,6 +552,7 @@ function sub() {
           sessionStorage.setItem('%s_'+sub_req_room,b_res2_save[0]);
         } else if(b_res2[1]) {
           sessionStorage.setItem('%s_'+sub_req_room,b_res2_save[0]);
+          sub_stuck++;
         }
         sub_cnt++;
       } else {
