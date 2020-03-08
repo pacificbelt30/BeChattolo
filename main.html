@@ -24,10 +24,10 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/push.js@1/bin/push.min.js" defer></script>
   <!-- メインのJS -->
   <script type="text/javascript" src="main.js?ver070" defer></script>
-  <script type="text/javascript" src="m_notice.js" defer></script>
+  <script type="text/javascript" src="m_notice.min.js" defer></script>
 </head>
 
-<body>
+<body id="body">
   <p id="time_b"></p>
   <header>
     <!-- <h2 style="font-size: 0.5em;" id="update_notice">アップデートがあります. リロードしてください.</h2> -->
@@ -39,19 +39,50 @@
       <input type="text" id="user_name" placeholder="ユーザー名を入力">
       <button type="button" id="submit_b" onclick="user_submit()">></button>
     </div>
+    <div id="edit_room">
+      <h2>Room Editor Ver.0.0.1</h2>
+      <p>This operation is under development and may affect the server. <br>It should not be used normally.</p>
+      <input type="text" id="room_name" pattern="^[0-9A-Za-z]+$" placeholder="Room Name / Can not use $,%,&">
+      <textarea name="room_desk_text" id="room_desk_text" placeholder="Description"></textarea>
+      <button type="button" id="cancel" onclick="room_editx(0)">Cancel</button>
+      <button type="button" id="deploy" onclick="room_editx(3)">Deploy</button>
+    </div>
+    <div id="create_room" onclick="room_editx(2)"><i class="fas fa-plus-circle"></i></div>
     <div id="enter_setting" onclick="e_setting()">
       <i class="fas fa-cog"></i>
     </div>
     <div id="setting" style="display: none;">
       <h2>設定</h2>
       <h3>ユーザー名</h3>
-      <input type="text" id="user_name2" placeholder="ユーザー名を入力">
+      <input type="text" id="user_name2" placeholder="ユーザー名を入力" onchange="name_setting()">
       <h3>Notice (Passive)</h3>
-      <input type="checkbox" id="notification" class="notice"><label for="notification" class="notice">Enable</label>
-      <input type="checkbox" id="notification2" class="notice2"><label for="notification2"
-        class="notice2">Special</label>
-      <h3>Bさんは疲れたので寝ます</h3>
-    </div>
+      <input type="checkbox" id="notification" class="notice" onchange="noti_setting()"><label for="notification" class="notice">Enable</label>
+      <!-- <input type="checkbox" id="notification2" class="notice2"><label for="notification2"
+        class="notice2">Special</label> -->
+        <select name="special_option" id="special_option" onchange="noti2_setting()">Special
+          <option value="0">OFF</option>
+          <option value="1">☭</option>
+          <option value="2">B1</option>
+          <option value="3">B2</option>
+        </select>
+        <h3>Theme</h3>
+        <select name="theme" id="theme" onchange="theme_setting()">
+          <option value="1">Dark</option>
+          <option value="2">DeepBlack</option>
+          <option value="3">White</option>
+        </select>
+        <h3>送信キー</h3>
+        <select name="send_key" id="send_key" onchange="sendkey_setting()">
+          <option value="1">Alt + Enter</option>
+          <option value="2">Shift + Enter</option>
+          <option value="3">Ctrl + Enter</option>
+          <option value="4">Enter</option>
+          <option value="5">Alt + B</option>
+          <option value="6">Shift + B</option>
+          <option value="7">Ctrl + B</option>
+          <option value="8">B</option>
+        </select>
+      </div>
     <!-- <input type="text" name="b_send" id="chat_content" placeholder="Name"> -->
     <div id="input_area">
       <textarea name="b_send" id="chat_content" placeholder="Message"></textarea>
@@ -62,7 +93,7 @@
     <button onclick="change_room('Main')">MainRoom</button><br><br>
   </div>
   <div id="R_side">
-    <h4 id="descr_tit">Description</h4>
+    <h4 id="descr_tit" onclick="room_editx(1)"><i class="fas fa-edit"></i>Description</h4>
     <p id="descr"></p>
   </div>
   <section>

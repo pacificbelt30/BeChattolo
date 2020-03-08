@@ -2,7 +2,7 @@
 
 @font-face {
   font-family: "font-awe_sol";
-  src: url("fa-solid-900.woff2") format("woff2");
+  src: url("fa-solid.woff2") format("woff2");
 }
 body {
   width: 100%;
@@ -18,7 +18,7 @@ body {
   font-family: "メイリオ","Hiragino Kaku Gothic Pro",Meiryo,"ヒラギノ角ゴ Pro W3","MS PGothic","MS UI Gothic",Helvetica,Arial,sans-serif;
 }
 header h1 {
-  width: 100%;;
+  width: 100%;
   margin: 0;
   padding: 10px 0;
   height: 20px;
@@ -70,6 +70,10 @@ header h1 {
 .L_side .new_mes {
   color: #00a0e9;
 }
+.L_side button:hover {
+  color: #ddd;
+  background: #555;
+}
 
 #R_side h4 {
   border-radius: 2px;
@@ -78,7 +82,15 @@ header h1 {
   padding: 5px;
   background: #333340;
   /* cursor: pointer; */
+  cursor: default;
 }
+.fa-edit:before {
+  font-style: normal;
+  font-family: 'font-awe_sol';
+  content: '\f044';
+  padding-right: 5px;
+}
+
 section {
   position: absolute;
   left: 200px;
@@ -187,10 +199,18 @@ h1 {
   border: solid 1px #222;
   border-radius: 3px;
   color: #bbb;
+  /* cursor: pointer; */
 
   position: absolute;
   top: 10px;
   right: 0;
+}
+#bbbutton:hover {
+  color: #eee;
+}
+#bbbutton:active {
+  background: #333;
+  color: #aaa;
 }
 .fa-paper-plane:before {
   font-family: 'font-awe_sol';
@@ -218,7 +238,7 @@ h1 {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 7;
+  z-index: 10;
   background: #222;
   color: #aaa;
   text-align: center;
@@ -229,6 +249,56 @@ h1 {
   color: #FFF;
   font-size: 1.7em;
   font-weight: 100;
+}
+
+#edit_room {
+  background: rgb(180, 0, 0);
+  color: #FFF;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 6;
+}
+#edit_room h2 {
+  font-size: 2em;
+  text-align: center;
+}
+#edit_room p {
+  font-size: 1.5em;
+  text-align: center;
+}
+#edit_room #room_name {
+  width: 300px;
+  padding: 10px 5px;
+  margin-left: calc(50% - 150px);
+  border: none;
+}
+#edit_room #room_desk_text {
+  resize: none;
+  width: 300px;
+  height: 240px;
+  padding: 10px 5px;
+  margin-left: calc(50% - 150px);
+  margin-top: 10px;
+  border: none;
+}
+#cancel, #deploy {
+  border: none;
+  display: inline-table;
+  width: 100px;
+  padding: 10px;
+}
+#cancel {
+  position: fixed;
+  left: calc(50% - 140px);
+  top: 600px;
+}
+#deploy {
+  position: fixed;
+  left: calc(50% + 50px);
+  top: 600px;
 }
 
 #user_name {
@@ -280,9 +350,21 @@ h1 {
   font-size: 1.4em;
   font-style: normal;
   z-index: 5;
-  color: #fff;
+  color: #ddd;
   vertical-align: baseline;
   text-align: center;
+}
+
+.fa-plus-circle:before {
+  font-family: 'font-awe_sol';
+  content: '\f055';
+  cursor: pointer;
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  font-size: 2em;
+  color: #555;
+  font-style: normal;
 }
 
 #setting h2 {
@@ -308,6 +390,13 @@ h1 {
   color: #00a0e9;
   font-size: 1.2em;
 }
+#setting select {
+  padding: 10px 5px;
+  line-height: 1.5;
+  background: #666;
+  color: #FFF;
+  border: none;
+}
 
 header {
   z-index: 2;
@@ -320,7 +409,7 @@ header {
 #time_b {
   position: fixed;
   top: 0;
-  right: 100px;
+  right: 80px;
   color: #BBB;
   z-index: 3;
 }
