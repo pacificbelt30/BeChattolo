@@ -435,4 +435,10 @@ span#dot {
     width: 98%;
     left: 1%;
   }
+  #create_room {
+    display: none;
+  }
+  #R_side,#L_side {
+    display: none;
+  }
 }
