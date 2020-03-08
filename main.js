@@ -1,5 +1,10 @@
 // Beちゃっとぉ クライアント側
 
+/*
+GET ?room= xxx の指定により、開くページを指定できます
+
+*/
+
 // ----- Javascript部分 -----
 
 //----- 定数定義 -----
@@ -12,7 +17,8 @@ const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 
 // ----- 変数定義 -----
-var s_cnt = 0; // 処理カウント用
+var s_cnt = 0; // 最初からの処理回数カウント用
+var s_cnt2 = 0; // Roomを変えてからの処理カウント用
 var last_date = 0; // 前回更新日時
 var dis_update = 0; // 更新するかしないかのフラグ
 // var push_timer = 1500; // 通知の表示時間(ms)
@@ -20,7 +26,7 @@ var push_timer = 3000; // 通知の表示時間(ms)
 var dsp_active = 1; // タブの状態を代入する変数
 var notice_set = 1; // 通知の設定
 var notice2_set = 0; // 特殊な通知の設定
-var room_n = 'Main'; // 表示Room
+var room_n = 'main'; // 表示Room
 var exec_cnt=0; // main()の重複実行の抑えるために実行数をカウントする変数
 
 function nowD() {
@@ -50,8 +56,8 @@ if (!localStorage.getItem("Notice2")) { // 特殊な通知の設定の確認
 } else {
   notice2_set = localStorage.getItem("Notice2");
 }
-get_room_list();
-main(); // メイン処理を実行
+
+change_room(getParam('room')); // ルーム変更(初回のトリガー的な)
 
 // ----- メイン処理 -----
 function main() { // ロード時開始
@@ -66,7 +72,7 @@ function main() { // ロード時開始
   b_req.setRequestHeader('Cache-Control', 'no-cach');
   b_req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
   b_req.timeout = XHR_TIMEOUT; // サーバリクエストのタイムアウト時間の指定
-  if (s_cnt == 0) {
+  if (s_cnt == 0 || s_cnt2 == 0) {
     b_req.send('b_req=bbb&user=' + localStorage.getItem("userName") + '&dir=' + room_n); // b_req=bbbを指定することで更新日時の判定なしで、即レスポンスを行い、データを取得します
   } else {
     b_req.send('b_req=BBBBB&last_date=' + last_date + '&dir=' + room_n); // b_req≠bbbの時は、ファイルの更新日時による判定で、更新がある場合のみ取得します
@@ -76,19 +82,26 @@ function main() { // ロード時開始
       if (b_req.status === 200) {
         // b_data = b_post.responseText.parse(json);
         var out_data = AppAdjust(b_req.responseText);
-        if (dis_update == 0 && out_data) { // dis_update == 0 の時にメッセージ内容の表示の更新を行います
+        if (dis_update !== 1 && out_data) { // dis_update !== 1 の時にメッセージ内容の表示の更新を行います
           CONTTT.innerHTML = AutoLink(out_data);
-          if (s_cnt !== 0) { // 初回読み込み時以外で、更新があった場合はPush通知を行う
+          if (s_cnt !== 0 && dis_update===1 && s_cnt2!== 0) { // 初回読み込み時以外で、更新があった場合はPush通知を行う && (dis_update==2の時は通知なし)
             notice('', push_timer); // 通知を行う
           }
         }
         s_cnt++;
+        s_cnt2++;
         // console.log(s_cnt);
         // main();
         if (exec_cnt < 1) {
           exec_cnt++;
           setTimeout(main, MAINLOOP_TIMER);
-          setTimeout(reserve_cnt, XHR_TIMEOUT);
+          setTimeout(reserve_cnt, MAINLOOP_TIMER);
+          sub();
+/*          if (s_cnt === 1) {
+            for(var i=0; i<get_list.length-2; i++) {
+              setTimeout(sub, 100*i);
+            }
+          } */
         }
         // console.log(b_data);
       } else {
@@ -96,6 +109,12 @@ function main() { // ロード時開始
           exec_cnt++;
           setTimeout(main, XHR_TIMEOUT);
           setTimeout(reserve_cnt, XHR_TIMEOUT);
+          sub();
+/*          if (s_cnt === 1) {
+            for(var i=0; i<get_list.length-2; i++) {
+              setTimeout(sub, 100*i);
+            }
+          } */
         }
       }
     }
@@ -158,14 +177,23 @@ function b_send() { // データをサーバに送信する関数
 */
 const descr = document.getElementById('descr');
 function AppAdjust(OriginalText) {
+  var OrgT2 = OriginalText.split("\t",3);
   if (OriginalText == 'B') { // 'B'が渡された場合は、ファイルの更新はありません
     // OriginalText = sessionStorage.getItem('receive_data'); // 更新がない場合、SessionStorageからデータを取得します
     dis_update = 1; // dip_update = 1 の時は、メッセージ内容の更新を行いません
     return false;
     // console.log('session');
+  } else if (OrgT2[0] == 'β') {
+    dis_update = 2; // 更新するが、通知なし
+    if (OrgT2[1]) {
+      descr.innerHTML = OrgT2[1];
+    } else {
+      descr.innerHTML = 'Roomの説明';
+    }
+    return "<li id=list2><br>メッセージがまだないようだ..<br>　</li>";
   } else {
     // sessionStorage.setItem('receive_data', OriginalText);
-    dis_update = 0;
+    dis_update = 0; // 更新、通知あり
   }
   // ----- mdataの分割 -----
   var con_b_data = OriginalText.split(/\r?\n/g); // 改行で区切り、配列にします
@@ -378,9 +406,6 @@ function date_update() {
 // ----- GET GET_Value -----
 // 参考> https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
 /*
-GETでRoom遷移をしようとしたが、やはりページがリロードされて遅いのでやめた
-そのため、この関数は利用されていない。
-今後利用する可能性があるので残してある。
 */
 function getParam(name, url) {
   if (!url) url = window.location.href;
@@ -392,16 +417,28 @@ function getParam(name, url) {
   return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-// ----- 表示Room変更 -----
+// ----- Room変更 -----
 function change_room(room) {
-  room_n = room;
-  main();
+  if (room_n !== room || s_cnt === 0) {
+    if (room) {
+      room_n = room;
+    } else {
+      room_n = 'main';
+    }
+    get_room_list();
+    if (s_cnt !== 0) {
+      // console.log('ChangeRoom '+room_n);
+    }
+    s_cnt2 = 0;
+    main();
+  }
 }
 
 // ----- RoomListを取得+ボタン生成 -----
 var get_list = ''; // RoomList
+const room_top_name = document.getElementById('room_top_name');
 function get_room_list() { // データをサーバに送信する関数
-  console.log('%cGET_LIST %c> ', 'color: orange;', 'color: #bbb;');
+  // console.log('%cGET_LIST', 'color: orange;');
   var b_list = new XMLHttpRequest();
   b_list.open('POST', SEND_SERVER, true);
   b_list.setRequestHeader('Pragma', 'no-cache');
@@ -412,12 +449,24 @@ function get_room_list() { // データをサーバに送信する関数
   b_list.onreadystatechange = function () {
     if (b_list.readyState === 4) {
       if (b_list.status === 200) {
-        var putData="<button onclick=change_room('main')>MainRoom</button><br><br>";
+        if (room_n === 'main') {
+          var putData="<button id='romain' class='on_butt' onclick=change_room('main')>MainRoom</button><br><br>";
+        } else {
+          var putData="<button id='romain' onclick=change_room('main')>MainRoom</button><br><br>";
+        }
         get_list = b_list.responseText.split("\n");
-        for(i=0; i<get_list.length-2; i++) {
+        for(var i=0; i<get_list.length-2; i++) {
           if(get_list[i]) {
             var get_list_t = get_list[i].split("\t");
-            putData += "<button onclick=change_room('"+get_list_t[0]+"')>"+get_list_t[1]+"</button><br>";
+            if (room_n == get_list_t[0]) { // タイトル部分も更新
+              room_top_name.innerHTML = ' - '+get_list_t[1];
+              putData += "<button id='ro"+get_list_t[0]+"' class='on_butt' onclick=change_room('"+get_list_t[0]+"')>"+get_list_t[1]+"</button><br>";
+            } else if (room_n === 'main') {
+              room_top_name.innerHTML = ' - MainRoom';
+              putData += "<button id='ro"+get_list_t[0]+"' onclick=change_room('"+get_list_t[0]+"')>"+get_list_t[1]+"</button><br>";
+            } else {
+              putData += "<button id='ro"+get_list_t[0]+"' onclick=change_room('"+get_list_t[0]+"')>"+get_list_t[1]+"</button><br>";
+            }
           }
         }
         L_side.innerHTML = putData;
@@ -425,4 +474,85 @@ function get_room_list() { // データをサーバに送信する関数
     }
   }
   // return get_list;
+}
+
+// ----- 開かれていないRoomの更新の監視 -----
+var sub_cnt=1; // サブルーチンのカウント
+var sub_stuck = 0;
+function sub() {
+  if (get_list.length<2) { // get_room_list()が終了する前に実行してしまうのを避ける
+    setTimeout(sub, 100);
+    return;
+  } else {
+    if (sub_stuck === 0) {
+      sub_stuck++;
+      for(var i=0; i<get_list.length-1; i++) {
+        setTimeout(sub, 100*i);
+      }
+    }
+  }
+  const b_req2 = new XMLHttpRequest();
+  b_req2.open('POST', SEND_SERVER, true);
+  b_req2.setRequestHeader('Pragma', 'no-cache'); // キャッシュを無効にするためのヘッダ指定
+  b_req2.setRequestHeader('Cache-Control', 'no-cach');
+  b_req2.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+  b_req2.timeout = XHR_TIMEOUT; // サーバリクエストのタイムアウト時間の指定
+  var sub_req, sub_req_t;
+  for(var i=1; i<3; i++) {
+    sub_req_t = get_list[sub_cnt%(get_list.length-1)];
+    sub_req = sub_req_t.split(/\t/g);
+    if(sub_req[0] == room_n) {
+      sub_cnt++;
+      continue;
+    }
+    sub_req_room = sub_req[0];
+    break
+  }
+  console.log('SubStuck: '+sub_req_room);
+  if (sessionStorage.getItem('%s_'+sub_req_room)) {
+    b_req2.send('b_req=BBBBB&last_date=' + sessionStorage.getItem('%s_'+sub_req_room) + '&dir=' + sub_req_room); // b_req≠bbbの時は、ファイルの更新日時による判定で、更新がある場合のみ取得します
+  } else {
+    b_req2.send('b_req=bbb&dir=' + sub_req_room);
+  }
+
+  b_req2.onreadystatechange = function () { // 通信ステータスが変わったとき実行
+    if (b_req2.readyState === 4) {
+      if (b_req2.status === 200) {
+/*        if(sessionStorage.getItem('%s_'+sub_req_room) && sub_cnt>get_list.length) {
+          var cg_room = document.getElementById("ro"+sub_req_room);
+          cg_room.setAttribute("class", "new_mes");
+        }
+
+        // ----- 開かれていないRoomの各最終更新時をSessionStrageへ ------
+        b_res2 = b_req2.responseText;
+        if (b_res2.length > 100) {
+          b_res2 = b_res2.slice(0,100);
+        }
+        sessionStorage.setItem('%s_'+sub_req_room,b_res2);*/
+        // b_data = b_post.responseText.parse(json);
+        b_res2 = b_req2.responseText.split(/[\t\n]/,6);
+        if (b_req2.responseText.indexOf("\t")>-1) {
+          b_res2_tmp = b_req2.responseText.split(/\t/,4);
+          if (b_req2.responseText.indexOf("\n")>-1) {
+            b_res2_save = b_res2_tmp[1].split(/\n/,4);
+          }
+        }
+        // console.log(b_res2);
+        if (b_res2[0] === 'β') {
+        // } else if (b_req2[0] == 'β' && b_req2[1]) {
+        //   sessionStorage.setItem('%s_'+sub_req_room,b_res2[1]);
+        } else if (b_res2[0]!=='B' && sessionStorage.getItem('%s_'+sub_req_room)) {
+          // console.log(b_res2[0]);
+          var cg_room = document.getElementById("ro"+sub_req_room);
+          cg_room.setAttribute("class", "new_mes");
+          notice();
+          sessionStorage.setItem('%s_'+sub_req_room,b_res2_save[0]);
+        } else if(b_res2[1]) {
+          sessionStorage.setItem('%s_'+sub_req_room,b_res2_save[0]);
+        }
+        sub_cnt++;
+      } else {
+      }
+    }
+  }
 }

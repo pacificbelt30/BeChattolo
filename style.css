@@ -44,7 +44,7 @@ header h1 {
   top: 42px;
   right: 0;
 }
-#L_side button {
+.L_side button {
   border: none;
   border-right: solid 5px #666;
   border-radius: 2px;
@@ -58,6 +58,19 @@ header h1 {
   width: 100%;
   text-align: right;
 }
+.L_side .on_butt {
+  background: #BBB;
+  color: #222;
+}
+.L_side .new_mes::before {
+  font-family: 'font-awe_sol';
+  content: '\f4ad';
+  padding-right: 5px;
+}
+.L_side .new_mes {
+  color: #00a0e9;
+}
+
 #R_side h4 {
   border-radius: 2px;
   margin-bottom: 0;

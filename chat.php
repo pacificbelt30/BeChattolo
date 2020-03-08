@@ -87,7 +87,15 @@ date_default_timezone_set('Asia/Tokyo');
 // ----- メイン処理 -----
 // ----- メッセージがPOSTされたとき -----
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if (isset($_POST['dir']) && file_exists("./".$bbs_folder."/".basename($_POST['dir'])."/".$save_mdata)) { // dir(SEND先が設定されているか)
+  if (isset($_POST['dir']) && file_exists("./".$bbs_folder.
+      "/".basename($_POST['dir']).
+      "/".$save_mdata) && file_exists("./".$bbs_folder.
+      "/".basename($_POST['dir']).
+      "/".$save_file_n.$save_file_k)&& file_exists("./".$bbs_folder.
+      "/".basename($_POST['dir']).
+      "/".$save2_file_n.$save2_file_k) || isset($_POST['dir']) && file_exists("./".$bbs_folder.
+      "/".basename($_POST['dir']).
+      "/".$save_mdata) && isset($_POST['b_send']))  { // dir(SEND先が設定されているか)
     $dir_name = basename(htmlspecialchars($_POST['dir'], ENT_QUOTES, "UTF-8"));
     if (isset($_POST['b_send'])) {
       if (isset($_POST['user'])) { // ユーザー名が設定されているか
@@ -105,32 +113,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       "\t".date('Y-m-d H:i:s').
       "\t".$_SERVER["REMOTE_ADDR"].
       "\n";
-      $file_dir_n = "./".$bbs_folder."/".$dir_name. // メインのファイル
+      $file_dir_n = "./".$bbs_folder.
+      "/".$dir_name. // メインのファイル
       "/".$save_file_n.$save_file_k;
-      $file2_dir_n = "./".$bbs_folder."/".$dir_name. // バックアップ
+      $file2_dir_n = "./".$bbs_folder.
+      "/".$dir_name. // バックアップ
       "/".$save2_file_n.$save2_file_k;
       // FilePush
       file_put_contents($file_dir_n, $push_data, FILE_APPEND | LOCK_EX);
       file_put_contents($file2_dir_n, $push_data2, FILE_APPEND | LOCK_EX);
-      if(file_exists("./".$bbs_folder."/".$dir_name."/".$save_mdata)) {
-        $mdata_data = explode("\t",file_get_contents("./".$bbs_folder."/".$dir_name."/".$save_mdata)); // \tで区切ってmdataを代入
-        echo $mdata_data[1]."\t";
+      if (file_exists("./".$bbs_folder.
+          "/".$dir_name.
+          "/".$save_mdata)) {
+        $mdata_data = explode("\t", file_get_contents("./".$bbs_folder.
+          "/".$dir_name.
+          "/".$save_mdata)); // \tで区切ってmdataを代入
+        echo $mdata_data[1].
+        "\t";
       } else {
-        echo $dir_name."\t";
+        echo $dir_name.
+        "\t";
       }
       echo date("YmdHis", filemtime($file_dir_n)).
       "\n".file_get_contents($file_dir_n);
 
       // ----- メッセージがREQUESTされたとき -----
-    } elseif(isset($_POST['b_req'])) {
-      $file_dir_n = "./".$bbs_folder."/".basename($_POST['dir']). // メインのファイル
+    }
+    elseif(isset($_POST['b_req'])) {
+      $file_dir_n = "./".$bbs_folder.
+      "/".basename($_POST['dir']). // メインのファイル
       "/".$save_file_n.$save_file_k;
-    if (isset($_POST["last_date"]) && $_POST['b_req'] !== 'bbb') { // 前の更新日時と同じとき、再送しない
-          // サーバでリクエストの保持
+      if (isset($_POST["last_date"]) && $_POST['b_req'] !== 'bbb' && file_exists($file_dir_n)) { // 前の更新日時と同じとき、再送しない
+        // サーバでリクエストの保持
         $rec_date = $_POST["last_date"];
         for ($i = 0; $i < HOLDING_TIMER; $i++) { // REQUESTの保持ループ
           clearstatcache(false, $file_dir_n);
-          $file_date = date("YmdHis",filemtime($file_dir_n));
+          $file_date = date("YmdHis", filemtime($file_dir_n));
           if ($rec_date != $file_date) { // 更新があったら内容出力
             $break_flag = 1;
             break;
@@ -141,11 +159,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           echo 'B';
           exit;
         } else {
-          if(file_exists("./".$bbs_folder."/".$dir_name."/".$save_mdata)) {
-            $mdata_data = explode("\t",file_get_contents("./".$bbs_folder."/".$dir_name."/".$save_mdata)); // \tで区切ってmdataを代入
-            echo $mdata_data[1]."\t";
+          if (file_exists("./".$bbs_folder.
+              "/".$dir_name.
+              "/".$save_mdata)) {
+            $mdata_data = explode("\t", file_get_contents("./".$bbs_folder.
+              "/".$dir_name.
+              "/".$save_mdata)); // \tで区切ってmdataを代入
+            echo $mdata_data[1].
+            "\t";
           } else {
-            echo $dir_name."\t";
+            echo $dir_name.
+            "\t";
           }
           echo date("YmdHis", filemtime($file_dir_n)).
           "\n".file_get_contents($file_dir_n);
@@ -153,34 +177,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
       } else {
         // 初回ロード時など、即レスポンスする
-        if(file_exists("./".$bbs_folder."/".$dir_name."/".$save_mdata)) {
-          $mdata_data = explode("\t",file_get_contents("./".$bbs_folder."/".$dir_name."/".$save_mdata)); // \tで区切ってmdataを代入
-          echo $mdata_data[1]."\t";
+        if (file_exists("./".$bbs_folder.
+            "/".$dir_name.
+            "/".$save_mdata)) {
+          $mdata_data = explode("\t", file_get_contents("./".$bbs_folder.
+            "/".$dir_name.
+            "/".$save_mdata)); // \tで区切ってmdataを代入
+          echo $mdata_data[1].
+          "\t";
         } else {
-          echo $dir_name."\t";
+          echo $dir_name.
+          "\t";
         }
         echo date("YmdHis", filemtime($file_dir_n)).
         "\n".file_get_contents($file_dir_n);
         exit;
       }
     }
-  } elseif (null !== $_POST['b_req']) { // ディレクトリリストがリクエストされたとき、存在するフォルダ一覧を返す
-    if ($_POST['b_req']=='βββ') {
-      $rdir_list = scandir("./".$bbs_folder."/");
-      for($i=2; $i<count($rdir_list); $i++) {
-        if (is_dir("./".$bbs_folder."/".$rdir_list[$i])) {
-          echo basename("./".$bbs_folder."/".$rdir_list[$i])."\t";
-          if(file_exists("./".$bbs_folder."/".$rdir_list[$i]."/".$save_mdata)) {
-            $mdata_data = explode("\t",file_get_contents("./".$bbs_folder."/".$rdir_list[$i]."/".$save_mdata)); // \tで区切ってmdataを代入
-            echo $mdata_data[0]."\n";
+  }
+  elseif(null !== $_POST['b_req']) {
+    if ($_POST['b_req'] == 'βββ') { // ディレクトリリストがリクエストされたとき、存在するフォルダ一覧を返す
+      $rdir_list = scandir("./".$bbs_folder.
+        "/");
+      for ($i = 2; $i < count($rdir_list); $i++) {
+        if (is_dir("./".$bbs_folder.
+            "/".$rdir_list[$i])) {
+          echo basename("./".$bbs_folder.
+            "/".$rdir_list[$i]).
+          "\t";
+          if (file_exists("./".$bbs_folder.
+              "/".$rdir_list[$i].
+              "/".$save_mdata)) {
+            $mdata_data = explode("\t", file_get_contents("./".$bbs_folder.
+              "/".$rdir_list[$i].
+              "/".$save_mdata)); // \tで区切ってmdataを代入
+            echo $mdata_data[0].
+            "\n";
           } else {
-            echo basename("./".$bbs_folder."/".$rdir_list[$i])."\n";
+            echo basename("./".$bbs_folder.
+              "/".$rdir_list[$i]).
+            "\n";
           }
         }
       }
+    } else { // そもそもメッセージが存在しない場合 β+RoomDescriptionを返す
+      if(file_exists("./".$bbs_folder.
+      "/".basename(htmlspecialchars($_POST['dir'], ENT_QUOTES, "UTF-8")).
+      "/".$save_mdata)) {
+        $mdata_data = explode("\t", file_get_contents("./".$bbs_folder.
+        "/".basename(htmlspecialchars($_POST['dir'], ENT_QUOTES, "UTF-8")).
+        "/".$save_mdata)); // \tで区切ってmdataを代入
+        echo 'β'."\t".$mdata_data[1];
+      } else {
+        echo 'β';
+      }
+      exit;
     }
   } else {
     echo 'ERROR';
+    exit;
   }
 }
 

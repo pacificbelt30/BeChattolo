@@ -23,17 +23,16 @@
   <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.12/push.min.js" defer></script> -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/push.js@1/bin/push.min.js" defer></script>
   <!-- メインのJS -->
-  <script type="text/javascript" src="main.js?ver070" async></script>
+  <script type="text/javascript" src="main.js?ver070" defer></script>
   <script type="text/javascript" src="m_notice.js" defer></script>
 </head>
 
 <body>
   <p id="time_b"></p>
   <header>
-    <h2 style="font-size: 0.5em;" id="update_notice">アップデートがあります. リロードしてください.</h2>
-    </h2>
+    <!-- <h2 style="font-size: 0.5em;" id="update_notice">アップデートがあります. リロードしてください.</h2> -->
     <!-- <h1 style="font-size: 1em;">Bさんの<ruby><rb>非同期劘蔿<rb><rp>(</rp><rt>Beeeeeee------</rt><rp>)</rp></ruby>リアルタイムちゃっとぉ</h1> -->
-    <h1 style="font-size: 1em;">Beちゃっとぉ - <span id="room_top_name"></span></h1>
+    <h1 style="font-size: 1em;">Beちゃっとぉ<span id="room_top_name"></span></h1>
     <div id="first_sc">
       <h1>ようこそ Ｂｅちゃっとぉ へ</h1>
       <p><br><br>Bなリアルタイムチャットを今すぐ始めよう！<br><br>サーバの性能などの都合上<br>新機能追加ができなくて開発者は不満な様子だ..</p>
@@ -51,12 +50,7 @@
       <input type="checkbox" id="notification" class="notice"><label for="notification" class="notice">Enable</label>
       <input type="checkbox" id="notification2" class="notice2"><label for="notification2"
         class="notice2">Special</label>
-      <h3>ConnectionInterval</h3>
-      <!-- <p>未実装</p> -->
-      <h3>Theme</h3>
-      <!-- <p>未実装</p> -->
-      <h3>FontSize</h3>
-      <!-- <p>未実装</p> -->
+      <h3>Bさんは疲れたので寝ます</h3>
     </div>
     <!-- <input type="text" name="b_send" id="chat_content" placeholder="Name"> -->
     <div id="input_area">
@@ -64,11 +58,11 @@
       <button type="button" id="bbbutton" onclick="b_send()"><i class="fas fa-paper-plane"></i></button>
     </div>
   </header>
-  <div id="L_side">
+  <div id="L_side" class="L_side">
     <button onclick="change_room('Main')">MainRoom</button><br><br>
   </div>
   <div id="R_side">
-    <h4>📄Description</h4>
+    <h4 id="descr_tit">Description</h4>
     <p id="descr"></p>
   </div>
   <section>
