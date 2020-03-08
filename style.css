@@ -139,8 +139,8 @@ h1 {
   font-size: 0.9em;
 }
 #user:before {
-  font-family: 'font-awe_sol';
-  content: '\f007';
+  /* font-family: 'font-awe_sol'; */
+  content: '>';
   padding-right: 4px;
   color: #555;
   font-size: 0.7em;
