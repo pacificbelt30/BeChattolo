@@ -12,10 +12,10 @@ const CONTTT = document.getElementById('conttt'); // メッセージ内容の表
 const TIME_B = document.getElementById('time_b'); // 時刻表示用(仮)
 const XHR_TIMEOUT = 1000 * 4; // サーバリクエストのタイムアウト時間(ms)
 const MAINLOOP_TIMER = 1000 * 4; // メイン関数の実行間隔の時間 (ms)
-const SEND_SERVER = 'chat.php';
-const EDIT_SERVER = 'edit.php';
-// const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
-// const EDIT_SERVER = 'https://u2net.azurewebsites.net/chat/edit.php'; // POSTする本番サーバURL
+// const SEND_SERVER = 'chat.php';
+// const EDIT_SERVER = 'edit.php';
+const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
+const EDIT_SERVER = 'https://u2net.azurewebsites.net/chat/edit.php'; // POSTする本番サーバURL
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const EDIT_SERVER = 'https://u2api.azurewebsites.net/chat/edit.php'; // POSTする試験サーバURL
 
@@ -150,7 +150,7 @@ function b_send() { // データをサーバに送信する関数
   var send_data = esc(div_top.value, 0); // inputに入っている値を$send_dataに代入します
   if (send_data.length >= 1011 || send_data.length <= 0) { // データサイズのチェックです
     console.log('%cPOST_SIZE %c> OVER <', 'color: #fff;', 'color: red;'); // データサイズが大きすぎる場合は拒否
-    return B;
+    return 'B';
   } else { // 以下main関数とほぼ同様
     console.log('%cPOST_DATA %c> ' + send_data, 'color: orange;', 'color: #bbb;');
     // console.log(send_data);
@@ -389,7 +389,7 @@ function cuser_name() {
 }
 
 // ----- ユーザー名をSessioinStrageに保存 -----
-user_name = document.getElementById('user_name');
+var user_name = document.getElementById('user_name');
 
 function user_submit() {
   if (user_name.value) {
@@ -438,8 +438,12 @@ function sendkey_setting() {
   localStorage.setItem('sendKey', send_key.value);
 }
 
+var min_wid_flag = 0; // スマホ用
 function e_setting() { // 設定関係
   if (setting_toggle === 0) { // 設定を開いたとき
+    if (L_side.style.display == "none") {
+      min_wid_flag = 1;
+    }
     user_name2.value = localStorage.getItem("userName");
     setting.style.display = "block";
     CONTTT.style.display = "none";
@@ -462,8 +466,13 @@ function e_setting() { // 設定関係
   } else { // 設定を閉じたとき (設定更新)
     setting.style.display = "none";
     CONTTT.style.display = "block";
-    L_side.style.display = "block";
-    R_side.style.display = "block";
+    if (min_wid_flag != 1) {
+      L_side.style.display = "block";
+      R_side.style.display = "block";
+    } else {
+      L_side.style.display = "none";
+      R_side.style.display = "none";
+    }
     setting_toggle = 0;
     // 設定更新
     cuser_name();
@@ -706,7 +715,7 @@ function room_editx(t) { // 1=編集, 2=作成, 3=送信
 function b_edit(mode, new_name, new_descr) { // データをサーバに送信する関数
   if (new_name) {
     // if (new_name.match(/^[A-Za-z0-9]*$/) && new_name!='main') { // Room名が英数字か
-    if (new_name != 'main' && new_name.match(/$?%?&/)) { // Room名が正しいか
+    if (new_name != 'main' && new_name.match(/[$%&]/g)) { // Room名が正しいか
       console.log('%cREQ_SERVER %c>>> ' + new_name, 'color: red;', 'color: #bbb;');
       var b_post = new XMLHttpRequest();
       b_post.open('POST', EDIT_SERVER, true);
@@ -736,25 +745,33 @@ function b_edit(mode, new_name, new_descr) { // データをサーバに送信�
 // ----- Theme変更 -----
 const css_body = document.getElementById('body');
 const descr_tit = document.getElementById('descr_tit');
+
 function change_theme(no) {
+  console.log(R_side.style.display);
   switch (no) {
     case '1':
+      if (R_side.style.display != 'none') {
+        R_side.style.background = "#1B1B1B";
+        L_side.style.background = "#1B1B1B";
+      }
       css_body.style.background = "#282830";
-      R_side.style.background = "#1B1B1B";
-      L_side.style.background = "#1B1B1B";
       break;
     case '2':
       css_body.style.background = "#111";
-      R_side.style.background = "#000";
+      if (R_side.style.display != 'none') {
+        R_side.style.background = "#000";
       L_side.style.background = "#000";
       R_side.style.color = "#BBB";
+      }
       break;
     case '3':
       css_body.style.background = "#BBB";
-      R_side.style.background = "#ccc";
+      if (R_side.style.display != 'none') {
+        R_side.style.background = "#ccc";
       L_side.style.background = "#ccc";
       R_side.style.color = "#111";
       descr_tit.style.color = "#BBB";
+      }
       break;
   }
 }
