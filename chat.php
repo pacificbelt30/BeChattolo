@@ -3,7 +3,23 @@
 Beちゃっとぉ
 2020 Fukuda-B/Dakhuf
 
+chat_v1.5
+
+// ----- メモ -----
+chat.php/edit.phpからの引き続ぎ
+JSON化、関数化、WebAPI向けに修正
+
+
 // ----- 予定 -----
+リクエストヘッダから更新日時を取得するか、PHPでまとめて全ルームを取得するか悩んでいる
+シンタティックスハイライト(ソースコードの色付け)を導入
+改行キーのオプション設定
+Roomの非表示、非通知設定
+既読を別のところ見ても残るようにする
+チャットの設定で、名無しの時の名前の設定
+通知は、Localstrageで行う
+RoomEditの機能拡張
+サーバへのリクエストをmain()/sub()で分けずにまとめて行う
 アプリ版を作る
 コマンドに対応する
 通知 (設定できるようにする)
@@ -21,6 +37,13 @@ From: Markdownチートシート
 ## これはH2タグ
 
 // ----- 更新履歴 -----
+Ver.0.8.0
+データ形式をJSONへ
+ファイルが分割されるようになります
+bbs.json
+bbs1.json
+bbs2.json ...
+
 Ver.0.7
 複数のチャットが使えるようにする
 \chat
@@ -57,186 +80,179 @@ URL自動リンク化
 Ajaxで基本的なチャット
 */
 
-// ----- PHP設定 -----
-// ini_set("max_execution_time",240); // 最大タイムアウト時間の指定
-
 // ----- 定数定義 -----
-define("HOLDING_TIMER", "1"); // リクエストの保持ループ回数
-define("TIMER_DENOMINATOR", "0"); // 更新チェック実行間隔(s)
-//>> (HOLDING_TIMER×TIMER_DENOMINATOR≠保持時間(s))
+define("BBS_FOLDER", 'bbs'); // Room/メッセージの親ディレクトリ
+define("MAIN_ROOM_DIR", 'main'); // 共通のメッセージを入れるディレクトリ
+// define("MDATA_NAME", 'mdata'); // mdata(meta_data Room設定を保存するファイル)のファイル名
 
-// ----- 変数 -----
-// メッセージデータ全体を入れる親ディレクトリ
-$bbs_folder = 'bbs';
-// 共通用のメッセージを入れるディレクトリ
-$main_folder = 'main';
-// 保存用のファイルの名前のつけ方と拡張子の形式
-$save_file_n = 'bbs';
-$save_file_k = '.txt';
-$save2_file_n = 'bbb';
-$save2_file_k = '.dat';
-// 個別メッセージの名前とパスを入れる (直接アクセスできてしまうので今後データベース処理/ハッシュ値にするかも)
-$save_mdata = 'mdata';
-// サーバで処理を持つループ処理のBreakフラグ
-$break_flag = 0;
+define("SAVEFILE_NAME", 'bbs'); // メッセージを保存するファイルの名前
+define("SAVEFILE_EXTE", '.json'); // メッセージを保存するファイルの拡張子
+define("SAVEFILE2_NAME", 'bbb'); // メッセージのバックアップを保存するファイルの名前
+define("SAVEFILE2_EXTE", '.json'); // メッセージのバックアップを保存するファイルの拡張子
+
+define("SPLIT_SIZE", 48059); // メッセージの分割条件のファイルサイズ 0xBBBB(Byte)
 
 // タイムゾーン指定 (Asia/Tokyo)
 date_default_timezone_set('Asia/Tokyo');
-// header("Access-Control-Allow-Origin: *"); // CORS対策
 
-// ----- メイン処理 -----
-// ----- メッセージがPOSTされたとき -----
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if (isset($_POST['dir']) && file_exists("./".$bbs_folder.
-      "/".basename($_POST['dir']).
-      "/".$save_mdata) && file_exists("./".$bbs_folder.
-      "/".basename($_POST['dir']).
-      "/".$save_file_n.$save_file_k)&& file_exists("./".$bbs_folder.
-      "/".basename($_POST['dir']).
-      "/".$save2_file_n.$save2_file_k) || isset($_POST['dir']) && file_exists("./".$bbs_folder.
-      "/".basename($_POST['dir']).
-      "/".$save_mdata) && isset($_POST['b_send']))  { // dir(SEND先が設定されているか)
-    $dir_name = basename(htmlspecialchars($_POST['dir'], ENT_QUOTES, "UTF-8"));
-    if (isset($_POST['b_send'])) {
-      if (isset($_POST['user'])) { // ユーザー名が設定されているか
-        $userN = htmlspecialchars($_POST['user'], ENT_QUOTES, "UTF-8");
-      } else {
-        $userN = 'Anonym';
-      }
-      $put_data = htmlspecialchars($_POST['b_send'], ENT_QUOTES, "UTF-8");
-      $push_data = $put_data.
-      "\t".$userN.
-      "\t".date('Y-m-d H:i:s').
-      "\n";
-      $push_data2 = $put_data.
-      "\t".$userN.
-      "\t".date('Y-m-d H:i:s').
-      "\t".$_SERVER["REMOTE_ADDR"].
-      "\n";
-      $file_dir_n = "./".$bbs_folder.
-      "/".$dir_name. // メインのファイル
-      "/".$save_file_n.$save_file_k;
-      $file2_dir_n = "./".$bbs_folder.
-      "/".$dir_name. // バックアップ
-      "/".$save2_file_n.$save2_file_k;
-      // FilePush
-      file_put_contents($file_dir_n, $push_data, FILE_APPEND | LOCK_EX);
-      file_put_contents($file2_dir_n, $push_data2, FILE_APPEND | LOCK_EX);
-      if (file_exists("./".$bbs_folder.
-          "/".$dir_name.
-          "/".$save_mdata)) {
-        $mdata_data = explode("\t", file_get_contents("./".$bbs_folder.
-          "/".$dir_name.
-          "/".$save_mdata)); // \tで区切ってmdataを代入
-        echo $mdata_data[1].
-        "\t";
-      } else {
-        echo $dir_name.
-        "\t";
-      }
-      echo date("YmdHis", filemtime($file_dir_n)).
-      "\n".file_get_contents($file_dir_n);
-
-      // ----- メッセージがREQUESTされたとき -----
-    }
-    elseif(isset($_POST['b_req'])) {
-      $file_dir_n = "./".$bbs_folder.
-      "/".basename($_POST['dir']). // メインのファイル
-      "/".$save_file_n.$save_file_k;
-      if (isset($_POST["last_date"]) && $_POST['b_req'] !== 'bbb' && file_exists($file_dir_n)) { // 前の更新日時と同じとき、再送しない
-        // サーバでリクエストの保持
-        $rec_date = $_POST["last_date"];
-        for ($i = 0; $i < HOLDING_TIMER; $i++) { // REQUESTの保持ループ
-          clearstatcache(false, $file_dir_n);
-          $file_date = date("YmdHis", filemtime($file_dir_n));
-          if ($rec_date != $file_date) { // 更新があったら内容出力
-            $break_flag = 1;
-            break;
-          }
-          sleep(TIMER_DENOMINATOR);
-        }
-        if ($break_flag === 0) {
-          echo 'B';
-          exit;
-        } else {
-          if (file_exists("./".$bbs_folder.
-              "/".$dir_name.
-              "/".$save_mdata)) {
-            $mdata_data = explode("\t", file_get_contents("./".$bbs_folder.
-              "/".$dir_name.
-              "/".$save_mdata)); // \tで区切ってmdataを代入
-            echo $mdata_data[1].
-            "\t";
-          } else {
-            echo $dir_name.
-            "\t";
-          }
-          echo date("YmdHis", filemtime($file_dir_n)).
-          "\n".file_get_contents($file_dir_n);
-          exit;
-        }
-      } else {
-        // 初回ロード時など、即レスポンスする
-        if (file_exists("./".$bbs_folder.
-            "/".$dir_name.
-            "/".$save_mdata)) {
-          $mdata_data = explode("\t", file_get_contents("./".$bbs_folder.
-            "/".$dir_name.
-            "/".$save_mdata)); // \tで区切ってmdataを代入
-          echo $mdata_data[1].
-          "\t";
-        } else {
-          echo $dir_name.
-          "\t";
-        }
-        echo date("YmdHis", filemtime($file_dir_n)).
-        "\n".file_get_contents($file_dir_n);
-        exit;
-      }
+// ----- メイン処理 (分岐) -----
+if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
+  if(isset($_POST['req'])) {
+    switch ($_POST['req']) {
+      case 'add': // メッセージ追加
+        header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
+        AddMes(esc($_POST['room'],1), esc($_POST['name']), esc($_POST['type']), esc($_POST['contents']), false);
+        AddMes(esc($_POST['room'],1), esc($_POST['name']), esc($_POST['type']), esc($_POST['contents']), true);
+      break;
+      case 'mes': // メッセージ取得
+        header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
+        GetMes(esc($_POST['room'],1), esc($_POST['thread']));
+      break;
+      case 'dir': // ディレクトリ一覧&更新日時取得
+        header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
+        echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+      break;
+      case 'set': // ルーム(作成/編集)
+        SetRoom(esc($_POST['mode']), esc($_POST['name']), esc($_POST['room'],1), esc($_POST['new_name']), esc($_POST['new_descr']));
+      break;
+      default:
+        echo 'ERROR: No shuch request type.';
+      break;
     }
   }
-  elseif(null !== $_POST['b_req']) {
-    if ($_POST['b_req'] == 'βββ') { // ディレクトリリストがリクエストされたとき、存在するフォルダ一覧を返す
-      $rdir_list = scandir("./".$bbs_folder.
-        "/");
-      for ($i = 2; $i < count($rdir_list); $i++) {
-        if (is_dir("./".$bbs_folder.
-            "/".$rdir_list[$i])) {
-          echo basename("./".$bbs_folder.
-            "/".$rdir_list[$i]).
-          "\t";
-          if (file_exists("./".$bbs_folder.
-              "/".$rdir_list[$i].
-              "/".$save_mdata)) {
-            $mdata_data = explode("\t", file_get_contents("./".$bbs_folder.
-              "/".$rdir_list[$i].
-              "/".$save_mdata)); // \tで区切ってmdataを代入
-            echo $mdata_data[0].
-            "\n";
-          } else {
-            echo basename("./".$bbs_folder.
-              "/".$rdir_list[$i]).
-            "\n";
-          }
-        }
-      }
-    } else { // そもそもメッセージが存在しない場合 β+RoomDescriptionを返す
-      if(file_exists("./".$bbs_folder.
-      "/".basename(htmlspecialchars($_POST['dir'], ENT_QUOTES, "UTF-8")).
-      "/".$save_mdata)) {
-        $mdata_data = explode("\t", file_get_contents("./".$bbs_folder.
-        "/".basename(htmlspecialchars($_POST['dir'], ENT_QUOTES, "UTF-8")).
-        "/".$save_mdata)); // \tで区切ってmdataを代入
-        echo 'β'."\t".$mdata_data[1];
-      } else {
-        echo 'β';
-      }
-      exit;
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') { // GETではReadのみ
+  if(isset($_GET['room'])) {
+    if (isset($_GET['thread'])) {
+      header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
+      GetMes(esc($_GET['room'],1), esc($_GET['thread']));
+    } else {
+      header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
+      GetMes(esc($_GET['room'],1), 0);
     }
-  } else {
-    echo 'ERROR';
-    exit;
+  } elseif (isset($_GET['dir'])) {
+    header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
+    echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+  }
+}
+exit;
+
+// ----- メッセージを追加 -----
+function AddMes($room, $name, $type, $contents, $mode_back) { // $mode_back=trueのとき、バックアップとして保存
+  $save_d = "./".BBS_FOLDER."/".$room."/"; // 保存ディレクトリ
+  if (!$name) $name = 'Anonym'; // 名無しの方は Anonym
+  if (file_exists($save_d)) { // ディレクトリとmdata確認
+    if ($mode_back) {
+      $save_f = latestMes($room, true)[0]; // メッセージのバックアップ保存ファイル
+    } else {
+      $save_f = latestMes($room, false)[0]; // メッセージ保存ファイル
+    }
+    if (file_exists($save_f)) { // 保存ファイルが既存の場合
+      $json_main = json_decode( $save_f, true); // JSONファイルを連想配列でデコード
+      $save_data = array( // 保存ファイルに追加するデータ
+        'user' => $name,
+        'type' => $type,
+        'contents' => $contents,
+        'date' => date('Y-m-d H:i:s')
+      );
+      if ($mode_back) {
+        $save_data['ip'] = $_SERVER["REMOTE_ADDR"];
+      }
+      $json_main["l_date"] = date('Y-m-d H:i:s'); // データを更新
+      $json_main["onject"][] = $save_data; // データを追加
+      file_put_contents($save_f, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE), LOCK_EX); // ファイル上書き保存
+
+      echo file_get_contents($save_f); // ファイルを出力
+    } else { // Room新規作成時など、保存ファイルが存在しない場合
+      echo 'ERROR: Write file does not exist.';
+    }
   }
 }
 
+// ----- メッセージを取得 -----
+function GetMes($room, $thread) { // $threadは分割されたスレッド番号(オプション) -> ない場合は最新のものを取得
+  if($thread && is_int($thread)) {
+    if(file_exists("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE)) {
+      echo file_get_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE);
+    }
+  } else {
+    // echo file_get_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.SAVEFILE_EXTE);
+    echo file_get_contents(latestMes($room, false)[0]); // 最新のメッセージを表示
+  }
+}
+
+// ----- ディレクトリ一覧を取得 -----
+function GetDir() {
+  $rdir_list = scandir("./".BBS_FOLDER."/");
+  $ret_arr=array(); // 戻り値用の変数を初期化
+  for ($i=2; $i < count($rdir_list); $i++) { // ,/, ../ を含むので$i=2
+    if (is_dir("./".BBS_FOLDER."/".$rdir_list[$i])) {
+      $ret_arr[] = array(
+        'dir_name' => $rdir_list[$i],
+        'room_name' => GetRoomName($rdir_list[$i]),
+        'l_date' => filemtime("./".BBS_FOLDER."/".$rdir_list[$i])
+      );
+    }
+  }
+  return $ret_arr;
+}
+
+// ----- RoomNameを取得する -----
+function GetRoomName($dir) {
+  $l_file = latestMes($dir, false)[0];
+  if(file_exists($l_file)) {
+    $get_name_json = json_decode(file_get_contents($l_file), true);
+    return $get_name_json["room_name"];
+  } else {
+    return $dir;
+  }
+}
+
+// ----- ルーム(作成/編集) -----
+function SetRoom($mode, $name, $room, $new_name, $new_descr) {
+
+}
+
+// ----- 特殊文字エスケープ処理 -----
+function esc($text, $mode) { // mode=1 : basename()+htmlspecial~~, else : htmlspecialchats
+  if ($mode === 1) {
+    return basename(htmlspecialchars($text, ENT_QUOTES, "UTF-8"));
+  } else {
+    return htmlspecialchars($text, ENT_QUOTES, "UTF-8");
+  }
+}
+
+// ----- 最新のメッセージファイルを調べる -----
+function latestMes($room, $mode_back) { // $mode_back = true の時、バックアップを探す
+  $rdir_list2 = scandir("./".BBS_FOLDER."/".$room."/");
+  if ($mode_back) {
+    for ($i=0; $i < count($rdir_list2); $i++) {
+      if(!file_exists("./".BBS_FOLDER."/".$room."/".SAVEFILE2_NAME.$i.SAVEFILE2_EXTE) && $i !== 0) {
+        return ["./".BBS_FOLDER."/".$room."/".SAVEFILE2_NAME.($i-1).SAVEFILE2_EXTE, ($i-1)];
+      }
+    }
+  } else {
+    for ($i=0; $i < count($rdir_list2); $i++) {
+      if(!file_exists("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$i.SAVEFILE_EXTE) && $i !== 0) {
+        return ["./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($i-1).SAVEFILE_EXTE, ($i-1)];
+      }
+    }
+  }
+  return ["ERROR: File does not exist."];
+}
+
+// ----- ファイルを自動分割する -----
+function autoSplit($room) {
+  $l_file = latestMes($room, false);
+  if(filesize($l_file[0]) >= SPLIT_SIZE) {
+    $json_main = json_decode($l_file[0] , true);
+    $n_format = array ( // 設定などを前のthreadから引き継ぐ
+      'room_name' => $json_main["room_name"],
+      'l_date' => date('Y-m-d H:i:s'),
+      'acc' => $json_main["acc"],
+      'onject' => ''
+    );
+    file_put_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, $n_format);
+    file_put_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE2_NAME.($l_file[1]+1).SAVEFILE2_EXTE, $n_format);
+  }
+}
 ?>
