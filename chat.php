@@ -1,9 +1,6 @@
 <?php
 /*
-
-ファイル置き場 5
 Beちゃっとぉ
-
 2020 Fukuda-B/Dakhuf
 
 chat_v1.5
@@ -14,9 +11,6 @@ JSON化、関数化、WebAPI向けに修正
 
 
 // ----- 予定 -----
-画像
-Roomの削除,非表示
-メッセージの編集・削除
 リクエストヘッダから更新日時を取得するか、PHPでまとめて全ルームを取得するか悩んでいる
 シンタティックスハイライト(ソースコードの色付け)を導入
 改行キーのオプション設定
@@ -30,17 +24,6 @@ RoomEditの機能拡張
 コマンドに対応する
 通知 (設定できるようにする)
 # ハッシュグに対応
-パスワード対応
-最新のデザイントレンドを採用
-・backdrop-filter
-・gradf
-・DarkMode
-・水平スクロール
-・scroll-snap
-・BoldFont
-速度と今後を考えて、PHPからNode.jsに移行する可能性..
-Azureサーバのメモリが厳しい
-
 
 // ----- コマンドなど -----
 From: Youtube
@@ -60,9 +43,6 @@ Ver.0.8.0
 bbs.json
 bbs1.json
 bbs2.json ...
-LocalStrageからIndexedDBをメインとします
-積極的なローカルデータの活用
-SSE, WebSocketはEdgeユーザを考慮し、使用しないことにした
 
 Ver.0.7
 複数のチャットが使えるようにする
@@ -72,6 +52,16 @@ Ver.0.7
 <bbs.txt
 <bbb.dat
 <data.dat
+パスワード対応
+最新のデザイントレンドを採用
+・backdrop-filter
+・gradf
+・DarkMode
+・水平スクロール
+・scroll-snap
+・BoldFont
+速度と今後を考えて、PHPからNode.jsに移行する可能性..
+Azureサーバのメモリが厳しい
 
 Ver.0.6
 やっぱりサーバの負荷がかかるからAjaxにもどす
@@ -100,11 +90,10 @@ define("SAVEFILE_EXTE", '.json'); // メッセージを保存するファイル�
 define("SAVEFILE2_NAME", 'bbb'); // メッセージのバックアップを保存するファイルの名前
 define("SAVEFILE2_EXTE", '.json'); // メッセージのバックアップを保存するファイルの拡張子
 
-define("SPLIT_SIZE", 135673); // メッセージの分割条件のファイルサイズ 0xBBBB -> (OCT) Byte
+define("SPLIT_SIZE", 48059); // メッセージの分割条件のファイルサイズ 0xBBBB(Byte)
 
-// ----- 設定 -----
+// タイムゾーン指定 (Asia/Tokyo)
 date_default_timezone_set('Asia/Tokyo');
-// header("Access-Control-Allow-Origin: *"); // CORS
 
 // ----- メイン処理 (分岐) -----
 if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
@@ -112,20 +101,19 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
     switch ($_POST['req']) {
       case 'add': // メッセージ追加
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-        AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), false);
-        AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), true);
+        AddMes(esc($_POST['room'],1), esc($_POST['name']), esc($_POST['type']), esc($_POST['contents']), false);
+        AddMes(esc($_POST['room'],1), esc($_POST['name']), esc($_POST['type']), esc($_POST['contents']), true);
       break;
       case 'mes': // メッセージ取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-        if (isset($_POST['thread'])) { GetMes(esc($_POST['room'],1), esc($_POST['thread'],0)); } else {
-          GetMes(esc($_POST['room'],1), false); }
+        GetMes(esc($_POST['room'],1), esc($_POST['thread']));
       break;
       case 'dir': // ディレクトリ一覧&更新日時取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
         echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
       break;
       case 'set': // ルーム(作成/編集)
-        SetRoom(esc($_POST['mode'],0), esc($_POST['name'],0), esc($_POST['room'],1), esc($_POST['new_name'],0), esc($_POST['new_descr'],0));
+        SetRoom(esc($_POST['mode']), esc($_POST['name']), esc($_POST['room'],1), esc($_POST['new_name']), esc($_POST['new_descr']));
       break;
       default:
         echo 'ERROR: No shuch request type.';
@@ -136,7 +124,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
   if(isset($_GET['room'])) {
     if (isset($_GET['thread'])) {
       header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-      GetMes(esc($_GET['room'],1), esc($_GET['thread'],0));
+      GetMes(esc($_GET['room'],1), esc($_GET['thread']));
     } else {
       header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
       GetMes(esc($_GET['room'],1), 0);
@@ -152,26 +140,14 @@ exit;
 function AddMes($room, $name, $type, $contents, $mode_back) { // $mode_back=trueのとき、バックアップとして保存
   $save_d = "./".BBS_FOLDER."/".$room."/"; // 保存ディレクトリ
   if (!$name) $name = 'Anonym'; // 名無しの方は Anonym
-  if (file_exists($save_d)) { // ディレクトリ確認
-    if ($mode_back === true) {
+  if (file_exists($save_d)) { // ディレクトリとmdata確認
+    if ($mode_back) {
       $save_f = latestMes($room, true)[0]; // メッセージのバックアップ保存ファイル
     } else {
       $save_f = latestMes($room, false)[0]; // メッセージ保存ファイル
     }
     if (file_exists($save_f)) { // 保存ファイルが既存の場合
-      $read_json = mb_convert_encoding(file_get_contents($save_f), 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
-      $json_main = json_decode( $read_json, true); // JSONファイルを連想配列でデコード
-      // $json_main = json_decode($save_f); // JSONファイルを連想配列でデコード
-    } else { // 保存ファイルが存在しない場合
-      $save_f = "./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.'0'.SAVEFILE_EXTE;
-      $json_main = array(
-        'room_name' => $room,
-        'l_date' => date('Y-m-d H:i:s'),
-        'thread' => 0,
-        'object' => array(),
-        'descr' => ''
-      );
-    }
+      $json_main = json_decode( $save_f, true); // JSONファイルを連想配列でデコード
       $save_data = array( // 保存ファイルに追加するデータ
         'user' => $name,
         'type' => $type,
@@ -181,16 +157,14 @@ function AddMes($room, $name, $type, $contents, $mode_back) { // $mode_back=true
       if ($mode_back) {
         $save_data['ip'] = $_SERVER["REMOTE_ADDR"];
       }
-      $json_main['l_date'] = date('Y-m-d H:i:s'); // データを更新
-      $json_main['object'][] = $save_data; // データ追加
-      // (array)$json_main["object"][] = $save_data; // データを追加
-      // var_dump($json_main["object"]);
-      // array_push($json_main["object"], $save_data);
-      // file_put_contents($save_f, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE), LOCK_EX); // ファイル上書き保存
-      file_put_contents($save_f, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)); // ファイル上書き保存, LOCK_EXだと同時接続不可説
+      $json_main["l_date"] = date('Y-m-d H:i:s'); // データを更新
+      $json_main["onject"][] = $save_data; // データを追加
+      file_put_contents($save_f, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE), LOCK_EX); // ファイル上書き保存
 
       echo file_get_contents($save_f); // ファイルを出力
-
+    } else { // Room新規作成時など、保存ファイルが存在しない場合
+      echo 'ERROR: Write file does not exist.';
+    }
   }
 }
 
@@ -202,9 +176,7 @@ function GetMes($room, $thread) { // $threadは分割されたスレッド番号
     }
   } else {
     // echo file_get_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.SAVEFILE_EXTE);
-    if(file_exists("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.latestMes($room, false)[1].SAVEFILE_EXTE)) {
-      echo file_get_contents(latestMes($room, false)[0]); // 最新のメッセージを表示
-    }
+    echo file_get_contents(latestMes($room, false)[0]); // 最新のメッセージを表示
   }
 }
 
@@ -217,8 +189,7 @@ function GetDir() {
       $ret_arr[] = array(
         'dir_name' => $rdir_list[$i],
         'room_name' => GetRoomName($rdir_list[$i]),
-        'l_date' => filemtime("./".BBS_FOLDER."/".$rdir_list[$i]),
-        'thread' => latestMes($rdir_list[$i], false)[1]
+        'l_date' => filemtime("./".BBS_FOLDER."/".$rdir_list[$i])
       );
     }
   }
@@ -229,9 +200,7 @@ function GetDir() {
 function GetRoomName($dir) {
   $l_file = latestMes($dir, false)[0];
   if(file_exists($l_file)) {
-    $read_json = mb_convert_encoding(file_get_contents($l_file), 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
-    $get_name_json = json_decode( $read_json, true); // JSONファイルを連想配列でデコード
-    if (!isset($get_name_json["room_name"])) return $dir;
+    $get_name_json = json_decode(file_get_contents($l_file), true);
     return $get_name_json["room_name"];
   } else {
     return $dir;
@@ -255,7 +224,7 @@ function esc($text, $mode) { // mode=1 : basename()+htmlspecial~~, else : htmlsp
 // ----- 最新のメッセージファイルを調べる -----
 function latestMes($room, $mode_back) { // $mode_back = true の時、バックアップを探す
   $rdir_list2 = scandir("./".BBS_FOLDER."/".$room."/");
-  if ($mode_back === true) {
+  if ($mode_back) {
     for ($i=0; $i < count($rdir_list2); $i++) {
       if(!file_exists("./".BBS_FOLDER."/".$room."/".SAVEFILE2_NAME.$i.SAVEFILE2_EXTE) && $i !== 0) {
         return ["./".BBS_FOLDER."/".$room."/".SAVEFILE2_NAME.($i-1).SAVEFILE2_EXTE, ($i-1)];
@@ -275,8 +244,7 @@ function latestMes($room, $mode_back) { // $mode_back = true の時、バック�
 function autoSplit($room) {
   $l_file = latestMes($room, false);
   if(filesize($l_file[0]) >= SPLIT_SIZE) {
-    $read_json = mb_convert_encoding($l_file[0], 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
-    $json_main = json_decode($read_json , true);
+    $json_main = json_decode($l_file[0] , true);
     $n_format = array ( // 設定などを前のthreadから引き継ぐ
       'room_name' => $json_main["room_name"],
       'l_date' => date('Y-m-d H:i:s'),
