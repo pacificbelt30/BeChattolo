@@ -29,12 +29,16 @@ const OBJ_STORE_MESS = 'ckb_mess';
 // ----- 変数宣言 -----
 var now_room = 'main'; // 現在アクティブなRoom
 var exec_cnt = 0; // main()の重複実行を抑えるために実行数をカウントする変数
-var up_info = ''; // 更新日時をDBから別関数へ渡すときに使う変数
+
+// ----- IndexedDBのテストも使えたら使う -----
+window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || {READ_WRITE: "readwrite"}; // この行は、古いブラウザー向けにオブジェクトの定数が必要である場合に限り、必要になります。
+window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
 
 
 // ----- 初期処理 -----
 window.onload = function Begin() {
-  console.log('%cＢｅちゃっとぉ%c Ver.0.8.0 20200317', 'color: #fff; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+  console.log('%cＢｅちゃっとぉ%c Ver.0.8.0 20200327', 'color: #fff; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
   c_page(1);
   get_room_data(); // アクティブなRoomのメッセージ取得
@@ -105,11 +109,12 @@ function db_connect(base_name, store_name, sw, param1, param2, param3, param4, p
         contents: param5
       };
       var push = obj.put(put_data);
-    } else if (sw === GET_LAST || sw === GET_MESS) {
+    } else if (sw === GET_LAST) {
       var get_data = obj.get(param1);
       get_data.onsuccess = function (ev2) {
-        up_info = ev2.target.result; // グローバル変数へ結果を代入
+        update_disp_db(ev2.target.result, param2, param3);
       }
+    } else if  (sw === GET_MESS) {
     }
 
     trans.oncomplete = function () {
@@ -119,6 +124,11 @@ function db_connect(base_name, store_name, sw, param1, param2, param3, param4, p
   }
   open_db.onerror = function () {
     console.log('DB Open ERROR: ' + base_name);
+    if (sw === GET_LAST) { // 習得した日時をそのまま返す // その場しのぎだが、仕方ない
+      var ret = [];
+      ret["up_date"] = param3[param2]["l_date"];
+      update_disp_db(ret, param2, param3);
+    }
   }
 }
 
@@ -222,56 +232,17 @@ function update_disp(sw, str) { // 更新の種類, 更新データ
       // console.log(r_list);
 
       // Roomボタン生成
-      var putData = ''; // RoomList
-      const L_side = document.getElementById('L_side');
       for (var i = 0; i < Object.keys(r_list).length; i++) {
-        putData += "<button id='ro" + r_list[i]["dir_name"] + "' onclick=change_room('" + r_list[i]["dir_name"] + "')>" + r_list[i]["room_name"] + "</button><br>";
+        if (document.getElementById('ro' + r_list[i]["dir_name"]) === null) {
+          reset_list(r_list);
+        }
       }
-      L_side.innerHTML = putData;
 
       // Class追加 + DB操作
       for (var i = 0; i < Object.keys(r_list).length; i++) {
-        // Roomリストのボタンを追加する
-        let temp_id = document.getElementById('ro' + r_list[i]["dir_name"]);
 
-        /*
-        notice_flagについて
-        0 = 未通知
-        1 = 既通知, 未読
-        2 = 既通知, 既読
-        */
-
-        // IndexedDB操作
-        db_connect(DB_N, OBJ_STORE_LAST, 'g_last', r_list[i]["dir_name"]); // 関数を実行させ、up_infoに結果代入
-        if (typeof up_info !== 'undefined') {
-          console.log(up_info["up_date"]+' '+r_list[i]["l_date"]);
-          if (up_info["up_date"] !== r_list[i]["l_date"]) { // 最終更新時が古い場合
-            if (now_room === r_list[i]["dir_name"]) { // RoomがアクティブになったらIndexedDB更新
-              db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
-              get_room_data(); // アクティブなRoomのメッセージ取得
-              temp_id.classList.add("on_butt"); // ActiveRoom
-              temp_id.classList.remove("new_mes"); // 通知削除
-            } else if (up_info["notice_flag"] === 0) { // 通知フラグが1以外の時通知, 最終更新時は更新しない
-              db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], up_info["up_date"], 1, r_list[i]["room_name"], r_list[i]["thread"]);
-              notice();
-              temp_id.classList.remove("on_butt"); // PassiveRoom
-              temp_id.classList.add("new_mes"); // 通知追加
-            } else { // 通知したが、未読
-              temp_id.classList.remove("on_butt"); // PassiveRoom
-              temp_id.classList.add("new_mes"); // 通知追加
-            }
-          } else { // 更新なし
-            // console.log(g_info["room_key"]);
-            // if (!g_info["room_key"]) { // IndexedDBがない場合はセット
-            //   db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 1, r_list[i]["room_name"], r_list[i]["thread"]);
-            // }
-            db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
-            temp_id.classList.remove("on_butt"); // PassiveRoom
-            temp_id.classList.remove("new_mes"); // 通知削除
-          }
-        } else {
-          db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 3, r_list[i]["room_name"], r_list[i]["thread"]);
-        }
+        // IndexedDB操作&画面更新
+        db_connect(DB_N, OBJ_STORE_LAST, 'g_last', r_list[i]["dir_name"], i, r_list); // IndexedDB操作用関数を実行させる
       }
       break;
 
@@ -283,12 +254,14 @@ function update_disp(sw, str) { // 更新の種類, 更新データ
         var r_list = JSON.parse(str);
         // console.log(r_list);
 
+/*
         // IndexedDB操作
         db_connect(DB_N, OBJ_STORE_LAST, 'g_last', now_room);
         // Description部分
         if (up_info) {
           db_connect(DB_N, OBJ_STORE_LAST, 'last', up_info["room_key"], up_info["up_date"], up_info["notice_flag"], up_info["room_name"], up_info["thread"], r_list["descr"]);
         }
+*/
         descr.innerHTML = r_list["descr"]; // Descriptionの更新
         // メッセージ部分更
         var list_put = ''; // 出力用の変数
@@ -310,6 +283,63 @@ function update_disp(sw, str) { // 更新の種類, 更新データ
       break;
   }
 }
+
+// ----- RoomListのボタン再生成 -----
+function reset_list(r_list) {
+  var putData = ''; // RoomList
+  const L_side = document.getElementById('L_side');
+  for (var i = 0; i < Object.keys(r_list).length; i++) {
+    putData += "<button id='ro" + r_list[i]["dir_name"] + "' onclick=change_room('" + r_list[i]["dir_name"] + "')>" + r_list[i]["room_name"] + "</button><br>";
+  }
+  L_side.innerHTML = putData;
+}
+
+// ----- IndexedDB操作&画面更新 -----
+function update_disp_db(up_info, i, r_list) {
+        // Roomリストのボタンを追加する
+        let temp_id = document.getElementById('ro' + r_list[i]["dir_name"]);
+
+        /*
+        notice_flagについて
+        0 = 未通知
+        1 = 既通知, 未読
+        2 = 既通知, 既読
+        */
+  if (up_info) { // DB上に値が存在するか
+    // console.log(up_info["up_date"]+' '+r_list[i]["l_date"]);
+    if (up_info["up_date"] !== r_list[i]["l_date"]) { // 最終更新時が古い場合
+      if (now_room === r_list[i]["dir_name"]) { // RoomがアクティブになったらIndexedDB更新
+        db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
+        get_room_data(); // アクティブなRoomのメッセージ取得
+        temp_id.classList.add("on_butt"); // ActiveRoom
+        temp_id.classList.remove("new_mes"); // 通知削除
+      } else if (up_info["notice_flag"] === 0) { // 通知フラグが1以外の時通知, 最終更新時は更新しない
+        db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], up_info["up_date"], 1, r_list[i]["room_name"], r_list[i]["thread"]);
+        notice();
+        temp_id.classList.remove("on_butt"); // PassiveRoom
+        temp_id.classList.add("new_mes"); // 通知追加
+      } else { // 通知したが、未読
+        temp_id.classList.remove("on_butt"); // PassiveRoom
+        temp_id.classList.add("new_mes"); // 通知追加
+      }
+    } else { // 更新なし
+      // console.log(g_info["room_key"]);
+      // if (!g_info["room_key"]) { // IndexedDBがない場合はセット
+      //   db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 1, r_list[i]["room_name"], r_list[i]["thread"]);
+      // }
+      if (now_room === r_list[i]["dir_name"]) {
+        temp_id.classList.add("on_butt"); // ActiveRoom
+      } else {
+        temp_id.classList.remove("on_butt"); // PassiveRoom
+      }
+      db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
+      temp_id.classList.remove("new_mes"); // 通知削除
+    }
+  } else { // 初回読み込み
+    db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 3, r_list[i]["room_name"], r_list[i]["thread"]);
+  }
+}
+
 
 // ----- ページ切り替え -----
 function c_page(no) {

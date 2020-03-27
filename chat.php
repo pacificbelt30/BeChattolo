@@ -214,10 +214,15 @@ function GetDir() {
   $ret_arr=array(); // 戻り値用の変数を初期化
   for ($i=2; $i < count($rdir_list); $i++) { // ,/, ../ を含むので$i=2
     if (is_dir("./".BBS_FOLDER."/".$rdir_list[$i])) {
+      if(file_exists("./".BBS_FOLDER."/".$rdir_list[$i]."/".SAVEFILE_NAME.latestMes($rdir_list[$i], false)[1].SAVEFILE_EXTE)) {
+        $l_meth = "./".BBS_FOLDER."/".$rdir_list[$i]."/".SAVEFILE_NAME.latestMes($rdir_list[$i], false)[1].SAVEFILE_EXTE;
+      } else {
+        $l_meth = "./".BBS_FOLDER."/".$rdir_list[$i];
+      }
       $ret_arr[] = array(
         'dir_name' => $rdir_list[$i],
         'room_name' => GetRoomName($rdir_list[$i]),
-        'l_date' => filemtime("./".BBS_FOLDER."/".$rdir_list[$i]),
+        'l_date' => date("YmdHis" ,filemtime($l_meth)),
         'thread' => latestMes($rdir_list[$i], false)[1]
       );
     }
