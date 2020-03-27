@@ -10,8 +10,8 @@ GET ?room= xxx の指定により、開くページを指定できます
 const XHR_TIMEOUT = 1000 * 5; // サーバリクエストのタイムアウト時間(ms)
 const MAINLOOP_TIMER = 1000 * 5; // メイン関数の実行間隔の時間 (ms)
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
-const SEND_SERVER = 'chat_v1.5.php';
-// const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
+// const SEND_SERVER = 'chat_v1.5.php';
+const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
 
 // phpへのリクエスト種類
@@ -28,27 +28,38 @@ const OBJ_STORE_MESS = 'ckb_mess';
 
 // ----- 変数宣言 -----
 var now_room = 'main'; // 現在アクティブなRoom
+var room_show = 'Main_room'; // 現在アクティブなRoomの表示名
+var descrip_text = ''; // 現在アクティブなRoomのDescription
 var exec_cnt = 0; // main()の重複実行を抑えるために実行数をカウントする変数
 var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, サポートされているが、アクセス不可:2
 var sub_DB = []; // IndexedDBが使用できない場合、更新状態を配列で保持する. そのため確保しておく
 
+// ----- 設定情報用変数 デフォルト値 -----
+var notice_set = 1; // 通知の設定
+var notice2_set = 0; // 特殊な通知の設定
+var theme_set = 1; // Themeの設定
+var sendKey_set = 1; // 送信ショートカットの設定
 
 // ----- 初期処理 -----
 window.onload = function Begin() {
   console.log('%cＢｅちゃっとぉ%c Ver.0.8.0 20200327', 'color: #fff; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
   ck_indexedDB(); // IndexedDBのサポート確認
-  c_page(1); // ページ切り替え
+  ck_setting(); // Localstrage内の設定情報確認
+  ck_user(); // ユーザー名確認
+  c_page(1); // 表示更新
   get_room_data(); // アクティブなRoomのメッセージ取得
   main(); // main()に渡す
 }
 
 // ----- メイン処理 -----
 function main(option) {
+  ck_user(); // ユーザー名確認
   ck_room_data(); // Room更新確認
   if (option === 1) { // Roomのメッセージ取得が必要な時
     get_room_data();
   }
+  date_update(); // 表示時刻の更新
 
   if (exec_cnt < 1) {
     exec_cnt++;
@@ -160,13 +171,148 @@ function get_room_data() {
   xhr('req=' + GET_MES + '&room=' + now_room, GET_MES);
 }
 
-function user_submit() {}
+function user_submit() { // ユーザー名入力画面
+var user_name = document.getElementById('user_name');
+  if (user_name.value) {
+    localStorage.setItem('userName', user_name.value);
+    ck_user();
+  }
+}
 
-function room_editx() {}
+// ----- Room編集・作成 -----
+function room_editx(mode) { // 0:Cancel 1:Edit 2:Create 3:exec
+  const edit_room = document.getElementById('edit_room');
+  const room_name = document.getElementById('room_name');
+  const room_desk_text = document.getElementById('room_desk_text');
+  const deploy = document.getElementById('deploy');
+  const cancel = document.getElementById('cancel');
 
-function e_setting() {}
+  switch (mode) {
+    case 1:
+      if (now_room == 'main') {
+        cancel.style.display = "block";
+        deploy.style.display = "none";
+      } else {
+        cancel.style.display = "block";
+        deploy.style.display = "block";
+      }
+      edit_room.style.display = "block";
+      room_name.value = room_show;
+      room_desk_text.value = descrip_text.replace(/<br>/g, "\n");
+      room_edit_mode = 1;
+      break;
+    case 2:
+      cancel.style.display = "block";
+      deploy.style.display = "block";
+      edit_room.style.display = "block";
+      room_name.value = '';
+      room_desk_text.value = '';
+      room_edit_mode = 2;
+      break;
+    case 3:
+      // ServerReq
+      console.log('%cREQ_SERVER %c>>> ' + room_name.value, 'color: red;', 'color: #bbb;');
+      if (room_edit_mode === 1) {
+        xhr('req='+SET_DIR+'&mode=1&name='+localStorage.getItem("userName")+'&room='+now_room+'&new_name='+room_name.value+'&new_descr='+room_desk_text.value, SET_DIR);
+      } else if (room_edit_mode === 2) {
+        xhr('req='+SET_DIR+'&mode=2&name='+localStorage.getItem("userName")+'&room='+now_room+'&new_name='+room_name.value+'&new_descr='+room_desk_text.value, SET_DIR);
+      }
+      edit_room.style.display = "none";
+      break;
+    default:
+      edit_room.style.display = "none";
+    }
+}
 
-function notice() {}
+// ----- 動作設定 -----
+function noti_setting() { // 通知設定更新
+  const notification_set = document.getElementById('notification');
+  if (notification_set.checked) {
+    localStorage.setItem("Notice", "1");
+    notice_set = 1;
+  } else {
+    localStorage.setItem("Notice", "0");
+    notice_set = 0;
+  }
+}
+
+function noti2_setting() { // 通知設定2更新
+  const special_option = document.getElementById('special_option');
+  notice2_set = special_option.value;
+  localStorage.setItem("Notice2", notice2_set);
+}
+
+function name_setting() {
+  const user_name2 = document.getElementById('user_name2');
+  localStorage.setItem('userName', user_name2.value);
+}
+
+function theme_setting() {
+  const theme = document.getElementById('theme');
+  localStorage.setItem('theme', theme.value);
+  change_theme(theme.value); // theme更新
+}
+
+function sendkey_setting() {
+  const send_key = document.getElementById('send_key');
+  localStorage.setItem('sendKey', send_key.value);
+}
+
+function e_setting() {
+  const setting = document.getElementById('setting');
+  const user_name2 = document.getElementById('user_name2');
+  const notification_set = document.getElementById('notification');
+  const special_option = document.getElementById('special_option');
+  const theme = document.getElementById('theme');
+  const send_key = document.getElementById('send_key');
+  setting_toggle = 0;
+
+  if (setting.style.display === "none") {
+    user_name2.value = localStorage.getItem("userName");
+    setting.style.display = "block";
+    setting_toggle = 1;
+    if (localStorage.getItem("Notice") === '1') { // 通知のチェックボックス更新
+      notification_set.checked = true;
+    } else {
+      notification_set.checked = false;
+    }
+    special_option.value = localStorage.getItem("Notice2");
+    theme.value = localStorage.getItem("theme");
+    send_key.value = localStorage.getItem("sendKey");
+  } else {
+    setting.style.display = "none";
+  }
+}
+
+// ----- 通知の作成 -----
+function notice() {
+  notice_set = localStorage.getItem('Notice'); // Localstrageから設定値取得
+  notice2_set = localStorage.getItem('Notice2');
+  if (notice2_set == 1) {
+    m1_notice();
+  } else if (notice2_set == 2) {
+    m2_notice();
+  } else if (notice2_set == 3) {
+    m3_notice();
+  }
+  if (document.hidden && notice_set == 1) {
+    if (!message) {
+      message = 'New message received!';
+    }
+    Push.create(message, {
+      timeout: timer,
+      onClick: function () {
+        window.focus();
+        this.close();
+      }
+    });
+    if (notice2_set == '1') {
+      document.title = '🟥☆☭Beちゃっとぉ';
+    } else {
+      document.title = '🟧Beちゃっとぉ';
+    }
+  }
+}
 
 // ----- メッセージを送信 -----
 function b_send() {
@@ -209,6 +355,24 @@ function nowD() {
   return '' + now_year + now_month + now_date + now_hours + now_hours + now_minute + now_sec;
 }
 
+// ----- 時刻表示の更新 -----
+function date_update() {
+  const TIME_B = document.getElementById('time_b'); // 時刻表示用(仮)
+  var week = ["日", "月", "火", "水", "木", "金", "土"];
+  var date = new Date();
+  if (date.getHours() < 10) {
+    date_hours = '0' + date.getHours();
+  } else {
+    date_hours = date.getHours();
+  }
+  if (date.getMinutes() < 10) {
+    date_minutes = '0' + date.getMinutes();
+  } else {
+    date_minutes = date.getMinutes();
+  }
+  TIME_B.innerHTML = date.getMonth() + 1 + '月' + date.getDate() + '日(' + week[date.getDay()] + ') ' + date_hours + '<span id=dot>:</span>' + date_minutes;
+}
+
 // ----- Ajaxにより非同期でサーバへリクエスト -----
 function xhr(send_data, send_mode) { // POSTする内容, リクエストの種類
   const req = new XMLHttpRequest();
@@ -233,6 +397,11 @@ function xhr(send_data, send_mode) { // POSTする内容, リクエストの種�
             update_disp(1, resData);
             break;
           case SET_DIR:
+            if (resData === 'ok') {
+              console.log('%cREQ_COMP!', 'color: #00a0e9;');
+            } else {
+              console.log('%cREQ_ERROR', 'color: red;');
+            }
             break;
         }
       } else {
@@ -287,10 +456,12 @@ function update_disp(sw, str) { // 更新の種類, 更新データ
                   db_connect(DB_N, OBJ_STORE_LAST, 'last', up_info["room_key"], up_info["up_date"], up_info["notice_flag"], up_info["room_name"], up_info["thread"], r_list["descr"]);
                 }
         */
+       room_show = r_list["room_name"]; // 変数更新
+       descrip_text = r_list["descr"];
         descr.innerHTML = r_list["descr"]; // Descriptionの更新
         // メッセージ部分更
         var list_put = ''; // 出力用の変数
-        if (r_list["object"].length > 0) {
+        if (r_list["object"] && r_list["object"].length > 0) {
           for (var i = 0; i < r_list["object"].length; i++) {
             var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
             var out_data = "<li id=list> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
@@ -427,16 +598,36 @@ function update_disp_arr(i, r_list) {
 
 // ----- ページ切り替え -----
 function c_page(no) {
+  const setting = document.getElementById('setting');
+  const first_sc = document.getElementById('first_sc');
+  const edit_room = document.getElementById('edit_room');
+  const load_sc = document.getElementById('load');
+
   switch (no) {
     case 0: // ユーザー名入力画面
+    setting.style.display = "block";
+    first_sc.style.display = "none";
+    edit_room.style.display = "none";
+    load_sc.style.display = "none";
       break;
     case 1: // 通常画面
       setting.style.display = "none";
       first_sc.style.display = "none";
       edit_room.style.display = "none";
+      load_sc.style.display = "none";
       break;
     case 2: // 設定画面
+    setting.style.display = "none";
+    first_sc.style.display = "none";
+    edit_room.style.display = "block";
+    load_sc.style.display = "none";
       break;
+    case 3: // ロード画面
+    setting.style.display = "none";
+    first_sc.style.display = "none";
+    edit_room.style.display = "none";
+    load_sc.style.display = "block";
+    break;
   }
 }
 
@@ -448,4 +639,67 @@ function AutoLink(str) {
     return '<a href="h' + href + '"  target="_blank" rel="noopener">' + url + '</a>';
   }
   return str.replace(regexp_url, regexp_makeLink);
+}
+
+// ----- Localstrage内の設定情報確認 -----
+function ck_setting() {
+  if (!localStorage.getItem("Notice")) { // 通知の設定の確認
+    localStorage.setItem("Notice", notice_set);
+  } else {
+    notice_set = localStorage.getItem("Notice");
+  }
+  
+  if (!localStorage.getItem("Notice2")) { // 特殊な通知の設定の確認
+    localStorage.setItem("Notice2", notice2_set);
+  } else {
+    notice2_set = localStorage.getItem("Notice2");
+  }
+  
+  if (!localStorage.getItem("theme")) { // Themeの設定
+    localStorage.setItem("theme", theme_set);
+  } else {
+    theme_set = localStorage.getItem("theme");
+  }
+  
+  if (!localStorage.getItem("sendKey")) { // 送信キーの設定
+    localStorage.setItem("sendKey", sendKey_set);
+  } else {
+    sendKey_set =localStorage.getItem("sendKey");
+  }
+}
+
+// ----- ユーザー名確認 -----
+function ck_user() {
+  if(!localStorage.getItem("userName")) {
+    first_sc.style.display = "block";
+  } else {
+    first_sc.style.display = "none";
+  }
+}
+
+// ----- キー入力を処理する関数 -----
+// Alt+Enter(keyCode==13)が入力されたとき、b_send()を実行
+// B+ オプションは廃止されました
+document.onkeydown = keydown;
+
+function keydown() {
+  s_value = localStorage.getItem("sendKey");
+  if (s_value === '1' && event.altKey == true && event.keyCode == 13) { // Alt + Enter で送信
+    b_send();
+  } else if (s_value === '2' && event.shiftKey == true && event.keyCode == 13) { // Shift + Enter で送信
+    b_send();
+  } else if (s_value === '3' && event.ctrlKey == true && event.keyCode == 13) { // Ctrl + Enter で送信
+    b_send();
+  } else if (s_value === '4' && event.keyCode == 13) { // Enter で送信 
+    b_send();
+  }
+}
+
+// ----- 下からのスクロール量 -----
+// 参考: https://qiita.com/hoto17296/items/be4c1362647dd241905d
+function getScrollBottom() {
+  var body = window.document.body;
+  var html = window.document.documentElement;
+  var scrollTop = body.scrollTop || html.scrollTop;
+  return html.scrollHeight - html.clientHeight - scrollTop;
 }
