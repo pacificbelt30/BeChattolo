@@ -61,6 +61,7 @@ bbs.json
 bbs1.json
 bbs2.json ...
 LocalStrageからIndexedDBをメインとします
+*IndexedDBが使えない場合、一部通知機能が制限されます
 積極的なローカルデータの活用
 SSE, WebSocketはEdgeユーザを考慮し、使用しないことにした
 
