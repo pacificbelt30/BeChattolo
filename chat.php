@@ -64,6 +64,7 @@ LocalStrageからIndexedDBをメインとします
 *IndexedDBが使えない場合、一部通知機能が制限されます
 積極的なローカルデータの活用
 SSE, WebSocketはEdgeユーザを考慮し、使用しないことにした
+HTMLでのpreload指定
 
 Ver.0.7
 複数のチャットが使えるようにする
@@ -306,7 +307,7 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
           'l_date' => date('Y-m-d H:i:s'),
           'thread' => 0,
           'object' => array(),
-          'descr' => ''
+          'descr' => $new_descr
         );
         $save_f = "./".BBS_FOLDER."/".$new_folder_no."/".SAVEFILE_NAME.'0'.SAVEFILE_EXTE;
         file_put_contents($save_f, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)); // ファイル上書き保存
@@ -314,7 +315,7 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
         $up_log = array(
           'user' => $name,
           'type' => 'log',
-          'contents' => 'Log: CreateRoom'."\r\n".'New:'.$new_name,
+          'contents' => 'Log: CreateRoom'."\r\n".'New:'.$new_name."\t".$new_descr,
           'date' => date('Y-m-d H:i:s'),
           'ip' => $_SERVER["REMOTE_ADDR"]
         );

@@ -10,6 +10,7 @@ GET ?room= xxx の指定により、開くページを指定できます
 const XHR_TIMEOUT = 1000 * 5; // サーバリクエストのタイムアウト時間(ms)
 const MAINLOOP_TIMER = 1000 * 5; // メイン関数の実行間隔の時間 (ms)
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
+const READ_AHEAD = 400; // 先読みを行う残りpx条件
 const SEND_SERVER = 'chat_v1.5.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
@@ -19,6 +20,8 @@ const ADD_MES = 'add'; // メッセージの追加
 const GET_MES = 'mes'; // メッセージ取得
 const GET_DIR = 'dir'; // メッセージのディレクトリ一覧取得
 const SET_DIR = 'set'; // メッセージのディレクトリ(Room)の作成・編集
+// そのほか
+const JOINT_MES = 'joint' // メッセージの結合
 
 // IndexedDBのデータベース名
 const DB_N = 'BeChat_DB';
@@ -28,9 +31,10 @@ const OBJ_STORE_LAST = 'ckb_last';
 const OBJ_STORE_MESS = 'ckb_mess';
 
 // ----- 変数宣言 -----
-var now_room = 'main'; // 現在アクティブなRoom
+var now_room = 'main'; // 現在アクティブなRoomのdir_name
 var room_show = 'Main_room'; // 現在アクティブなRoomの表示名
 var descrip_text = ''; // 現在アクティブなRoomのDescription
+var now_thread = 0; // 現在アクティブなRoomのthread
 var exec_cnt = 0; // main()の重複実行を抑えるために実行数をカウントする変数
 var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, サポートされているが、アクセス不可:2
 var sub_DB = []; // IndexedDBが使用できない場合、更新状態を配列で保持する. そのため確保しておく
@@ -49,6 +53,7 @@ window.onload = function Begin() {
   ck_setting(); // Localstrage内の設定情報確認
   ck_user(); // ユーザー名確認
   c_page(1); // 表示更新
+  change_theme(localStorage.getItem("theme")); // Theme適用
   main(1); // main()に処理を渡す
 }
 
@@ -136,14 +141,6 @@ function db_connect(base_name, store_name, sw, param1, param2, param3, param4, p
           update_disp_db(ev2.target.result, param2, param3);
         }
       } else if (sw === GET_MESS) { // アクティブなRoomの更新
-        var get_data = obj.get(param1);
-        get_data.onsuccess = function (ev2) {
-          if (ev2.target.result) {
-            update_disp(2, ev2.target.result, 1011);
-          } else {
-            main(1);
-          }
-        }
       }
 
       trans.oncomplete = function () {
@@ -179,6 +176,29 @@ function ck_room_data() {
 // ----- Roomデータ取得 -----
 function get_room_data() {
   xhr('req=' + GET_MES + '&room=' + now_room, GET_MES);
+  get_room_data_plus(now_thread); // 追加読み込み
+}
+
+// ----- 追加読み込み判定 -----
+function get_room_data_plus(thr, r_list) {
+
+  const CONTTT = document.getElementById('conttt'); // メッセージ内容の表示部分
+
+  if (r_list && r_list["object"] && r_list["object"].length > 0) {
+    var list_put = ''; // 出力用の変数
+    for (var i = 0; i < r_list["object"].length; i++) {
+      var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
+      var out_data = "<li id=list> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
+      list_put = out_data + list_put;
+    }
+    CONTTT.innerHTML = CONTTT.innerHTML+list_put;
+  }
+
+    // 追加読み込み
+    var b_height = from_Bottom(); // ページ下部からのpx
+    if (thr > 0 && b_height < READ_AHEAD) {
+      xhr('req='+GET_MES+'&room='+now_room+'&thread='+(thr-1), JOINT_MES, thr-1);
+    }
 }
 
 function user_submit() { // ユーザー名入力画面
@@ -316,11 +336,6 @@ function notice() {
         this.close();
       }
     });
-    if (notice2_set == '1') {
-      document.title = '🟥☆☭Beちゃっとぉ';
-    } else {
-      document.title = '🟧Beちゃっとぉ';
-    }
   }
 }
 
@@ -343,12 +358,7 @@ function b_send() {
 // ----- アクティブなRoomを変更
 function change_room(room) {
   now_room = room;
-  if (support_indexedDB < 1) { // IndexedDBが使用できるか
-    // DBから表示部分のデータを更新
-    db_connect(DB_N2, OBJ_STORE_MESS, 'g_mess', room_show);
-  } else {
-    ck_room_data(); // アクティブなRoomのメッセージ取得
-  }
+  main(1); // 更新
 }
 
 // ----- 文字エスケープ -----
@@ -389,7 +399,7 @@ function date_update() {
 }
 
 // ----- Ajaxにより非同期でサーバへリクエスト -----
-function xhr(send_data, send_mode) { // POSTする内容, リクエストの種類
+function xhr(send_data, send_mode, param1) { // POSTする内容, リクエストの種類
   const req = new XMLHttpRequest();
   req.open('POST', SEND_SERVER, true);
   req.setRequestHeader('Pragma', 'no-cache'); // キャッシュを無効にするためのヘッダ指定
@@ -417,6 +427,9 @@ function xhr(send_data, send_mode) { // POSTする内容, リクエストの種�
             } else {
               console.log('%cREQ_ERROR', 'color: red;');
             }
+            break;
+          case JOINT_MES:
+            get_room_data_plus(param1, resData);
             break;
         }
       } else {
@@ -460,11 +473,7 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
       const descr = document.getElementById('descr'); // Description部分
 
       if (str) { // サーバからのレスポンスがあるかどうか
-        if (!option1) {
-          var r_list = JSON.parse(str);
-        } else {
-          r_list = str;
-        }
+        var r_list = JSON.parse(str);
         // console.log(r_list);
 
         /*
@@ -475,8 +484,10 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
                   db_connect(DB_N, OBJ_STORE_LAST, 'last', up_info["room_key"], up_info["up_date"], up_info["notice_flag"], up_info["room_name"], up_info["thread"], r_list["descr"]);
                 }
         */
+       // 現在のthreadを変数に代入
+       now_thread = r_list["thread"];
+
        // 表示部分更新
-       if (option1) r_list["room_name"] = r_list["room_key"];
        room_show = r_list["room_name"]; // 変数更新
        descrip_text = r_list["descr"];
         descr.innerHTML = r_list["descr"]; // Descriptionの更新
@@ -487,10 +498,6 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
             var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
             var out_data = "<li id=list> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
             list_put = out_data + list_put;
-          }
-          // IndexedDBが使用できる場合、Serverへのアクセス数を減らすためにDBに入れておく
-          if (support_indexedDB < 1) {
-            db_connect(DB_N2, OBJ_STORE_MESS, 'mess', r_list["room_name"], r_list["l_date"], r_list["thread"], r_list["descr"], r_list["object"]);
           }
         } else {
           list_put = "<li id=list2><br>メッセージがまだないようだ..<br>　</li>";
@@ -532,20 +539,23 @@ function update_disp_db(up_info, i, r_list) {
     if (up_info["up_date"] !== r_list[i]["l_date"]) {
       // 最終更新時が古い場合
       if (now_room === r_list[i]["dir_name"]) {
-        // RoomがアクティブになったらIndexedDB更新
-        db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
-        get_room_data(); // アクティブなRoomのメッセージ取得
         temp_id.classList.add("on_butt"); // ActiveRoom
         temp_id.classList.remove("new_mes"); // 通知削除
+        favicon(0); // 通知オフ
+        get_room_data(); // アクティブなRoomのメッセージ取得
+        // RoomがアクティブになったらIndexedDB更新
+        db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
       } else if (up_info["notice_flag"] === 0) {
         // 通知フラグが1以外の時通知, 最終更新時は更新しない
-        db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], up_info["up_date"], 1, r_list[i]["room_name"], r_list[i]["thread"]);
-        notice(); // 通知する
         temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
+        favicon(1); // 通知オン
+        notice(); // 通知する
+        db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], up_info["up_date"], 1, r_list[i]["room_name"], r_list[i]["thread"]);
       } else { // 通知したが、未読
         temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
+        favicon(1); // 通知オン
       }
     } else { // 更新なし
       // console.log(g_info["room_key"]);
@@ -557,8 +567,8 @@ function update_disp_db(up_info, i, r_list) {
       } else {
         temp_id.classList.remove("on_butt"); // PassiveRoom
       }
-      db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
       temp_id.classList.remove("new_mes"); // 通知削除
+      db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
     }
   } else {
     // 初回読み込み
@@ -567,6 +577,7 @@ function update_disp_db(up_info, i, r_list) {
     } else {
       temp_id.classList.remove("on_butt"); // PassiveRoom
     }
+    favicon(0); // 通知オフ
     db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 3, r_list[i]["room_name"], r_list[i]["thread"]);
   }
 }
@@ -721,10 +732,35 @@ function keydown() {
 }
 
 // ----- 下からのスクロール量 -----
-// 参考: https://qiita.com/hoto17296/items/be4c1362647dd241905d
-function getScrollBottom() {
+function from_Bottom() {
   var body = window.document.body;
   var html = window.document.documentElement;
   var scrollTop = body.scrollTop || html.scrollTop;
   return html.scrollHeight - html.clientHeight - scrollTop;
+}
+
+// ----- Theme変更 -----
+function change_theme(no) {
+  const style_c = document.getElementById('style_c');  
+  switch (no) {
+    case '1':
+      style_c.innerHTML = "";
+      break;
+    case '2':
+      style_c.innerHTML = "#list, #list2 {background: #000; color: #fff;} #body{background: #111;} #R_side{color: #BBB;} #R_side,#L_side{background: #000;}";
+      break;
+    case '3':
+      style_c.innerHTML = "#list, #list2 {background: #fff!important; color: #111!important; border-top: none;} #body{background: #BBB;} #R_side{color: #111;} #R_side,#L_side{background: #eee;} #descr_tit{background: #BBB!important; color: #222;}";
+      break;
+  }
+}
+
+// ----- ファビコンの変更 -----
+function favicon(type) {
+  const fav = document.getElementById('favicon');
+  if (type === 1) { // 通知
+    fav.href = "fav32_2.png";
+  } else { // デフォルト
+    fav.href = "fav32.png";
+  }
 }
