@@ -10,8 +10,8 @@ GET ?room= xxx の指定により、開くページを指定できます
 const XHR_TIMEOUT = 1000 * 5; // サーバリクエストのタイムアウト時間(ms)
 const MAINLOOP_TIMER = 1000 * 5; // メイン関数の実行間隔の時間 (ms)
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
-// const SEND_SERVER = 'chat_v1.5.php';
-const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
+const SEND_SERVER = 'chat_v1.5.php';
+// const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
 
 // phpへのリクエスト種類
@@ -22,6 +22,7 @@ const SET_DIR = 'set'; // メッセージのディレクトリ(Room)の作成・
 
 // IndexedDBのデータベース名
 const DB_N = 'BeChat_DB';
+const DB_N2 = 'BeChat_DB2';
 // オブジェストア名
 const OBJ_STORE_LAST = 'ckb_last';
 const OBJ_STORE_MESS = 'ckb_mess';
@@ -48,8 +49,7 @@ window.onload = function Begin() {
   ck_setting(); // Localstrage内の設定情報確認
   ck_user(); // ユーザー名確認
   c_page(1); // 表示更新
-  get_room_data(); // アクティブなRoomのメッセージ取得
-  main(); // main()に渡す
+  main(1); // main()に処理を渡す
 }
 
 // ----- メイン処理 -----
@@ -90,19 +90,20 @@ function db_connect(base_name, store_name, sw, param1, param2, param3, param4, p
   const GET_LAST = 'g_last';
   const GET_MESS = 'g_mess';
   if (support_indexedDB < 1) { // IndexedDBのサポート状態
-    var open_db = indexedDB.open(base_name);
+    let base_var = 1;
+    var open_db = indexedDB.open(base_name, base_var);
 
     open_db.onupgradeneeded = function (event) {
       var store = event.target.result;
       store.createObjectStore(store_name, {
-        keyPath: 'room_key'
+        keyPath: key
       });
       // console.log('DB Upgrade');
     }
     open_db.onsuccess = function (event) {
       // console.log('DB Connect: ' + base_name);
       var db_data = event.target.result;
-      var trans = db_data.transaction(store_name, 'readwrite');
+      var trans = db_data.transaction(store_name, "readwrite");
       var obj = trans.objectStore(store_name);
       if (sw === UPDATE_LAST) {
         // Room名, 最終更新時, 通知フラグ, 表示名, スレッド数, 概要
@@ -120,13 +121,13 @@ function db_connect(base_name, store_name, sw, param1, param2, param3, param4, p
           // console.log('Push: ' + event.target.result);
         }
       } else if (sw === UPDATE_MESS) {
-        // Room名, 最終更新時, データ種類, ユーザー名, データ
+        // Room名, 最終更新時, thread, descr, データ
         var put_data = {
           room_key: param1,
           up_date: param2,
-          type: param3,
-          user: param4,
-          contents: param5
+          thread: param3,
+          descr: param4,
+          object: param5
         };
         var push = obj.put(put_data);
       } else if (sw === GET_LAST) {
@@ -134,7 +135,16 @@ function db_connect(base_name, store_name, sw, param1, param2, param3, param4, p
         get_data.onsuccess = function (ev2) {
           update_disp_db(ev2.target.result, param2, param3);
         }
-      } else if (sw === GET_MESS) {}
+      } else if (sw === GET_MESS) { // アクティブなRoomの更新
+        var get_data = obj.get(param1);
+        get_data.onsuccess = function (ev2) {
+          if (ev2.target.result) {
+            update_disp(2, ev2.target.result, 1011);
+          } else {
+            main(1);
+          }
+        }
+      }
 
       trans.oncomplete = function () {
         // console.log('Trasaction comp');
@@ -333,7 +343,12 @@ function b_send() {
 // ----- アクティブなRoomを変更
 function change_room(room) {
   now_room = room;
-  main(1);
+  if (support_indexedDB < 1) { // IndexedDBが使用できるか
+    // DBから表示部分のデータを更新
+    db_connect(DB_N2, OBJ_STORE_MESS, 'g_mess', room_show);
+  } else {
+    ck_room_data(); // アクティブなRoomのメッセージ取得
+  }
 }
 
 // ----- 文字エスケープ -----
@@ -412,7 +427,7 @@ function xhr(send_data, send_mode) { // POSTする内容, リクエストの種�
 }
 
 // ----- データ取得後の処理 -----
-function update_disp(sw, str) { // 更新の種類, 更新データ
+function update_disp(sw, str, option1) { // 更新の種類, 更新データ
 
   switch (sw) {
     case 1: // Roomリスト更新
@@ -445,7 +460,11 @@ function update_disp(sw, str) { // 更新の種類, 更新データ
       const descr = document.getElementById('descr'); // Description部分
 
       if (str) { // サーバからのレスポンスがあるかどうか
-        var r_list = JSON.parse(str);
+        if (!option1) {
+          var r_list = JSON.parse(str);
+        } else {
+          r_list = str;
+        }
         // console.log(r_list);
 
         /*
@@ -456,6 +475,8 @@ function update_disp(sw, str) { // 更新の種類, 更新データ
                   db_connect(DB_N, OBJ_STORE_LAST, 'last', up_info["room_key"], up_info["up_date"], up_info["notice_flag"], up_info["room_name"], up_info["thread"], r_list["descr"]);
                 }
         */
+       // 表示部分更新
+       if (option1) r_list["room_name"] = r_list["room_key"];
        room_show = r_list["room_name"]; // 変数更新
        descrip_text = r_list["descr"];
         descr.innerHTML = r_list["descr"]; // Descriptionの更新
@@ -466,6 +487,10 @@ function update_disp(sw, str) { // 更新の種類, 更新データ
             var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
             var out_data = "<li id=list> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
             list_put = out_data + list_put;
+          }
+          // IndexedDBが使用できる場合、Serverへのアクセス数を減らすためにDBに入れておく
+          if (support_indexedDB < 1) {
+            db_connect(DB_N2, OBJ_STORE_MESS, 'mess', r_list["room_name"], r_list["l_date"], r_list["thread"], r_list["descr"], r_list["object"]);
           }
         } else {
           list_put = "<li id=list2><br>メッセージがまだないようだ..<br>　</li>";
@@ -608,19 +633,19 @@ function c_page(no) {
     setting.style.display = "block";
     first_sc.style.display = "none";
     edit_room.style.display = "none";
-    load_sc.style.display = "none";
+    // load_sc.style.display = "none";
       break;
     case 1: // 通常画面
       setting.style.display = "none";
       first_sc.style.display = "none";
       edit_room.style.display = "none";
-      load_sc.style.display = "none";
+      // load_sc.style.display = "none";
       break;
     case 2: // 設定画面
     setting.style.display = "none";
     first_sc.style.display = "none";
     edit_room.style.display = "block";
-    load_sc.style.display = "none";
+    // load_sc.style.display = "none";
       break;
     case 3: // ロード画面
     setting.style.display = "none";
