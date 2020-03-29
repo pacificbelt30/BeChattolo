@@ -25,23 +25,37 @@ header h1 {
   border-top: solid 2px #BBB;
 }
 
+#L_side::-webkit-scrollbar, #R_side::-webkit-scrollbar {
+  width: 7px;
+}
+#L_side::-webkit-scrollbar-thumb, #R_side::-webkit-scrollbar-thumb {
+  background: #666;
+}
 #L_side {
   padding: 10px 0;
   background: #1B1B1B;
   width: 150px;
-  height: 100%;
+  height: calc(100% - 20px - 42px);
   position: fixed;
   top: 42px;
   left: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -ms-overflow-style:none;
+  scrollbar-width: thin;
 }
 #R_side {
   padding: 10px;
   background: #1B1B1B;
   width: 150px;
-  height: 100%;
+  height: calc(100% - 20px - 42px);
   position: fixed;
   top: 42px;
   right: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -ms-overflow-style:none;
+  scrollbar-width: thin;
 }
 .L_side button:first-child {
   margin-top: 60px;
@@ -82,14 +96,15 @@ header h1 {
   background: #555;
 } */
 
-#R_side h4 {
-  border-radius: 2px;
+#R_side #descr_tit {
+  border-radius: 1px;
   margin-bottom: 0;
   margin-top: 5px;
   padding: 5px;
   background: #333340;
   /* cursor: pointer; */
   cursor: default;
+  width: 100%;
 }
 .fa-edit:before {
   font-style: normal;
@@ -140,6 +155,11 @@ h1 {
   border-left: solid 5px #00a0e9;
   word-break: break-all;
   font-family: 'Segoe UI',SegoeUI,"Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+#list2 {
+  color: #666;
+  border-left: solid 5px #111;
 }
 
 #user {
@@ -358,6 +378,7 @@ h1 {
   /* background: #1B1B1B; */
   color: #aaa;
   text-align: center;
+  padding: 10px 0;
 }
 
 #enter_setting {
