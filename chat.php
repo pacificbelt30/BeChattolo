@@ -117,11 +117,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
         AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), false);
         AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), true);
+        autoSplit(esc($_POST['room'],1)); // 自動分割
       break;
       case 'mes': // メッセージ取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
         if (isset($_POST['thread'])) { GetMes(esc($_POST['room'],1), esc($_POST['thread'],0)); } else {
-          GetMes(esc($_POST['room'],1), false); }
+          GetMes(esc($_POST['room'],1), -1); }
       break;
       case 'dir': // ディレクトリ一覧&更新日時取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
@@ -136,16 +137,14 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
     }
   }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') { // GETではReadのみ
+  header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
   if(isset($_GET['room'])) {
     if (isset($_GET['thread'])) {
-      header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
       GetMes(esc($_GET['room'],1), esc($_GET['thread'],0));
     } else {
-      header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-      GetMes(esc($_GET['room'],1), 0);
+      GetMes(esc($_GET['room'],1), -1);
     }
   } elseif (isset($_GET['dir'])) {
-    header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
     echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
   }
 }
@@ -206,7 +205,7 @@ function AddMes($room, $name, $type, $contents, $mode_back) { // $mode_back=true
 
 // ----- メッセージを取得 -----
 function GetMes($room, $thread) { // $threadは分割されたスレッド番号(オプション) -> ない場合は最新のものを取得
-  if($thread && is_int($thread)) {
+  if($thread >= 0) {
     if(file_exists("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE)) {
       echo file_get_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE);
     }
@@ -362,16 +361,18 @@ function latestMes($room, $mode_back) { // $mode_back = true の時、バック�
 function autoSplit($room) {
   $l_file = latestMes($room, false);
   if(filesize($l_file[0]) >= SPLIT_SIZE) {
-    $read_json = mb_convert_encoding($l_file[0], 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
-    $json_main = json_decode($read_json , true);
+    $read_json = mb_convert_encoding(file_get_contents($l_file[0]), 'UTF8', 'ASCII,JIS,UTF-8,EUC-JP,SJIS-WIN');
+    $json_main = json_decode( $read_json, true); // JSONファイルを連想配列でデコード
     $n_format = array ( // 設定などを前のthreadから引き継ぐ
       'room_name' => $json_main["room_name"],
       'l_date' => date('Y-m-d H:i:s'),
       'acc' => $json_main["acc"],
-      'onject' => ''
+      'object' => array(),
+      'descr' => $json_main["descr"],
+      'thread' => $l_file[1]+1
     );
-    file_put_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, $n_format);
-    file_put_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE2_NAME.($l_file[1]+1).SAVEFILE2_EXTE, $n_format);
+    file_put_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, json_encode($n_format, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
+    file_put_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE2_NAME.($l_file[1]+1).SAVEFILE2_EXTE, json_encode($n_format, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
   }
 }
 ?>
