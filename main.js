@@ -176,53 +176,30 @@ function ck_room_data() {
 // ----- Roomデータ取得 -----
 function get_room_data() {
   xhr('req=' + GET_MES + '&room=' + now_room, GET_MES);
+  get_room_data_plus(now_thread); // 追加読み込み
 }
 
 // ----- 追加読み込み判定 -----
-function get_room_data_plus(thr, str) {
+function get_room_data_plus(thr, r_list) {
+
   const CONTTT = document.getElementById('conttt'); // メッセージ内容の表示部分
-  if (str) {
-    var r_list = JSON.parse(str);
-    if (r_list["object"] && r_list["object"].length > 0) {
-      var list_put = ''; // 出力用の変数
-      for (var i = 0; i < r_list["object"].length; i++) {
-        var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
-        var out_data = "<li id=list> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
-        list_put = out_data + list_put;
-      }
-      CONTTT.innerHTML = CONTTT.innerHTML+list_put;
+
+  if (r_list && r_list["object"] && r_list["object"].length > 0) {
+    var list_put = ''; // 出力用の変数
+    for (var i = 0; i < r_list["object"].length; i++) {
+      var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
+      var out_data = "<li id=list> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
+      list_put = out_data + list_put;
     }
+    CONTTT.innerHTML = CONTTT.innerHTML+list_put;
   }
-  // 追加読み込み
-  var b_height = from_Bottom(); // ページ下部からのpx
-  // console.log(b_height + ' ' + thr);
-  if (thr > 0 && b_height < READ_AHEAD || thr > 0 && now_thread === thr) {
-    console.log("Load: Old Thread");
-    xhr('req='+GET_MES+'&room='+now_room+'&thread='+(thr-1), JOINT_MES, thr-1);
-  } else if (thr > 0) {
-    ready_getDataNo = thr;
-    ready_getDataPlus = true; // 追加読み込みの実行OK
-  } else {
-    ready_getDataPlus = false; // 追加読み込みの実行ブロック
-  }
-}
 
-// ----- スクロールイベント+次の再描画でアニメーションを更新するときに実行 -----
-document.addEventListener('scroll', getRoomData_exec, {passive: true}); // スクロールイベント取得
-var ready_animFrame = false;
-var ready_getDataPlus = true; // 追加読み込み
-var ready_getDataNo = 0; // 既に読み込んだthread数
-function getRoomData_exec() {
-  if (!ready_animFrame && ready_getDataPlus && ready_getDataNo>0) {
-    requestAnimationFrame(function() {
-      ready_animFrame = false;
-      ready_getDataPlus = false; // 追加読み込みの実行ブロック
-      get_room_data_plus(ready_getDataNo); // 追加読み込み
-    });
-    ready_animFrame = true;
-  }
+    // 追加読み込み
+    var b_height = from_Bottom(); // ページ下部からのpx
+    if (thr > 0 && b_height < READ_AHEAD) {
+      xhr('req='+GET_MES+'&room='+now_room+'&thread='+(thr-1), JOINT_MES, thr-1);
+    }
 }
-
 
 function user_submit() { // ユーザー名入力画面
 var user_name = document.getElementById('user_name');
@@ -270,7 +247,6 @@ function room_editx(mode) { // 0:Cancel 1:Edit 2:Create 3:exec
       } else if (room_edit_mode === 2) {
         xhr('req='+SET_DIR+'&mode=2&name='+localStorage.getItem("userName")+'&room='+now_room+'&new_name='+room_name.value+'&new_descr='+room_desk_text.value, SET_DIR);
       }
-      main(1);
       edit_room.style.display = "none";
       break;
     default:
@@ -441,7 +417,6 @@ function xhr(send_data, send_mode, param1) { // POSTする内容, リクエス�
             break;
           case GET_MES:
             update_disp(2, resData);
-            get_room_data_plus(now_thread); // 追加読み込み
             break;
           case GET_DIR:
             update_disp(1, resData);
@@ -454,7 +429,7 @@ function xhr(send_data, send_mode, param1) { // POSTする内容, リクエス�
             }
             break;
           case JOINT_MES:
-            get_room_data_plus(param1, resData); // 追加読み込み
+            get_room_data_plus(param1, resData);
             break;
         }
       } else {
@@ -515,9 +490,7 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
        // 表示部分更新
        room_show = r_list["room_name"]; // 変数更新
        descrip_text = r_list["descr"];
-       if (r_list["descr"]) {
-          descr.innerHTML = r_list["descr"].replace(/\r?\n/g, '<br>'); // 改行を置換 + Descriptionの更新
-        }
+        descr.innerHTML = r_list["descr"]; // Descriptionの更新
         // メッセージ部分更
         var list_put = ''; // 出力用の変数
         if (r_list["object"] && r_list["object"].length > 0) {
@@ -527,12 +500,12 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
             list_put = out_data + list_put;
           }
         } else {
-          list_put = "<li id=list2>Info: A new thread has been created</li>";
+          list_put = "<li id=list2><br>メッセージがまだないようだ..<br>　</li>";
         }
         CONTTT.innerHTML = list_put;
       } else {
         descr.innerHTML = '';
-        CONTTT.innerHTML = "<li id=list2>Info: A new thread has been created</li>";
+        CONTTT.innerHTML = "<li id=list2><br>メッセージがまだないようだ..<br>　</li>";
       }
 
       break;
@@ -622,21 +595,18 @@ function update_disp_arr(i, r_list) {
           l_date: r_list[i]["l_date"],
           notice_flag: 0
         }
-        favicon(0); // 通知オフ
         get_room_data(); // アクティブなRoomのメッセージ取得
         temp_id.classList.add("on_butt"); // ActiveRoom
         temp_id.classList.remove("new_mes"); // 通知削除
       } else if (sub_DB[r_list[i]["dir_name"]]["notice_flag"] === 0) {
         // 通知フラグが1以外の時通知、最終更新時は更新しない
         sub_DB[r_list[i]["dir_name"]]["notice_flag"] = 1; // 通知フラグの更新
+        notice(); // 通知する
         temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
-        favicon(1); // 通知オン
-        notice(); // 通知する
       } else { // 通知したが、未読
         temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
-        favicon(1); // 通知オン
       }
     } else {
       // 更新なし
