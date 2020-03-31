@@ -11,7 +11,7 @@ const XHR_TIMEOUT = 1000 * 5; // サーバリクエストのタイムアウト�
 const MAINLOOP_TIMER = 1000 * 5; // メイン関数の実行間隔の時間 (ms)
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
-const SEND_SERVER = 'chat_v1.5.php';
+const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
 
@@ -21,8 +21,12 @@ const GET_MES = 'mes'; // メッセージ取得
 const GET_DIR = 'dir'; // メッセージのディレクトリ一覧取得
 const SET_DIR = 'set'; // メッセージのディレクトリ(Room)の作成・編集
 const DEL_DIR = 'del'; // ディレクトリ(Room)へのアクセス不可にする
-// そのほか
 const JOINT_MES = 'joint' // メッセージの結合
+
+// メッセージの種類
+const MES_TYPE_PLA = 'plain'; // 通常のテキスト
+const MES_TYPE_IMG = 'image'; // 画像リンク
+const MES_TYPE_IFR = 'iframe'; // 埋め込みリンク
 
 // IndexedDBのデータベース名
 const DB_N = 'BeChat_DB';
@@ -50,6 +54,7 @@ var notice_set = 1; // 通知の設定
 var notice2_set = 0; // 特殊な通知の設定
 var theme_set = 1; // Themeの設定
 var sendKey_set = 1; // 送信ショートカットの設定
+var load_media_set = 1; // 埋め込みメディアの読み込み
 
 var sp_mode = false; // スマホモード
 
@@ -195,14 +200,7 @@ function get_room_data_plus(thr, str) {
   if (str) {
     var r_list = JSON.parse(str);
     if (r_list["object"] && r_list["object"].length > 0) {
-      var list_put = ''; // 出力用の変数
-      for (var i = 0; i < r_list["object"].length; i++) {
-        var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
-        content = AutoLink(content); // リンクをAnchorに変換
-        var out_data = "<li id=list><span id=u_icon>" + r_list["object"][i]["user"] + "</span><span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
-        list_put = out_data + list_put;
-      }
-      CONTTT.innerHTML = CONTTT.innerHTML + list_put;
+      CONTTT.innerHTML = CONTTT.innerHTML + parse_message(r_list); // メッセージを追加します
     }
   }
   // 追加読み込み
@@ -343,6 +341,16 @@ function sendkey_setting() {
   localStorage.setItem('sendKey', send_key.value);
 }
 
+function loadem_setting() { // 埋め込みメディアの表示
+  const loadmedia = document.getElementById('loadmedia');
+  if (loadmedia.checked) {
+    localStorage.setItem('loadEm', "1");
+  } else {
+    localStorage.setItem('loadEm', "0");
+  }
+  get_room_data(); // メッセージの再読み込みが必要。
+}
+
 function e_setting() {
   const setting = document.getElementById('setting');
   const user_name2 = document.getElementById('user_name2');
@@ -352,6 +360,7 @@ function e_setting() {
   const send_key = document.getElementById('send_key');
   const L_side = document.getElementById('L_side');
   const create_room = document.getElementById('create_room');
+  const loadmedia = document.getElementById('loadmedia');
 
   if (setting.style.display === "none") {
     if (sp_mode) {
@@ -367,6 +376,11 @@ function e_setting() {
       notification_set.checked = true;
     } else {
       notification_set.checked = false;
+    }
+    if (localStorage.getItem("loadEm") === '1') { // メディアの表示
+      loadmedia.checked = true;
+    } else {
+      loadmedia.checked = false;
     }
     special_option.value = localStorage.getItem("Notice2");
     theme.value = localStorage.getItem("theme");
@@ -404,18 +418,33 @@ function notice() {
 // ----- メッセージを送信 -----
 function b_send() {
   const div_top = document.getElementById('chat_content');
+  const chat_url = document.getElementById('chat_url');
   var v_send = esc(div_top.value);
-  var type = 'plain';
+  var v_send_media = esc(chat_url.value);
   if (v_send.length >= MAX_SEND_SIZE || v_send.length <= 0) {
     console.log('%cPOST_SIZE %c> OVER <', 'color: #fff;', 'color: red;'); // データサイズが大きすぎる場合は拒否
     return 'B';
   } else {
+    var type = MES_TYPE_PLA; // デフォルトは通常テキスト
+    if (chat_url.value) { // 送信オプションがついている場合
+      if (ex_menu_checked === 1) { // imageオプション
+        type = MES_TYPE_IMG;
+      } else if (ex_menu_checked === 2) { // iframeオプション
+        type = MES_TYPE_IFR;
+      }
+    }
     console.log('%cPOST_DATA %c> ' + v_send, 'color: orange;', 'color: #bbb;');
+    if (type === MES_TYPE_PLA) { // 通常のテキストデータ
+      xhr('req=' + ADD_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send);
+    } else { // 通常のテキスト以外
+      console.log(v_send_media);
+      xhr('req=' + ADD_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send + '&media=' + v_send_media);
+    }
     div_top.value = '';
-    xhr('req=' + ADD_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send);
+    chat_url.value = '';
   }
   ex_b_send(0, true); // 送信オプションを閉じる
-  ck_ex_content('',0); // メッセージ入力欄のサイズ
+  ck_ex_content('', 0); // メッセージ入力欄のサイズ
   ck_room_data(); // アクティブなRoomのメッセージ取得
 }
 
@@ -559,6 +588,7 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
         // 表示部分更新
         room_show = r_list["room_name"]; // 変数更新
         room_top_name.innerHTML = ' / ' + r_list["room_name"]; // 表示更新
+        document.title = r_list["room_name"] + ' / Beちゃっとぉ'; // title更新
 
         descrip_text = r_list["descr"];
         if (r_list["descr"]) {
@@ -567,12 +597,7 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
         // メッセージ部分更
         var list_put = ''; // 出力用の変数
         if (r_list["object"] && r_list["object"].length > 0) {
-          for (var i = 0; i < r_list["object"].length; i++) {
-            var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
-            content = AutoLink(content); // リンクをAnchorに変換
-            var out_data = "<li id=list><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
-            list_put = out_data + list_put;
-          }
+          list_put = parse_message(r_list); // list_putに表示用に直したデータを代入します
         } else {
           list_put = "<li id=list2>Info: A new thread has been created</li>";
         }
@@ -584,6 +609,32 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
 
       break;
   }
+}
+
+// ----- メッセージの表示部分を取得データから生成する -----
+// r_listは配列で渡す必要があります
+function parse_message(r_list) {
+  var list_put = ''; // 出力用の変数
+  for (var i = 0; i < r_list["object"].length; i++) {
+    var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
+    content = AutoLink(content); // リンクをAnchorに変換
+    if (r_list["object"][i]['type'] !== 'plain' && r_list["object"][i]["media"]) {
+      if (localStorage.getItem("loadEm") === '1') { // メディアを表示するか
+        if (r_list["object"][i]['type'] === 'image') { // 画像
+          var out_data = "<li id=list class='li li_img li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><img src='" + r_list["object"][i]['media'] + "' alt class='media media_img'>";
+        } else if (r_list["object"][i]['type'] === 'iframe') { // iframe
+          var out_data = "<li id=list class='li li_ifr li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><iframe src='" + r_list["object"][i]['media'] + "' frameborder=0 class='media media_ifr'></iframe>";
+        }
+      } else {
+        var out_data = "<li id=list class='li li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br>Media: <a href='" + r_list["object"][i]['media'] + "' target='_blank' rel='noopener'>" + r_list["object"][i]['media'] + "</a>";
+      }
+    } else {
+      var out_data = "<li id=list class='li li_pla'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
+    }
+    list_put = out_data + list_put;
+  }
+
+  return list_put;
 }
 
 // ----- RoomListのボタン再生成 -----
@@ -615,7 +666,11 @@ function update_disp_db(up_info, i, r_list) {
       if (now_room === r_list[i]["dir_name"]) {
         temp_id.classList.add("on_butt"); // ActiveRoom
         temp_id.classList.remove("new_mes"); // 通知削除
-        favicon(0); // 通知オフ
+        if (document.hidden) { // タブがパッシブ
+          favicon(1); // 通知オン
+        } else {
+          favicon(0); // 通知オフ
+        }
         get_room_data(); // アクティブなRoomのメッセージ取得
         // RoomがアクティブになったらIndexedDB更新
         db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
@@ -642,6 +697,7 @@ function update_disp_db(up_info, i, r_list) {
         temp_id.classList.remove("on_butt"); // PassiveRoom
       }
       temp_id.classList.remove("new_mes"); // 通知削除
+      favicon(0); // 通知オフ
       db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
     }
   } else {
@@ -766,7 +822,7 @@ function AutoLink(str) {
   // var regexp_url = /((h?)(ttps?:\/\/[a-zA-Z0-9.\-_@:/~?%&;=+#',()*!]+))/g;
   var regexp_url = /((h?)(ttps?:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+))/g;
   var regexp_makeLink = function (all, url, h, href) {
-    return '<a href="h' + href + '"  target="_blank" rel="noopener">' + url + '</a>';
+    return '<a href="' + href + '"  target="_blank" rel="noopener">' + url + '</a>';
   }
   return str.replace(regexp_url, regexp_makeLink);
 }
@@ -795,6 +851,10 @@ function ck_setting() {
     localStorage.setItem("sendKey", sendKey_set);
   } else {
     sendKey_set = localStorage.getItem("sendKey");
+  }
+
+  if (!localStorage.getItem("loadEm")) { // 埋め込みメディアの読み込み
+    localStorage.setItem("loadEm", load_media_set);
   }
 }
 
@@ -905,7 +965,7 @@ function ex_b_send(option1, option2) { // 動作種類, 特定の動作をする
   const ex_menu2 = document.getElementById('ex_menu2');
   const ex_menu3 = document.getElementById('ex_menu3');
   if (option1 === 0) { // メニューの展開
-    if (!ex_menu_disp && option2!==true) {
+    if (!ex_menu_disp && option2 !== true) {
       ex_menu1.style.display = "block";
       ex_menu2.style.display = "block";
       ex_menu3.style.display = "block";
@@ -933,7 +993,7 @@ function ex_b_send(option1, option2) { // 動作種類, 特定の動作をする
     ex_menu1.style.color = "orange";
     ex_menu2.style.color = "#ccc";
     chat_url.placeholder = "Image URL";
-  } else if(ex_menu_checked === 2){
+  } else if (ex_menu_checked === 2) {
     ex_menu1.style.color = "#ccc";
     ex_menu2.style.color = "orange";
     chat_url.placeholder = "Embed URL/Link";
@@ -959,26 +1019,27 @@ window.addEventListener("resize", function () { // スクロールイベント�
 // うまくいかないb
 var chat_content_offset = chat_content.scrollHeight;
 var chat_content2;
-var chat_content_tgg=0;
+var chat_content_tgg = 0;
 chat_content.addEventListener("input", function con_ex_content() {
   ck_ex_content(0);
 }, true);
+
 function ck_ex_content(op) {
   const chat_content = document.getElementById('chat_content');
   const ex_menu_gr = document.getElementById('ex_menu_gr');
-    // console.log(chat_content.scrollHeight+' '+chat_content.offsetHeight+' '+chat_content_offset+' '+chat_content2);
-  if (op===1 || chat_content.scrollHeight > chat_content_offset && chat_content_tgg === 0) {
-    chat_content.style.height =  "54px";
+  // console.log(chat_content.scrollHeight+' '+chat_content.offsetHeight+' '+chat_content_offset+' '+chat_content2);
+  if (op === 1 || chat_content.scrollHeight > chat_content_offset && chat_content_tgg === 0) {
+    chat_content.style.height = "54px";
     ex_menu_gr.style.top = "32px";
     chat_content2 = chat_content.offsetHeight;
     chat_content_tgg = 1;
     ck_ex_content2(); // メインコンテンツの位置変更
   } else if (chat_content.scrollHeight < chat_content2) {
-    chat_content.style.height =  "22px";
+    chat_content.style.height = "22px";
     ex_menu_gr.style.top = "0";
     chat_content_tgg = 0;
     if (chat_content.scrollHeight > chat_content_offset) {
-      chat_content.style.height =  "54px";
+      chat_content.style.height = "54px";
       ex_menu_gr.style.top = "32px";
       chat_content2 = chat_content.offsetHeight;
       chat_content_tgg = 1;
@@ -986,6 +1047,7 @@ function ck_ex_content(op) {
     ck_ex_content2(); // メインコンテンツの位置変更
   }
 }
+
 function ck_ex_content2() { // メインコンテンツの位置変更
   const main_contents = document.getElementById('main_contents');
   var top_default = 100;
@@ -995,5 +1057,5 @@ function ck_ex_content2() { // メインコンテンツの位置変更
   if (chat_content_tgg) {
     top_default += 32;
   }
-  main_contents.style.top = top_default+"px";
+  main_contents.style.top = top_default + "px";
 }

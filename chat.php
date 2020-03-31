@@ -126,8 +126,13 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
     switch ($_POST['req']) {
       case 'add': // メッセージ追加
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-        AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), false);
-        AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), true);
+        if (isset($_POST['media'])) {
+          AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), esc($_POST['media'], 0) ,false);
+          AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), esc($_POST['media'], 0) ,true);
+        } else {
+          AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), false, false);
+          AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), false, true);
+        }
         autoSplit(esc($_POST['room'],1)); // 自動分割
       break;
       case 'mes': // メッセージ取得
@@ -165,7 +170,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
 exit;
 
 // ----- メッセージを追加 -----
-function AddMes($room, $name, $type, $contents, $mode_back) { // $mode_back=trueのとき、バックアップとして保存
+function AddMes($room, $name, $type, $contents, $media,$mode_back) { // $mode_back=trueのとき、バックアップとして保存
   $save_d = "./".BBS_FOLDER."/".$room."/"; // 保存ディレクトリ
   if (!$name) $name = 'Anonym'; // 名無しの方は Anonym
   if (file_exists($save_d)) { // ディレクトリ確認
@@ -201,6 +206,9 @@ function AddMes($room, $name, $type, $contents, $mode_back) { // $mode_back=true
         'contents' => $contents,
         'date' => date('Y-m-d H:i:s')
       );
+      if (isset($media)) {
+        $save_data['media'] = $media;
+      }
       if ($mode_back) {
         $save_data['ip'] = $_SERVER["REMOTE_ADDR"];
       }
