@@ -1,12 +1,24 @@
 <!DOCTYPE html>
 
 <head>
+  <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
   <meta charset="utf-8">
+  <!-- <meta charset="SJIS"> -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="shortcut icon"
-    href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAgMAAAAP2OW3AAAADFBMVEUBoOn/pQG7u7s8PDw11wO5AAAADElEQVQIHWNoYCgAAAH0APEYyyxRAAAAAElFTkSuQmCC">
+  <meta name="apple-mobile-web-app-title" content="Ｂｅちゃっとぉ">
+  <link rel="shortcut icon" href="fav32.png" id="favicon" type="image/png">
   <title>Beちゃっとぉ</title>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-122638281-2"></script>
+  <link rel="preload" href="style.css?ver080" as="style">
+  <link rel="preload" href="m_notice.min.js" as="script">
+  <link rel="preload" href="fa-solid.woff2" as="font" crossorigin="anonymous">
+
+  <link rel="stylesheet" type="text/css" href="style.css?ver080">
+
+  <!-- メインのJS -->
+  <script charset="utf-8" src="main.js" defer></script>
+  <script charset="utf-8" src="//cdn.jsdelivr.net/npm/push.js@1/bin/push.min.js" defer></script>
+  <script charset="utf-8" src="m_notice.min.js" defer></script>
+  <script async src="//www.googletagmanager.com/gtag/js?id=UA-122638281-2"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
 
@@ -16,15 +28,6 @@
     gtag('js', new Date());
     gtag('config', 'UA-122638281-2');
   </script>
-  <link rel="stylesheet" type="text/css" href="style.css?ver070">
-
-  <!-- CDN jsdeliverが開発時に一番早かったので.. -->
-  <!-- <script type="text/javascript" src="https://pushjs.org/scripts/push.min.js" defer></script> -->
-  <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/push.js/1.0.12/push.min.js" defer></script> -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/push.js@1/bin/push.min.js" defer></script>
-  <!-- メインのJS -->
-  <script type="text/javascript" src="main.js?ver070" defer></script>
-  <script type="text/javascript" src="m_notice.min.js" defer></script>
 </head>
 
 <body id="body">
@@ -33,73 +36,90 @@
     <!-- <h2 style="font-size: 0.5em;" id="update_notice">アップデートがあります. リロードしてください.</h2> -->
     <!-- <h1 style="font-size: 1em;">Bさんの<ruby><rb>非同期劘蔿<rb><rp>(</rp><rt>Beeeeeee------</rt><rp>)</rp></ruby>リアルタイムちゃっとぉ</h1> -->
     <h1 style="font-size: 1em;">Beちゃっとぉ<span id="room_top_name"></span></h1>
+    <!-- <h1 style="font-size: 1em;">Beちゃっとぉ</h1> -->
     <div id="first_sc">
       <h1>ようこそ Ｂｅちゃっとぉ へ</h1>
-      <p><br><br>Bなリアルタイムチャットを今すぐ始めよう！<br><br>サーバの性能などの都合上<br>新機能追加ができなくて開発者は不満な様子だ..</p>
+      <p><br><br>オープンなリアルタイムチャットを今すぐ始めよう！<br><br>開発中の機能も今後実装予定です<br>バグ・不具合等の情報収集にご協力ください</p>
       <input type="text" id="user_name" placeholder="ユーザー名を入力">
       <button type="button" id="submit_b" onclick="user_submit()">></button>
     </div>
     <div id="edit_room">
-      <h2>Room Editor Ver.0.0.1</h2>
-      <p>This operation is under development and may affect the server. <br>It should not be used normally.</p>
-      <input type="text" id="room_name" pattern="^[0-9A-Za-z]+$" placeholder="Room Name / Can not use $,%,&">
+      <h2>Room Editor Ver.0.1.1</h2>
+      <p>Edit Room Setting | Please be careful when using.</p>
+      <input type="text" id="room_name" pattern="^[0-9A-Za-z]+$" placeholder="Room Name">
       <textarea name="room_desk_text" id="room_desk_text" placeholder="Description"></textarea>
       <button type="button" id="cancel" onclick="room_editx(0)">Cancel</button>
-      <button type="button" id="deploy" onclick="room_editx(3)">Deploy</button>
+      <div id="delete">
+        <p>Danger Zone</p><button type="button" onclick="room_editx(4)">Delete</button>
+      </div>
+      <button type="button" id="apply" onclick="room_editx(3)">Apply</button>
+      <button type="button" id="create" onclick="room_editx(3)">Create</button>
     </div>
-    <div id="create_room" onclick="room_editx(2)"><i class="fas fa-plus-circle"></i></div>
-    <div id="enter_setting" onclick="e_setting()">
-      <i class="fas fa-cog"></i>
-    </div>
+    <div id="show_roomlist" onclick="c_page(4)"><i class="fas bars"></i></div>
+    <div id="enter_setting" onclick="e_setting()"><i class="fas fa-cog"></i></div>
     <div id="setting" style="display: none;">
-      <h2>設定</h2>
-      <h3>ユーザー名</h3>
+      <h2>Setting</h2>
+      <h3>Name</h3>
       <input type="text" id="user_name2" placeholder="ユーザー名を入力" onchange="name_setting()">
-      <h3>Notice (Passive)</h3>
-      <input type="checkbox" id="notification" class="notice" onchange="noti_setting()"><label for="notification" class="notice">Enable</label>
+      <h3>Notice Push / Sound</h3>
+      <input type="checkbox" id="notification" class="notice" onchange="noti_setting()"><label for="notification"
+        class="notice">Enable</label>
       <!-- <input type="checkbox" id="notification2" class="notice2"><label for="notification2"
         class="notice2">Special</label> -->
-        <select name="special_option" id="special_option" onchange="noti2_setting()">Special
-          <option value="0">OFF</option>
-          <option value="1">☭</option>
-          <option value="2">B1</option>
-          <option value="3">B2</option>
-        </select>
-        <h3>Theme</h3>
-        <select name="theme" id="theme" onchange="theme_setting()">
-          <option value="1">Dark</option>
-          <option value="2">DeepBlack</option>
-          <option value="3">White</option>
-        </select>
-        <h3>送信キー</h3>
-        <select name="send_key" id="send_key" onchange="sendkey_setting()">
-          <option value="1">Alt + Enter</option>
-          <option value="2">Shift + Enter</option>
-          <option value="3">Ctrl + Enter</option>
-          <option value="4">Enter</option>
-          <option value="5">Alt + B</option>
-          <option value="6">Shift + B</option>
-          <option value="7">Ctrl + B</option>
-          <option value="8">B</option>
-        </select>
-      </div>
+      <select name="special_option" id="special_option" onchange="noti2_setting()">Special
+        <option value="0">OFF</option>
+        <option value="1">☭</option>
+        <option value="2">B1</option>
+        <option value="3">B2</option>
+      </select>
+      <h3>Theme</h3>
+      <select name="theme" id="theme" onchange="theme_setting()">
+        <option value="1">Dark</option>
+        <option value="2">DeepBlack</option>
+        <option value="3">White</option>
+      </select>
+      <h3>Send Key</h3>
+      <select name="send_key" id="send_key" onchange="sendkey_setting()">
+        <option value="1">Alt + Enter</option>
+        <option value="2">Shift + Enter</option>
+        <option value="3">Ctrl + Enter</option>
+        <option value="4">Enter</option>
+        <!-- <option value="5">Alt + B</option> -->
+        <!-- <option value="6">Shift + B</option> -->
+        <!-- <option value="7">Ctrl + B</option> -->
+        <!-- <option value="8">B</option> -->
+      </select>
+      <h3>Load Embedded Media</h3>
+      <input type="checkbox" id="loadmedia" class="loadmedia" onchange="loadem_setting()"><label for="loadmedia"
+        class="loadmedia">Enable</label>
+    </div>
+    <div id="create_room" onclick="room_editx(2)"><i class="fas fa-plus-circle"></i></div>
     <!-- <input type="text" name="b_send" id="chat_content" placeholder="Name"> -->
     <div id="input_area">
-      <textarea name="b_send" id="chat_content" placeholder="Message"></textarea>
+      <div id="ex_menu_gr">
+      <button type="button" id="ex_menu1" onclick="ex_b_send(1)"><i class="fas fa-image"></i></button>
+      <button type="button" id="ex_menu2" onclick="ex_b_send(2)"><i class="fas fa-window-maximize"></i></button>
+      <!-- <input type="text" id="chat_url_ifr" placeholder="Embed URL/link"> -->
+      <input type="text" id="chat_url" placeholder="Image URL">
+      <button type="button" id="ex_menu3" onclick="ex_b_send(3)"><i class="fas fa-times"></i></button>
+    </div>
+    <button type="button" id="ex_menu" onclick="ex_b_send(0)"><i class="fas fa-angle-double-down"></i></button>
+    <textarea name="b_send" id="chat_content" placeholder="Message"></textarea>
       <button type="button" id="bbbutton" onclick="b_send()"><i class="fas fa-paper-plane"></i></button>
     </div>
   </header>
   <div id="L_side" class="L_side">
-    <button onclick="change_room('Main')">MainRoom</button><br><br>
+    <button onclick="change_room('main')">MainRoom</button><br><br>
   </div>
   <div id="R_side">
-    <h4 id="descr_tit" onclick="room_editx(1)"><i class="fas fa-edit"></i>Description</h4>
+    <h4 id="descr_tit" onclick="room_editx(1)"><i class="fas fa-edit"></i>Room Info</h4>
     <p id="descr"></p>
   </div>
   <section>
     <div id="main_contents">
       <div id=main_conttt>
-        <p id="conttt">SesstionBegin.</p>
+        <p id="conttt">
+        </p>
         <noscript>
           <p>Javascript is disabled !!! (*‘∀‘)</p>
           <style>
@@ -112,3 +132,8 @@
     </div>
   </section>
 </body>
+<style id="style_c"></style>
+
+<script>
+  document.getElementById('conttt').innerHTML = "<div id='load'><video src='lg.mp4' muted autoplay loop></video></div>";
+</script>
