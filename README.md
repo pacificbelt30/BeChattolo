@@ -7,6 +7,13 @@ RealtimeWebChatSystem
 最低限必要ファイル構成↓
 
 -----
+#### ＊Ver.0.8.0～
+// ファイル形式がJSONになりました
+// リンクが埋め込めるようになりました
+// 機能が増えました<br>
++logo等
+
+-----
 #### ＊Ver.0.7.0～
 // 他修正・機能(Theme/Notice/Shortcut)追加
 // Roomを作りました
