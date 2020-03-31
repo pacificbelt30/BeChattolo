@@ -14,6 +14,7 @@ JSON化、関数化、WebAPI向けに修正
 
 
 // ----- 予定 -----
+開発費がほしいよぉ
 画像
 Roomの削除,非表示
 メッセージの編集・削除
@@ -102,7 +103,10 @@ define("SAVEFILE_EXTE", '.json'); // メッセージを保存するファイル�
 define("SAVEFILE2_NAME", 'bbb'); // メッセージのバックアップを保存するファイルの名前
 define("SAVEFILE2_EXTE", '.json'); // メッセージのバックアップを保存するファイルの拡張子
 
-define("SPLIT_SIZE", 135673); // メッセージの分割条件のファイルサイズ 0xBBBB -> (OCT) Byte
+define("PROTECTED_ROOM", 'PROTECTED'); // Roomのアクセス判定用のファイル
+
+// define("SPLIT_SIZE", 135673); // メッセージの分割条件のファイルサイズ 0xBBBB -> (OCT) Byte
+define("SPLIT_SIZE", 104858); // メッセージの分割条件のファイルサイズ 0.1MiB = 104858Byte
 define("MAX_ROOMS", 21474836); // 最大Room数
 
 // ----- 設定 -----
@@ -112,6 +116,14 @@ date_default_timezone_set('Asia/Tokyo');
 // ----- メイン処理 (分岐) -----
 if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
   if(isset($_POST['req'])) {
+
+    if (isset($_POST['room']) && file_exists("./".BBS_FOLDER."/".esc($_POST['room'],1)."/".PROTECTED_ROOM)) { // アクセスしてよいか判定
+      if($_POST['req'] === 'add' || $_POST['req'] === 'mes' || $_POST['req'] === 'del') {
+        echo 'error';
+        exit;
+      }
+    }
+
     switch ($_POST['req']) {
       case 'add': // メッセージ追加
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
@@ -123,6 +135,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
         if (isset($_POST['thread'])) { GetMes(esc($_POST['room'],1), esc($_POST['thread'],0)); } else {
           GetMes(esc($_POST['room'],1), -1); }
+      break;
+      case 'del': // ルーム(削除) // アクセス不可にする
+        DelRoom(esc($_POST['room'],1), esc($_POST['name'],0));
       break;
       case 'dir': // ディレクトリ一覧&更新日時取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
@@ -222,8 +237,8 @@ function GetDir() {
   $rdir_list = scandir("./".BBS_FOLDER."/");
   $ret_arr=array(); // 戻り値用の変数を初期化
   for ($i=2; $i < count($rdir_list); $i++) { // ,/, ../ を含むので$i=2
-    if (is_dir("./".BBS_FOLDER."/".$rdir_list[$i])) {
-      if(file_exists(latestMes($rdir_list[$i], false)[0])) {
+    if (is_dir("./".BBS_FOLDER."/".$rdir_list[$i]) && !file_exists("./".BBS_FOLDER."/".$rdir_list[$i]."/".PROTECTED_ROOM)) { // ディレクトリ, アクセス可能か
+      if(file_exists(latestMes($rdir_list[$i], false)[0])) { // Room名があればその名前を、他はディレクトリ名
         $l_meth = latestMes($rdir_list[$i], false)[0];
       } else {
         $l_meth = "./".BBS_FOLDER."/".$rdir_list[$i];
@@ -255,7 +270,7 @@ function GetRoomName($dir) {
 // ----- ルーム(作成/編集) -----
 function SetRoom($mode, $name, $room, $new_name, $new_descr) {
   if ($mode === '1') { // 編集モード
-    if (file_exists("./".BBS_FOLDER."/".$room)) {
+    if (file_exists("./".BBS_FOLDER."/".$room) && !file_exists("./".BBS_FOLDER."/".$room."/".PROTECTED_ROOM)) { // アクセスしてよいか
       if (file_exists(latestMes($room, false)[0])) {
         // メインのJSONファイル更新
         $save_f = latestMes($room, false)[0];
@@ -329,6 +344,18 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
   echo 'error';
 }
 
+// ----- ルーム削除 PROTECTEDファイル作成 -----
+function DelRoom($room, $name) {
+  if (file_exists("./".BBS_FOLDER."/".$room."/") && $room != MAIN_ROOM_DIR_) { // mainのRoomは不可
+    touch("./".BBS_FOLDER."/".$room."/".PROTECTED_ROOM);
+    $put_log = 'Room protected';
+    AddMes($room, $name, 'log', $put_log, true); // バックアップファイルにログを追加
+    echo 'ok';
+  } else {
+    echo 'error';
+  }
+}
+
 // ----- 特殊文字エスケープ処理 -----
 function esc($text, $mode) { // mode=1 : basename()+htmlspecial~~, else : htmlspecialchats
   if ($mode === 1) {
@@ -366,7 +393,6 @@ function autoSplit($room) {
     $n_format = array ( // 設定などを前のthreadから引き継ぐ
       'room_name' => $json_main["room_name"],
       'l_date' => date('Y-m-d H:i:s'),
-      'acc' => $json_main["acc"],
       'object' => array(),
       'descr' => $json_main["descr"],
       'thread' => $l_file[1]+1

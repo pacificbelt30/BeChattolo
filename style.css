@@ -33,7 +33,7 @@ header h1 {
 }
 #L_side {
   padding: 10px 0;
-  background: #1B1B1B;
+  background: #111;
   width: 150px;
   height: calc(100% - 20px - 42px);
   position: fixed;
@@ -46,7 +46,7 @@ header h1 {
 }
 #R_side {
   padding: 10px;
-  background: #1B1B1B;
+  background: #111;
   width: 150px;
   height: calc(100% - 20px - 42px);
   position: fixed;
@@ -62,11 +62,12 @@ header h1 {
 }
 .L_side button {
   border: none;
-  border-bottom: solid 1px #666;
   border-radius: 0;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
   margin-bottom: 0;
   margin-top: 5px;
-  padding: 10px 5px;
+  padding: 10px 10px 10px 0;
   color: #aaa;
   /* background: #333340; */
   background: #555;
@@ -82,6 +83,7 @@ header h1 {
 .L_side .on_butt {
   background: #BBB;
   color: #222;
+  border-right: solid 4px #ddd;
 }
 .L_side .new_mes::before {
   font-family: 'font-awe_sol';
@@ -140,9 +142,11 @@ h1 {
   padding: 3px 10px 6px 10px;
   border: none;
   border-top: dashed 1px #111;
-  border-left: solid 5px #444;
+  border-left: solid 4px #444;
   word-break: break-all;
   font-family: 'Segoe UI',SegoeUI,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  position: static;
+  padding-left: 55px;
 }
 
 #list2, #list:first-child {
@@ -151,21 +155,44 @@ h1 {
   margin: 2px 0;
   padding: 3px 10px 6px 10px;
   /* border: solid 1px #00a0e9; */
-  border-top: dashed 1px #111;
-  border-left: solid 5px #00a0e9;
+  /* border-top: dashed 1px #111; */
+  border-left: solid 4px #00a0e9;
   word-break: break-all;
   font-family: 'Segoe UI',SegoeUI,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  position: static;
+  padding-left: 55px;
 }
 
 #list2 {
-  color: #666;
+  color: #777;
   border-left: solid 5px #111;
 }
 
-#user {
-  color: #00a0e9;
+#u_icon {
+  display: block;
+  color: #111;
+  text-align: center;
   font-size: 0.9em;
+  line-height: 2.6;
+  font-weight: 900;
+  width: 35px;
+  height: 35px;
+  background: #999;
+  border-radius: 50%;
+  position: absolute;
+  margin-top: 3px;
+  left: 10px;
+  overflow: hidden;
 }
+
+#user {
+  /* color: #00a0e9; */
+  color: #999;
+  font-weight: bold;
+  font-size: 0.9em;
+  position: relative;
+}
+
 #user:before {
   /* font-family: 'font-awe_sol'; */
   content: '>';
@@ -175,7 +202,7 @@ h1 {
 }
 
 #date {
-  margin-right: 0;
+  right: 0;
   font-size: 0.7em;
   color: #999;
   font-family: "メイリオ","Hiragino Kaku Gothic Pro",Meiryo,"ヒラギノ角ゴ Pro W3","MS PGothic","MS UI Gothic",Helvetica,Arial,sans-serif;
@@ -199,9 +226,28 @@ h1 {
 }
 
 #chat_content {
-  font-family: inherit;
+  /* font-family: inherit; */
   font-size: 1.0em;
-  width: calc(100% - 80px);
+  width: calc(100% - 92px);
+  padding: 7px 5px;
+  margin: 0;
+  /* background: #0B0B0B; */
+  background: #eee;
+  color: #000;
+  border: solid 1px #444;
+  border-radius: 3px;
+  height: 22px;
+  resize: none;
+
+  position: absolute;
+  top: 15px;
+  left: 40px;
+  font-family: 'Segoe UI',SegoeUI,"Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+#chat_url_ifr, #chat_url_img {
+  width: calc(100% - 132px);
+  font-family: inherit;
+  font-size: 0.9em;
   padding: 5px;
   margin: 0;
   /* background: #0B0B0B; */
@@ -209,27 +255,67 @@ h1 {
   color: #000;
   border: solid 1px #444;
   border-radius: 3px;
-  height: 50px;
-  resize: none;
-
+  height: 26px;
   position: absolute;
-  top: 10px;
-  font-family: 'Segoe UI',SegoeUI,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  top: 55px;
+  left: 80px;
+  /* display: none; */
 }
-
-#bbbutton {
-  width: 64px;
-  height: 62px;
-  padding: 5px 5px 5px 0;
+#ex_menu, #ex_menu1, #ex_menu2 {
+  width: 39px;
+  height: 38px;
+  padding: 5px;
   margin: 0;
-  background: #444;
-  border: solid 1px #222;
+  background: #ccc;
+  border: solid 1px #444;
   border-radius: 3px;
-  color: #bbb;
+  color: #444;
   /* cursor: pointer; */
 
   position: absolute;
-  top: 10px;
+  top: 15px;
+  left: 0;
+}
+#ex_menu1 {
+  position: absolute;
+  top: 55px;
+}
+#ex_menu2 {
+  position: absolute;
+  top: 55px;
+  left: 40px;
+}
+.fa-angle-double-down:before {
+  font-style: normal;
+  font-family: 'font-awe_sol';
+  content: '\f103';
+  font-size: 1.2em;
+}
+.fa-image:before {
+  font-style: normal;
+  font-family: 'font-awe_sol';
+  content: '\f03e';
+  font-size: 1.2em;
+}
+.fa-window-maximize:before {
+  font-style: normal;
+  font-family: 'font-awe_sol';
+  content: '\f2d0';
+  font-size: 1.2em;
+}
+#bbbutton {
+  width: 39px;
+  height: 38px;
+  padding: 5px 5px 5px 0;
+  margin: 0;
+  background: #ccc;
+  border: solid 1px #444;
+  border-radius: 3px;
+  color: #444;
+  /* cursor: pointer; */
+
+  position: absolute;
+  top: 15px;
   right: 0;
 }
 #bbbutton:hover {
@@ -248,7 +334,7 @@ h1 {
 #main_contents {
   width: 98%;
   position: absolute;
-  top: 130px;
+  top: 100px;
   left: 1%;
 }
 
@@ -287,7 +373,7 @@ h1 {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 10;
+  z-index: 100;
   background: #222;
   color: #aaa;
   text-align: center;
@@ -334,7 +420,7 @@ h1 {
   margin-top: 10px;
   border: none;
 }
-#cancel, #deploy {
+#cancel, #create, #apply, #delete button {
   border: none;
   display: inline-table;
   width: 100px;
@@ -345,7 +431,21 @@ h1 {
   left: calc(50% - 140px);
   top: 600px;
 }
-#deploy {
+#delete {
+  position: fixed;
+  left: calc(50% + 47px);
+  top: 500px;
+  border: solid 3px orangered;
+  background: orangered;
+  margin: 0;
+}
+#delete p {
+  font-weight: bold;
+  color: #000;
+  font-size: 0.9em;
+}
+
+#create, #apply {
   position: fixed;
   left: calc(50% + 50px);
   top: 600px;
@@ -366,6 +466,32 @@ h1 {
   padding: 10px 15px;
   border: none;
   border-radius: 3px;
+}
+
+#show_roomlist {
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 2px;
+  left: 7px;
+  z-index: 5;
+  text-align: center;
+  display: none;
+}
+.bars:before {
+  font-family: 'font-awe_sol';
+  content: '\f0c9';
+  cursor: pointer;
+  margin: 0;
+  line-height: 40px;
+  font-size: 1.4em;
+  font-style: normal;
+  z-index: 5;
+  color: #ddd;
+  vertical-align: baseline;
+  text-align: center;
 }
 
 #setting {
@@ -414,7 +540,7 @@ h1 {
   bottom: 10px;
   left: 10px;
   font-size: 2em;
-  color: #555;
+  color: #666;
   font-style: normal;
 }
 
@@ -475,6 +601,10 @@ span#dot {
   100% {opacity: 1;}
 }
 @media screen and (max-width:768px) {
+  #main_contents {
+    position: absolute;
+    z-index: -3;
+  }
   #R_side, #L_side, #time_b {
     display: none;
   }
@@ -482,17 +612,27 @@ span#dot {
     width: 98%;
     left: 1%;
   }
+  #chat_content, #ex_menu, #bbbutton {
+    z-index: -3;
+  }
   section {
     width: 98%;
     left: 1%;
   }
   #create_room {
     display: none;
+    z-index: 5;
   }
   #R_side {
     display: none;
   }
   #L_side {
     display: none;
+    /* z-index: 2; */
+    z-index: 2;
+  }
+  #show_roomlist {
+    display: block;
+    z-index: 5;
   }
 }

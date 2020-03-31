@@ -35,8 +35,8 @@
   <header>
     <!-- <h2 style="font-size: 0.5em;" id="update_notice">アップデートがあります. リロードしてください.</h2> -->
     <!-- <h1 style="font-size: 1em;">Bさんの<ruby><rb>非同期劘蔿<rb><rp>(</rp><rt>Beeeeeee------</rt><rp>)</rp></ruby>リアルタイムちゃっとぉ</h1> -->
-    <!-- <h1 style="font-size: 1em;">Beちゃっとぉ<span id="room_top_name"></span></h1> -->
-    <h1 style="font-size: 1em;">Beちゃっとぉ</h1>
+    <h1 style="font-size: 1em;">Beちゃっとぉ<span id="room_top_name"></span></h1>
+    <!-- <h1 style="font-size: 1em;">Beちゃっとぉ</h1> -->
     <div id="first_sc">
       <h1>ようこそ Ｂｅちゃっとぉ へ</h1>
       <p><br><br>オープンなリアルタイムチャットを今すぐ始めよう！<br><br>開発中の機能も今後実装予定です<br>バグ・不具合等の情報収集にご協力ください</p>
@@ -44,18 +44,17 @@
       <button type="button" id="submit_b" onclick="user_submit()">></button>
     </div>
     <div id="edit_room">
-      <h2>Room Editor Ver.0.0.2</h2>
-      <p>This operation is under development and may affect the server. <br>
-        In fact, developers have not fully tested this feature.</p>
+      <h2>Room Editor Ver.0.1.1</h2>
+      <p>Edit Room Setting | Please be careful when using.</p>
       <input type="text" id="room_name" pattern="^[0-9A-Za-z]+$" placeholder="Room Name">
       <textarea name="room_desk_text" id="room_desk_text" placeholder="Description"></textarea>
       <button type="button" id="cancel" onclick="room_editx(0)">Cancel</button>
-      <button type="button" id="deploy" onclick="room_editx(3)">Deploy</button>
+      <div id="delete" ><p>Danger Zone</p><button type="button" onclick="room_editx(4)">Delete</button></div>
+      <button type="button" id="apply" onclick="room_editx(3)">Apply</button>
+      <button type="button" id="create" onclick="room_editx(3)">Create</button>
     </div>
-    <div id="create_room" onclick="room_editx(2)"><i class="fas fa-plus-circle"></i></div>
-    <div id="enter_setting" onclick="e_setting()">
-      <i class="fas fa-cog"></i>
-    </div>
+    <div id="show_roomlist" onclick="c_page(4)"><i class="fas bars"></i></div>
+    <div id="enter_setting" onclick="e_setting()"><i class="fas fa-cog"></i></div>
     <div id="setting" style="display: none;">
       <h2>Setting</h2>
       <h3>Name</h3>
@@ -89,14 +88,20 @@
         <!-- <option value="8">B</option> -->
       </select>
     </div>
+    <div id="create_room" onclick="room_editx(2)"><i class="fas fa-plus-circle"></i></div>
     <!-- <input type="text" name="b_send" id="chat_content" placeholder="Name"> -->
     <div id="input_area">
+      <button type="button" id="ex_menu1" onclick="ex_b_send(1)"><i class="fas fa-image"></i></button>
+      <button type="button" id="ex_menu2" onclick="ex_b_send(2)"><i class="fas fa-window-maximize"></i></button>
+      <button type="button" id="ex_menu" onclick="ex_b_send(0)"><i class="fas fa-angle-double-down"></i></button>
       <textarea name="b_send" id="chat_content" placeholder="Message"></textarea>
+      <input type="text" id="chat_url_ifr" placeholder="Embed URL/link">
+      <input type="text" id="chat_url_img" placeholder="Image URL">
       <button type="button" id="bbbutton" onclick="b_send()"><i class="fas fa-paper-plane"></i></button>
     </div>
   </header>
   <div id="L_side" class="L_side">
-    <button onclick="change_room('Main')">MainRoom</button><br><br>
+    <button onclick="change_room('main')">MainRoom</button><br><br>
   </div>
   <div id="R_side">
     <h4 id="descr_tit" onclick="room_editx(1)"><i class="fas fa-edit"></i>Description</h4>
