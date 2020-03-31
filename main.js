@@ -618,15 +618,15 @@ function parse_message(r_list) {
   for (var i = 0; i < r_list["object"].length; i++) {
     var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
     content = AutoLink(content); // リンクをAnchorに変換
-    if (r_list["object"][i]['type'] !== 'plain' && r_list["object"][i]["media"]) {
+    if (r_list["object"][i]['type'] !== 'plain' && getLink(r_list["object"][i]["media"])) {
       if (localStorage.getItem("loadEm") === '1') { // メディアを表示するか
         if (r_list["object"][i]['type'] === 'image') { // 画像
-          var out_data = "<li id=list class='li li_img li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><img src='" + r_list["object"][i]['media'] + "' alt class='media media_img'>";
+          var out_data = "<li id=list class='li li_img li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><img src='" + getLink(r_list["object"][i]['media']) + "' alt class='media media_img'>";
         } else if (r_list["object"][i]['type'] === 'iframe') { // iframe
-          var out_data = "<li id=list class='li li_ifr li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><iframe src='" + r_list["object"][i]['media'] + "' frameborder=0 class='media media_ifr'></iframe>";
+          var out_data = "<li id=list class='li li_ifr li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><iframe src='" + getLink(r_list["object"][i]['media']) + "' frameborder=0 class='media media_ifr'></iframe>";
         }
       } else {
-        var out_data = "<li id=list class='li li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br>Media: <a href='" + r_list["object"][i]['media'] + "' target='_blank' rel='noopener'>" + r_list["object"][i]['media'] + "</a>";
+        var out_data = "<li id=list class='li li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br>Media: <a href='" + getLink(r_list["object"][i]['media']) + "' target='_blank' rel='noopener'>" + getLink(r_list["object"][i]['media']) + "</a>";
       }
     } else {
       var out_data = "<li id=list class='li li_pla'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
@@ -635,6 +635,14 @@ function parse_message(r_list) {
   }
 
   return list_put;
+}
+
+// ----- 文字列からURLを取り出す関数 -----
+function getLink(str) {
+  var result = str.match(/((https?|ftp):\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)/);
+  result = result[0];
+  result = result.replace('&quot;', ''); // 文字エスケープ時に「"」が残ってしまうのを取り除く
+  return result;
 }
 
 // ----- RoomListのボタン再生成 -----
