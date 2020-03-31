@@ -199,10 +199,10 @@ function get_room_data_plus(thr, str) {
       for (var i = 0; i < r_list["object"].length; i++) {
         var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
         content = AutoLink(content); // リンクをAnchorに変換
-        var out_data = "<li id=list><span id=u_icon>"+ r_list["object"][i]["user"] +"</span><span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
+        var out_data = "<li id=list><span id=u_icon>" + r_list["object"][i]["user"] + "</span><span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
         list_put = out_data + list_put;
       }
-      CONTTT.innerHTML = CONTTT.innerHTML+list_put;
+      CONTTT.innerHTML = CONTTT.innerHTML + list_put;
     }
   }
   // 追加読み込み
@@ -210,7 +210,7 @@ function get_room_data_plus(thr, str) {
   // console.log(b_height + ' ' + thr);
   if (thr > 0 && b_height < READ_AHEAD || thr > 0 && now_thread === thr) {
     // console.log("Load: Old Thread");
-    xhr('req='+GET_MES+'&room='+now_room+'&thread='+(thr-1), JOINT_MES, thr-1);
+    xhr('req=' + GET_MES + '&room=' + now_room + '&thread=' + (thr - 1), JOINT_MES, thr - 1);
   } else if (thr > 0) {
     ready_getDataNo = thr;
     ready_getDataPlus = true; // 追加読み込みの実行OK
@@ -220,13 +220,15 @@ function get_room_data_plus(thr, str) {
 }
 
 // ----- スクロールイベント+次の再描画でアニメーションを更新するときに実行 -----
-document.addEventListener('scroll', getRoomData_exec, {passive: true}); // スクロールイベント取得
+document.addEventListener('scroll', getRoomData_exec, {
+  passive: true
+}); // スクロールイベント取得
 var ready_animFrame = false;
 var ready_getDataPlus = true; // 追加読み込み
 var ready_getDataNo = 0; // 既に読み込んだthread数
 function getRoomData_exec() {
-  if (!ready_animFrame && ready_getDataPlus && ready_getDataNo>0) {
-    requestAnimationFrame(function() {
+  if (!ready_animFrame && ready_getDataPlus && ready_getDataNo > 0) {
+    requestAnimationFrame(function () {
       ready_animFrame = false;
       ready_getDataPlus = false; // 追加読み込みの実行ブロック
       get_room_data_plus(ready_getDataNo); // 追加読み込み
@@ -237,7 +239,7 @@ function getRoomData_exec() {
 
 
 function user_submit() { // ユーザー名入力画面
-var user_name = document.getElementById('user_name');
+  var user_name = document.getElementById('user_name');
   if (user_name.value) {
     localStorage.setItem('userName', user_name.value);
     ck_user();
@@ -286,25 +288,25 @@ function room_editx(mode) { // 0:Cancel 1:Edit 2:Create 3:exec
       // ServerReq
       console.log('%cREQ_SERVER %c>>> ' + room_name.value, 'color: red;', 'color: #bbb;');
       if (room_edit_mode === 1) { // 編集
-        xhr('req='+SET_DIR+'&mode=1&name='+localStorage.getItem("userName")+'&room='+now_room+'&new_name='+room_name.value+'&new_descr='+room_desk_text.value, SET_DIR);
+        xhr('req=' + SET_DIR + '&mode=1&name=' + localStorage.getItem("userName") + '&room=' + now_room + '&new_name=' + room_name.value + '&new_descr=' + room_desk_text.value, SET_DIR);
       } else if (room_edit_mode === 2) { // 作成
-        xhr('req='+SET_DIR+'&mode=2&name='+localStorage.getItem("userName")+'&room='+now_room+'&new_name='+room_name.value+'&new_descr='+room_desk_text.value, SET_DIR);
+        xhr('req=' + SET_DIR + '&mode=2&name=' + localStorage.getItem("userName") + '&room=' + now_room + '&new_name=' + room_name.value + '&new_descr=' + room_desk_text.value, SET_DIR);
       } else if (room_edit_mode === 4) { // 削除
-        xhr('req='+DEL_DIR+'&name='+localStorage.getItem("userName")+'&room='+now_room, DEL_DIR);
+        xhr('req=' + DEL_DIR + '&name=' + localStorage.getItem("userName") + '&room=' + now_room, DEL_DIR);
       }
       main(1);
       room_edit_mode = 0;
       edit_room.style.display = "none";
       break;
     case 4: // 削除
-    if (window.confirm("DeleteRoom: "+room_show+"\nAre you really sure?")) {
-      room_edit_mode = 4;
-      room_editx(3);
-    }
+      if (window.confirm("DeleteRoom: " + room_show + "\nAre you really sure?")) {
+        room_edit_mode = 4;
+        room_editx(3);
+      }
       break;
     default:
       edit_room.style.display = "none";
-    }
+  }
 }
 
 // ----- 動作設定 -----
@@ -412,6 +414,8 @@ function b_send() {
     div_top.value = '';
     xhr('req=' + ADD_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send);
   }
+  ex_b_send(0, true); // 送信オプションを閉じる
+  ck_ex_content('',0); // メッセージ入力欄のサイズ
   ck_room_data(); // アクティブなRoomのメッセージ取得
 }
 
@@ -549,15 +553,15 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
                   db_connect(DB_N, OBJ_STORE_LAST, 'last', up_info["room_key"], up_info["up_date"], up_info["notice_flag"], up_info["room_name"], up_info["thread"], r_list["descr"]);
                 }
         */
-       // 現在のthreadを変数に代入
-       now_thread = r_list["thread"];
+        // 現在のthreadを変数に代入
+        now_thread = r_list["thread"];
 
-       // 表示部分更新
-       room_show = r_list["room_name"]; // 変数更新
-       room_top_name.innerHTML = ' / '+r_list["room_name"]; // 表示更新
+        // 表示部分更新
+        room_show = r_list["room_name"]; // 変数更新
+        room_top_name.innerHTML = ' / ' + r_list["room_name"]; // 表示更新
 
-       descrip_text = r_list["descr"];
-       if (r_list["descr"]) {
+        descrip_text = r_list["descr"];
+        if (r_list["descr"]) {
           descr.innerHTML = r_list["descr"].replace(/\r?\n/g, '<br>'); // 改行を置換 + Descriptionの更新
         }
         // メッセージ部分更
@@ -566,7 +570,7 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
           for (var i = 0; i < r_list["object"].length; i++) {
             var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
             content = AutoLink(content); // リンクをAnchorに変換
-            var out_data = "<li id=list><span id=u_icon>"+ r_list["object"][i]["user"] +"</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
+            var out_data = "<li id=list><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
             list_put = out_data + list_put;
           }
         } else {
@@ -707,6 +711,7 @@ function update_disp_arr(i, r_list) {
 
 // ----- ページ切り替え -----
 L_side_toggle = 0;
+
 function c_page(no) {
   const setting = document.getElementById('setting');
   const edit_room = document.getElementById('edit_room');
@@ -717,10 +722,10 @@ function c_page(no) {
 
   switch (no) {
     case 0: // ユーザー名入力画面
-    setting.style.display = "block";
-    first_sc.style.display = "none";
-    edit_room.style.display = "none";
-    // load_sc.style.display = "none";
+      setting.style.display = "block";
+      first_sc.style.display = "none";
+      edit_room.style.display = "none";
+      // load_sc.style.display = "none";
       break;
     case 1: // 通常画面
       setting.style.display = "none";
@@ -729,29 +734,29 @@ function c_page(no) {
       // load_sc.style.display = "none";
       break;
     case 2: // 設定画面
-    setting.style.display = "none";
-    first_sc.style.display = "none";
-    edit_room.style.display = "block";
-    // load_sc.style.display = "none";
+      setting.style.display = "none";
+      first_sc.style.display = "none";
+      edit_room.style.display = "block";
+      // load_sc.style.display = "none";
       break;
     case 3: // ロード画面
-    setting.style.display = "none";
-    first_sc.style.display = "none";
-    edit_room.style.display = "none";
-    load_sc.style.display = "block";
-    break;
-    case 4: // Roomリスト表示/非表示
-    if (sp_mode && L_side_toggle !== 1) {
       setting.style.display = "none";
-      L_side.style.display = "block";
-      create_room.style.display = "block";
-      L_side_toggle = 1;
-    } else {
-      L_side.style.display = "none";
-      create_room.style.display = "none";
-      L_side_toggle = 0;
-    }
-    break;
+      first_sc.style.display = "none";
+      edit_room.style.display = "none";
+      load_sc.style.display = "block";
+      break;
+    case 4: // Roomリスト表示/非表示
+      if (sp_mode && L_side_toggle !== 1) {
+        setting.style.display = "none";
+        L_side.style.display = "block";
+        create_room.style.display = "block";
+        L_side_toggle = 1;
+      } else {
+        L_side.style.display = "none";
+        create_room.style.display = "none";
+        L_side_toggle = 0;
+      }
+      break;
   }
 }
 
@@ -789,7 +794,7 @@ function ck_setting() {
   if (!localStorage.getItem("sendKey")) { // 送信キーの設定
     localStorage.setItem("sendKey", sendKey_set);
   } else {
-    sendKey_set =localStorage.getItem("sendKey");
+    sendKey_set = localStorage.getItem("sendKey");
   }
 }
 
@@ -798,7 +803,7 @@ function ck_user() {
   const first_sc = document.getElementById('first_sc');
   const L_side = document.getElementById('L_side');
   const create_room = document.getElementById('create_room');
-  if(!localStorage.getItem("userName")) {
+  if (!localStorage.getItem("userName")) {
     first_sc.style.display = "block";
     L_side.style.display = "none";
     create_room.style.display = "none";
@@ -890,32 +895,105 @@ function client_width() {
 }
 
 // ----- リンク付きメッセージの送信 -----
-function ex_b_send(option) {
-  if (option === 0) { // メニューの展開
+var ex_menu_disp = false; // 送信メニューの開閉
+var ex_menu_checked = 1; // 選択されてるオプション
+
+function ex_b_send(option1, option2) { // 動作種類, 特定の動作をする
+  const chat_url = document.getElementById('chat_url');
+  const ex_menu = document.getElementById('ex_menu');
+  const ex_menu1 = document.getElementById('ex_menu1');
+  const ex_menu2 = document.getElementById('ex_menu2');
+  const ex_menu3 = document.getElementById('ex_menu3');
+  if (option1 === 0) { // メニューの展開
+    if (!ex_menu_disp && option2!==true) {
+      ex_menu1.style.display = "block";
+      ex_menu2.style.display = "block";
+      ex_menu3.style.display = "block";
+      chat_url.style.display = "block";
+      ex_menu.style.transform = "rotate(180deg)";
+      ex_menu_disp = true;
+    } else {
+      ex_menu1.style.display = "none";
+      ex_menu2.style.display = "none";
+      ex_menu3.style.display = "none";
+      chat_url.style.display = "none";
+      ex_menu.style.transform = "rotate(0)";
+      ex_menu_disp = false;
+    }
+  } else if (option1 === 1) { // image
+    ex_menu_checked = 1;
+  } else if (option1 === 2) { // iframe
+    ex_menu_checked = 2;
+  } else if (option1 === 3) { // delete
+    chat_url.value = '';
+    ex_b_send(0, true);
   }
+  // ボタン色の更新
+  if (ex_menu_checked === 1) {
+    ex_menu1.style.color = "orange";
+    ex_menu2.style.color = "#ccc";
+    chat_url.placeholder = "Image URL";
+  } else if(ex_menu_checked === 2){
+    ex_menu1.style.color = "#ccc";
+    ex_menu2.style.color = "orange";
+    chat_url.placeholder = "Embed URL/Link";
+  }
+  ck_ex_content2(); // メインコンテンツの位置変更
 }
 
 // ----- ウィンドウサイズ変更+次の再描画でアニメーションを更新するときに実行 -----
-window.addEventListener("resize", function() { // スクロールイベント取得
+window.addEventListener("resize", function () { // スクロールイベント取得
   const L_side = document.getElementById('L_side');
   const create_room = document.getElementById('create_room');
-        if (window.outerWidth < MIN_WINDOW && L_side_toggle!==1) {
-        L_side.style.display = "none";
-        create_room.style.display = "none";
-      } else {
-        L_side.style.display = "block";
-        create_room.style.display = "block";
-      }
+  if (window.outerWidth < MIN_WINDOW && L_side_toggle !== 1) {
+    L_side.style.display = "none";
+    create_room.style.display = "none";
+  } else {
+    L_side.style.display = "block";
+    create_room.style.display = "block";
+  }
 
 }, true);
 
 // ----- メッセージの量によってテキストエリアのサイズ変更 -----
-const chat_content = document.getElementById('chat_content');
-chat_content.addEventListener("input", function(ev) {
-  if(ev.target.scrollHeight > ev.target.offsetHeight) {
-    ev.target.style.height = ev.target.scrollHeight+"px";
-  } else if (ev.target.scrollHeight < ev.target.offsetHeight) {
-    ev.target.style.height = (ev.target.scrollHeight - ev.target.offsetHeight)+"px";
-    console.log((ev.target.offsetHeight)+"px");
-  }
+// うまくいかないb
+var chat_content_offset = chat_content.scrollHeight;
+var chat_content2;
+var chat_content_tgg=0;
+chat_content.addEventListener("input", function con_ex_content() {
+  ck_ex_content(0);
 }, true);
+function ck_ex_content(op) {
+  const chat_content = document.getElementById('chat_content');
+  const ex_menu_gr = document.getElementById('ex_menu_gr');
+    // console.log(chat_content.scrollHeight+' '+chat_content.offsetHeight+' '+chat_content_offset+' '+chat_content2);
+  if (op===1 || chat_content.scrollHeight > chat_content_offset && chat_content_tgg === 0) {
+    chat_content.style.height =  "54px";
+    ex_menu_gr.style.top = "32px";
+    chat_content2 = chat_content.offsetHeight;
+    chat_content_tgg = 1;
+    ck_ex_content2(); // メインコンテンツの位置変更
+  } else if (chat_content.scrollHeight < chat_content2) {
+    chat_content.style.height =  "22px";
+    ex_menu_gr.style.top = "0";
+    chat_content_tgg = 0;
+    if (chat_content.scrollHeight > chat_content_offset) {
+      chat_content.style.height =  "54px";
+      ex_menu_gr.style.top = "32px";
+      chat_content2 = chat_content.offsetHeight;
+      chat_content_tgg = 1;
+    }
+    ck_ex_content2(); // メインコンテンツの位置変更
+  }
+}
+function ck_ex_content2() { // メインコンテンツの位置変更
+  const main_contents = document.getElementById('main_contents');
+  var top_default = 100;
+  if (ex_menu_disp) {
+    top_default += 32;
+  }
+  if (chat_content_tgg) {
+    top_default += 32;
+  }
+  main_contents.style.top = top_default+"px";
+}

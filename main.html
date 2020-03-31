@@ -21,7 +21,7 @@
   <script async src="//www.googletagmanager.com/gtag/js?id=UA-122638281-2"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-  
+
     function gtag() {
       dataLayer.push(arguments);
     }
@@ -49,7 +49,9 @@
       <input type="text" id="room_name" pattern="^[0-9A-Za-z]+$" placeholder="Room Name">
       <textarea name="room_desk_text" id="room_desk_text" placeholder="Description"></textarea>
       <button type="button" id="cancel" onclick="room_editx(0)">Cancel</button>
-      <div id="delete" ><p>Danger Zone</p><button type="button" onclick="room_editx(4)">Delete</button></div>
+      <div id="delete">
+        <p>Danger Zone</p><button type="button" onclick="room_editx(4)">Delete</button>
+      </div>
       <button type="button" id="apply" onclick="room_editx(3)">Apply</button>
       <button type="button" id="create" onclick="room_editx(3)">Create</button>
     </div>
@@ -59,7 +61,7 @@
       <h2>Setting</h2>
       <h3>Name</h3>
       <input type="text" id="user_name2" placeholder="ユーザー名を入力" onchange="name_setting()">
-      <h3>Notice (Passive)</h3>
+      <h3>Notice Push / Sound</h3>
       <input type="checkbox" id="notification" class="notice" onchange="noti_setting()"><label for="notification"
         class="notice">Enable</label>
       <!-- <input type="checkbox" id="notification2" class="notice2"><label for="notification2"
@@ -87,16 +89,22 @@
         <!-- <option value="7">Ctrl + B</option> -->
         <!-- <option value="8">B</option> -->
       </select>
+      <h3>Load Embedded Media</h3>
+      <input type="checkbox" id="loadmedia" class="loadmedia" onchange="loadem_setting()"><label for="loadmedia"
+        class="loadmedia">Enable</label>
     </div>
     <div id="create_room" onclick="room_editx(2)"><i class="fas fa-plus-circle"></i></div>
     <!-- <input type="text" name="b_send" id="chat_content" placeholder="Name"> -->
     <div id="input_area">
+      <div id="ex_menu_gr">
       <button type="button" id="ex_menu1" onclick="ex_b_send(1)"><i class="fas fa-image"></i></button>
       <button type="button" id="ex_menu2" onclick="ex_b_send(2)"><i class="fas fa-window-maximize"></i></button>
-      <button type="button" id="ex_menu" onclick="ex_b_send(0)"><i class="fas fa-angle-double-down"></i></button>
-      <textarea name="b_send" id="chat_content" placeholder="Message"></textarea>
-      <input type="text" id="chat_url_ifr" placeholder="Embed URL/link">
-      <input type="text" id="chat_url_img" placeholder="Image URL">
+      <!-- <input type="text" id="chat_url_ifr" placeholder="Embed URL/link"> -->
+      <input type="text" id="chat_url" placeholder="Image URL">
+      <button type="button" id="ex_menu3" onclick="ex_b_send(3)"><i class="fas fa-times"></i></button>
+    </div>
+    <button type="button" id="ex_menu" onclick="ex_b_send(0)"><i class="fas fa-angle-double-down"></i></button>
+    <textarea name="b_send" id="chat_content" placeholder="Message"></textarea>
       <button type="button" id="bbbutton" onclick="b_send()"><i class="fas fa-paper-plane"></i></button>
     </div>
   </header>
@@ -104,7 +112,7 @@
     <button onclick="change_room('main')">MainRoom</button><br><br>
   </div>
   <div id="R_side">
-    <h4 id="descr_tit" onclick="room_editx(1)"><i class="fas fa-edit"></i>Description</h4>
+    <h4 id="descr_tit" onclick="room_editx(1)"><i class="fas fa-edit"></i>Room Info</h4>
     <p id="descr"></p>
   </div>
   <section>
