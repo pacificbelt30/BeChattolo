@@ -60,7 +60,11 @@ var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
 window.onload = function Begin() {
+<<<<<<< Updated upstream
   console.log('%cＢｅちゃっとぉ%c Ver.0.8.0 20200401', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+=======
+  console.log('%cＢｅちゃっとぉ%c Ver.0.8.1 20200401', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+>>>>>>> Stashed changes
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
   ck_indexedDB(); // IndexedDBのサポート確認
   ck_setting(); // Localstrage内の設定情報確認
@@ -830,7 +834,7 @@ function AutoLink(str) {
   // var regexp_url = /((h?)(ttps?:\/\/[a-zA-Z0-9.\-_@:/~?%&;=+#',()*!]+))/g;
   var regexp_url = /((h?)(ttps?:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+))/g;
   var regexp_makeLink = function (all, url, h, href) {
-    return '<a href="' + href + '"  target="_blank" rel="noopener">' + url + '</a>';
+    return '<a href="h' + href + '"  target="_blank" rel="noopener">' + url + '</a>';
   }
   return str.replace(regexp_url, regexp_makeLink);
 }
