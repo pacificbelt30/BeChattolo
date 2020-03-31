@@ -112,6 +112,23 @@ define("MAX_ROOMS", 21474836); // 最大Room数
 date_default_timezone_set('Asia/Tokyo');
 // header("Access-Control-Allow-Origin: *"); // CORS
 
+// ----- MainRoomの作成 -----
+first_roomc(); // MainRoomは作らないと始まらないよ。
+function first_roomc(){
+  if (!file_exists("./".BBS_FOLDER)) {
+    mkdir("./".BBS_FOLDER, 0777); 
+  };
+  if (!file_exists("./".BBS_FOLDER."/".MAIN_ROOM_DIR)) {
+    mkdir("./".BBS_FOLDER."/".MAIN_ROOM_DIR, 0777);
+  };
+  if (!file_exists("./".BBS_FOLDER."/".MAIN_ROOM_DIR."/".SAVEFILE_NAME.'0'.SAVEFILE_EXTE)) {
+    touch("./".BBS_FOLDER."/".MAIN_ROOM_DIR."/".SAVEFILE_NAME.'0'.SAVEFILE_EXTE);
+  };
+  if (!file_exists("./".BBS_FOLDER."/".MAIN_ROOM_DIR."/".SAVEFILE2_NAME.'0'.SAVEFILE2_EXTE)) {
+    touch("./".BBS_FOLDER."/".MAIN_ROOM_DIR."/".SAVEFILE2_NAME.'0'.SAVEFILE2_EXTE);
+  };
+};
+
 // ----- メイン処理 (分岐) -----
 if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
   if(isset($_POST['req'])) {
