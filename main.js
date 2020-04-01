@@ -60,7 +60,7 @@ var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
 window.onload = function Begin() {
-  console.log('%cＢｅちゃっとぉ%c Ver.0.8.3 20200401', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+  console.log('%cＢｅちゃっとぉ%c Ver.0.8.4 20200401', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
   ck_indexedDB(); // IndexedDBのサポート確認
   ck_setting(); // Localstrage内の設定情報確認
@@ -391,7 +391,7 @@ function e_setting() {
 }
 
 // ----- 通知の作成 -----
-function notice() {
+function notice(message) {
   notice_set = localStorage.getItem('Notice'); // Localstrageから設定値取得
   notice2_set = localStorage.getItem('Notice2');
   if (notice2_set == 1) {
@@ -671,14 +671,10 @@ function update_disp_db(up_info, i, r_list) {
     // console.log(up_info["up_date"]+' '+r_list[i]["l_date"]);
     if (up_info["up_date"] !== r_list[i]["l_date"]) {
       // 最終更新時が古い場合
-      if (now_room === r_list[i]["dir_name"]) {
+      if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれ、タブがアクティブ
         temp_id.classList.add("on_butt"); // ActiveRoom
         temp_id.classList.remove("new_mes"); // 通知削除
-        if (document.hidden) { // タブがパッシブ
-          favicon(1); // 通知オン
-        } else {
-          favicon(0); // 通知オフ
-        }
+        favicon(0); // 通知オフ
         get_room_data(); // アクティブなRoomのメッセージ取得
         // RoomがアクティブになったらIndexedDB更新
         db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
@@ -687,7 +683,7 @@ function update_disp_db(up_info, i, r_list) {
         temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
         favicon(1); // 通知オン
-        notice(); // 通知する
+        notice(false); // 通知する
         db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], up_info["up_date"], 1, r_list[i]["room_name"], r_list[i]["thread"]);
       } else { // 通知したが、未読
         temp_id.classList.remove("on_butt"); // PassiveRoom
@@ -727,7 +723,7 @@ function update_disp_arr(i, r_list) {
 
   if (sub_DB[r_list[i]["dir_name"]]) {
     if (sub_DB[r_list[i]["dir_name"]]["l_date"] !== r_list[i]["l_date"]) { // 更新日時が古い場合
-      if (now_room === r_list[i]["dir_name"]) {
+      if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれ、タブがアクティブ
         // Roomがアクティブになったら更新
         sub_DB[r_list[i]["dir_name"]] = { // 配列追加
           l_date: r_list[i]["l_date"],
@@ -743,7 +739,7 @@ function update_disp_arr(i, r_list) {
         temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
         favicon(1); // 通知オン
-        notice(); // 通知する
+        notice(false); // 通知する
       } else { // 通知したが、未読
         temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
