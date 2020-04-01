@@ -60,7 +60,7 @@ var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
 window.onload = function Begin() {
-  console.log('%cＢｅちゃっとぉ%c Ver.0.8.1 20200401', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+  console.log('%cＢｅちゃっとぉ%c Ver.0.8.3 20200401', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
   ck_indexedDB(); // IndexedDBのサポート確認
   ck_setting(); // Localstrage内の設定情報確認
@@ -117,7 +117,7 @@ function db_connect(base_name, store_name, sw, param1, param2, param3, param4, p
     open_db.onupgradeneeded = function (event) {
       var store = event.target.result;
       store.createObjectStore(store_name, {
-        keyPath: key
+        keyPath: 'room_key'
       });
       // console.log('DB Upgrade');
     }
