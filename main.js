@@ -11,9 +11,9 @@ const XHR_TIMEOUT = 1000 * 5; // サーバリクエストのタイムアウト�
 const MAINLOOP_TIMER = 1000 * 5; // メイン関数の実行間隔の時間 (ms)
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
-const SEND_SERVER = 'chat.php';
+// const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
-// const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
+const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
 
 // phpへのリクエスト種類
 const ADD_MES = 'add'; // メッセージの追加
@@ -60,7 +60,7 @@ var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
 window.onload = function Begin() {
-  console.log('%cＢｅちゃっとぉ%c Ver.0.8.4 20200401', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+  console.log('%cＢｅちゃっとぉ%c Ver.0.8.5 20200401', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
   ck_indexedDB(); // IndexedDBのサポート確認
   ck_setting(); // Localstrage内の設定情報確認
@@ -460,6 +460,7 @@ function change_room(room) {
 function esc(str) {
   return encodeURI(str)
     .replace(/&/g, '%26')
+    .replace(/\+/g, '%2B')
     .replace(/\r?\n/g, '%0D%0A');
 }
 
