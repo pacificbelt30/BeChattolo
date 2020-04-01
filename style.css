@@ -2,7 +2,7 @@
 
 @font-face {
   font-family: "font-awe_sol";
-  src: url("fa-solid.woff2") format("woff2");
+  src: url("fa-solid.woff2?ver2") format("woff2");
 }
 
 body {
@@ -39,7 +39,7 @@ header h1 {
 
 #L_side {
   padding: 10px 0;
-  background: #111;
+  /* background: #111; */
   width: 150px;
   height: calc(100% - 20px - 42px);
   position: fixed;
@@ -49,6 +49,9 @@ header h1 {
   overflow-x: hidden;
   -ms-overflow-style: none;
   scrollbar-width: thin;
+  background: rgba(17,17,17,0.97);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 
 #R_side {
@@ -63,6 +66,9 @@ header h1 {
   overflow-x: hidden;
   -ms-overflow-style: none;
   scrollbar-width: thin;
+  background: rgba(17,17,17,0.97);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 
 .L_side button:first-child {
@@ -453,9 +459,13 @@ h1 {
   top: 0;
   left: 0;
   z-index: 100;
-  background: #222;
+  /* background: #222; */
   color: #aaa;
   text-align: center;
+  background: rgba(17, 17, 17, 0.95);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+
   /* display: none; */
 }
 
@@ -592,11 +602,14 @@ h1 {
   top: 0;
   left: 0;
   z-index: 2;
-  background: #222;
+  /* background: #222; */
   /* background: #1B1B1B; */
   color: #aaa;
   text-align: center;
   padding: 10px 0;
+  background: rgba(17,17,17,0.9);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 
 #enter_setting {
@@ -680,7 +693,8 @@ header {
   position: fixed;
   top: 0;
   width: inherit;
-  background: #222;
+  /* background: #222; */
+  background: rgba(34,34,34,0.97);
 }
 
 #time_b {
