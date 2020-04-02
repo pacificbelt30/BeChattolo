@@ -470,8 +470,7 @@ h1 {
   background: rgba(17, 17, 17, 0.95);
   -webkit-backdrop-filter: blur(5px);
   backdrop-filter: blur(5px);
-
-  /* display: none; */
+  display: none;
 }
 
 #first_sc h1 {
@@ -490,6 +489,7 @@ h1 {
   width: 100%;
   height: 100%;
   z-index: 6;
+  display: none;
 }
 
 #edit_room h2 {

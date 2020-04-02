@@ -8,6 +8,7 @@ GET ?room=xxx の指定により、開くページを指定できます
 
 // ----- 定数定義 -----
 const XHR_TIMEOUT = 1000 * 5; // サーバリクエストのタイムアウト時間(ms)
+const XHR_TIMEOUT_L = 1000 * 3600; // サーバリクエストのタイムアウト時間(ms)(長い)
 const MAINLOOP_TIMER = 1000 * 5; // メイン関数の実行間隔の時間 (ms)
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
@@ -68,7 +69,7 @@ window.onload = function Begin() {
   change_room(getParam('room')); // GET_valueでRoom変更
   ck_indexedDB(); // IndexedDBのサポート確認
   main(1); // main()に処理を渡す
-  console.log('%cＢｅちゃっとぉ%c Ver.0.8.7 20200402', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+  console.log('%cＢｅちゃっとぉ%c Ver.0.8.8 20200402', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
 }
 
@@ -78,7 +79,7 @@ function main(option) {
   ck_room_data(); // Room更新確認
   sp_mode = client_width(false);
   if (option === 1) { // Roomのメッセージ取得が必要な時
-    get_room_data();
+    get_room_data(true); // タイムアウト長い
   }
   date_update(); // 表示時刻の更新
 
@@ -190,8 +191,12 @@ function ck_room_data() {
 }
 
 // ----- Roomデータ取得 -----
-function get_room_data() {
-  xhr('req=' + GET_MES + '&room=' + now_room, GET_MES);
+function get_room_data(option) { // タイムアウトを長くするオプション
+  if (option === true) {
+    xhr('req=' + GET_MES + '&room=' + now_room, GET_MES, false, true);
+  } else {
+    xhr('req=' + GET_MES + '&room=' + now_room, GET_MES, false, false);
+  }
 }
 
 // ----- 追加読み込み判定 -----
@@ -495,13 +500,17 @@ function date_update() {
 }
 
 // ----- Ajaxにより非同期でサーバへリクエスト -----
-function xhr(send_data, send_mode, param1) { // POSTする内容, リクエストの種類
+function xhr(send_data, send_mode, param1, option) { // POSTする内容, リクエストの種類, 追加読み込みの引継ぎ, 通信のタイムアウトを長くするか
   const req = new XMLHttpRequest();
   req.open('POST', SEND_SERVER, true);
   req.setRequestHeader('Pragma', 'no-cache'); // キャッシュを無効にするためのヘッダ指定
   req.setRequestHeader('Cache-Control', 'no-cach');
   req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
-  req.timeout = XHR_TIMEOUT; // サーバリクエストのタイムアウト時間の指定
+  if (option === true) {
+    req.timeout = XHR_TIMEOUT_L; // サーバリクエストのタイムアウト時間(長い)の指定
+  } else {
+    req.timeout = XHR_TIMEOUT; // サーバリクエストのタイムアウト時間の指定
+  }
   req.send(send_data);
   req.onreadystatechange = function () { // 通信ステータスが変わったとき実行
     if (req.readyState === 4) {
