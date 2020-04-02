@@ -60,7 +60,7 @@ var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
 window.onload = function Begin() {
-  console.log('%cＢｅちゃっとぉ%c Ver.0.8.5 20200401', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+  console.log('%cＢｅちゃっとぉ%c Ver.0.8.6 20200402', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
   ck_indexedDB(); // IndexedDBのサポート確認
   ck_setting(); // Localstrage内の設定情報確認
@@ -915,10 +915,10 @@ function change_theme(no) {
       style_c.innerHTML = "";
       break;
     case '2':
-      style_c.innerHTML = "#list, #list2 {background: #000; color: #fff;} #body{background: #111;} #R_side{color: #BBB;} #R_side,#L_side{background: rgba(0,0,0,0.97);}";
+      style_c.innerHTML = "#list, #list2, #list:first-child {background: #000; color: #fff;} #body{background: #111;} #R_side{color: #BBB;} #R_side,#L_side{background: rgba(0,0,0,0.97);}";
       break;
     case '3':
-      style_c.innerHTML = "#list, #list2 {background: #fff!important; color: #111!important; border-top: none;} #body{background: #BBB;} #R_side{color: #111;} #R_side,#L_side{background: rgba(238,238,238,0.97);} #descr_tit{background: #BBB!important; color: #222;}";
+      style_c.innerHTML = "#list, #list2 {background: #fff!important; color: #111!important; border-top: none;} #body{background: #BBB;} #R_side{color: #111;} #R_side,#L_side{background: rgba(238,238,238,0.97);} #descr_tit{background: #BBB!important; color: #222;} #u_icon{background: #fff; color: #666; box-shadow: 0 0 5px #BBB;}";
       break;
   }
 }

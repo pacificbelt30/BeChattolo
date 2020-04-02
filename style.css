@@ -52,6 +52,7 @@ header h1 {
   background: rgba(17,17,17,0.97);
   -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
+  box-shadow: 0 0 3px #000;
 }
 
 #R_side {
@@ -69,6 +70,7 @@ header h1 {
   background: rgba(17,17,17,0.97);
   -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
+  box-shadow: 0 0 3px #000;
 }
 
 .L_side button:first-child {
@@ -165,7 +167,7 @@ h1 {
   padding: 3px 10px 6px 10px;
   border: none;
   border-top: dashed 1px #111;
-  border-left: solid 4px #444;
+  border-left: solid 3px #444;
   word-break: break-all;
   font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
   position: static;
@@ -180,7 +182,7 @@ h1 {
   padding: 3px 10px 6px 10px;
   /* border: solid 1px #00a0e9; */
   /* border-top: dashed 1px #111; */
-  border-left: solid 4px #00a0e9;
+  border-left: solid 3px #00a0e9;
   word-break: break-all;
   font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
   position: static;
@@ -189,11 +191,11 @@ h1 {
 
 #list2 {
   color: #777;
-  border-left: solid 5px #111;
+  border-left: solid 3px #111;
 }
 
 #conttt .li_media {
-  border-left: solid 5px orange;
+  border-left: solid 3px orange;
 }
 
 #conttt .media {
@@ -207,19 +209,22 @@ h1 {
 
 #u_icon {
   display: block;
-  color: #111;
+  color: #ddd;
   text-align: center;
-  font-size: 0.9em;
-  line-height: 2.6;
+  font-size: 0.75em;
+  line-height: 31px;
   font-weight: 900;
-  width: 35px;
-  height: 35px;
-  background: #999;
+  width: 31px;
+  height: 31px;
+  background: #1B1B1B;
   border-radius: 50%;
+  border: solid 2px #888;
+  box-shadow: 0 0 5px #000;
   position: absolute;
   margin-top: 3px;
   left: 10px;
   overflow: hidden;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 #user {
@@ -686,6 +691,7 @@ h1 {
   background: #666;
   color: #FFF;
   border: none;
+  box-shadow: 0 0 3px #000;
 }
 
 header {
@@ -695,6 +701,7 @@ header {
   width: inherit;
   /* background: #222; */
   background: rgba(34,34,34,0.97);
+  box-shadow: 0 0 3px #000;
 }
 
 #time_b {
@@ -782,6 +789,7 @@ span#dot {
   #conttt .media {
     max-height: 250px;
     max-width: 100%;
+    height: auto;
   }
 
   #conttt .media_ifr {
