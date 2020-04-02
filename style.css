@@ -585,6 +585,7 @@ h1 {
   z-index: 5;
   text-align: center;
   display: none;
+  color: #ddd;
 }
 
 .bars:before {
@@ -596,7 +597,6 @@ h1 {
   font-size: 1.4em;
   font-style: normal;
   z-index: 5;
-  color: #ddd;
   vertical-align: baseline;
   text-align: center;
 }

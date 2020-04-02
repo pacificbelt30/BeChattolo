@@ -11,9 +11,9 @@ const XHR_TIMEOUT = 1000 * 5; // サーバリクエストのタイムアウト�
 const MAINLOOP_TIMER = 1000 * 5; // メイン関数の実行間隔の時間 (ms)
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
-// const SEND_SERVER = 'chat.php';
+const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
-const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
+// const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
 
 // phpへのリクエスト種類
 const ADD_MES = 'add'; // メッセージの追加
@@ -60,16 +60,16 @@ var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
 window.onload = function Begin() {
-  console.log('%cＢｅちゃっとぉ%c Ver.0.8.6 20200402', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
-  console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
-  ck_indexedDB(); // IndexedDBのサポート確認
+  c_page(1); // 表示更新
   ck_setting(); // Localstrage内の設定情報確認
   ck_user(); // ユーザー名確認
-  c_page(1); // 表示更新
   client_width(true); // リスト表示するか
-  change_room(getParam('room')); // GET_valueでRoom変更
   change_theme(localStorage.getItem("theme")); // Theme適用
+  change_room(getParam('room')); // GET_valueでRoom変更
+  ck_indexedDB(); // IndexedDBのサポート確認
   main(1); // main()に処理を渡す
+  console.log('%cＢｅちゃっとぉ%c Ver.0.8.7 20200402', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+  console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
 }
 
 // ----- メイン処理 -----
@@ -702,7 +702,6 @@ function update_disp_db(up_info, i, r_list) {
         temp_id.classList.remove("on_butt"); // PassiveRoom
       }
       temp_id.classList.remove("new_mes"); // 通知削除
-      favicon(0); // 通知オフ
       db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
     }
   } else {
@@ -767,6 +766,7 @@ function update_disp_arr(i, r_list) {
     } else {
       temp_id.classList.remove("on_butt"); // PassiveRoom
     }
+    favicon(0); // 通知オフ
   }
 }
 
@@ -888,13 +888,13 @@ document.onkeydown = keydown;
 
 function keydown() {
   s_value = localStorage.getItem("sendKey");
-  if (s_value === '1' && event.altKey == true && event.keyCode == 13) { // Alt + Enter で送信
+  if (s_value === '1' && event.altKey === true && event.keyCode === 13) { // Alt + Enter で送信
     b_send();
-  } else if (s_value === '2' && event.shiftKey == true && event.keyCode == 13) { // Shift + Enter で送信
+  } else if (s_value === '2' && event.shiftKey === true && event.keyCode === 13) { // Shift + Enter で送信
     b_send();
-  } else if (s_value === '3' && event.ctrlKey == true && event.keyCode == 13) { // Ctrl + Enter で送信
+  } else if (s_value === '3' && event.ctrlKey === true && event.keyCode === 13) { // Ctrl + Enter で送信
     b_send();
-  } else if (s_value === '4' && event.keyCode == 13) { // Enter で送信
+  } else if (s_value === '4' && event.keyCode === 13) { // Enter で送信
     b_send();
   }
 }
@@ -935,12 +935,16 @@ function getParam(name, url) {
 }
 
 // ----- ファビコンの変更 -----
+// ----- スマホの時はshow_roomlistの色
 function favicon(type) {
   const fav = document.getElementById('favicon');
+  const show_roomlist = document.getElementById('show_roomlist');
   if (type === 1) { // 通知
     fav.href = "fav32_2.png";
+    show_roomlist.style.color = '#00a0e9';
   } else { // デフォルト
     fav.href = "fav32.png";
+    show_roomlist.style.color = '#ddd';
   }
 }
 
@@ -948,7 +952,7 @@ function favicon(type) {
 function client_width() {
   const L_side = document.getElementById('L_side');
   const create_room = document.getElementById('create_room');
-  if (window.outerWidth < MIN_WINDOW) {
+  if (window.innerWidth < MIN_WINDOW) {
     if (L_side_toggle !== 1) {
       L_side.style.display = "none";
       create_room.style.display = "none";
@@ -1010,7 +1014,7 @@ function ex_b_send(option1, option2) { // 動作種類, 特定の動作をする
 window.addEventListener("resize", function () { // スクロールイベント取得
   const L_side = document.getElementById('L_side');
   const create_room = document.getElementById('create_room');
-  if (window.outerWidth < MIN_WINDOW && L_side_toggle !== 1) {
+  if (window.outerWidth <= MIN_WINDOW && L_side_toggle !== 1) {
     L_side.style.display = "none";
     create_room.style.display = "none";
   } else {
