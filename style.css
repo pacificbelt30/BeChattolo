@@ -1,23 +1,9 @@
 @charset "UTF-8";
 
-/*
- * Font Awesome Free 5.12.1 by @fontawesome - https://fontawesome.com
- * License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
- */
 @font-face {
   font-family: "font-awe_sol";
   src: url("fa-solid.woff2") format("woff2");
 }
-
-/*
- * Play by Jonas Hecksher
- * License - http://scripts.sil.org/OFL (Fonts: SIL OFL 1.1)
- */
- @font-face {
-  font-family: "font-play";
-  src: url("play.woff2") format("woff2");
-}
-
 
 body {
   width: 100%;
@@ -31,10 +17,6 @@ body {
   /* font-family: flop,"\30D2\30E9\30AE\30CE\89D2\30B4 Pro W3",Hiragino Kaku Gothic Pro,"\30E1\30A4\30EA\30AA",Meiryo,"\FF2D\FF33 \FF30\30B4\30B7\30C3\30AF",MS P,sans-serif!important; */
   /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
   font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif;
-}
-
-#descr_tit, #edit_room, #time_b, button, a {
-  font-family: 'font-play',Meiryo, sans-serif;
 }
 
 header h1 {
@@ -109,7 +91,6 @@ header h1 {
   cursor: pointer;
   width: 100%;
   text-align: right;
-  font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .L_side #romain {
@@ -186,7 +167,7 @@ h1 {
   padding: 3px 10px 6px 10px;
   border: none;
   border-top: dashed 1px #111;
-  border-left: solid 2px #444;
+  border-left: solid 3px #444;
   word-break: break-all;
   font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
   position: static;
@@ -201,7 +182,7 @@ h1 {
   padding: 3px 10px 6px 10px;
   /* border: solid 1px #00a0e9; */
   /* border-top: dashed 1px #111; */
-  border-left: solid 2px #00a0e9;
+  border-left: solid 3px #00a0e9;
   word-break: break-all;
   font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
   position: static;
@@ -210,12 +191,11 @@ h1 {
 
 #list2 {
   color: #777;
-  border-left: solid 2px #111;
-  font-family: 'font-play',Meiryo, sans-serif;
+  border-left: solid 3px #111;
 }
 
 #conttt .li_media {
-  border-left: solid 2px orange;
+  border-left: solid 3px orange;
 }
 
 #conttt .media {
@@ -244,8 +224,7 @@ h1 {
   margin-top: 3px;
   left: 10px;
   overflow: hidden;
-  /* font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; */
-  font-family: 'font-play',Meiryo, sans-serif;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 #user {
@@ -254,7 +233,6 @@ h1 {
   font-weight: bold;
   font-size: 0.9em;
   position: relative;
-  font-family: 'font-play',Meiryo, sans-serif;
 }
 
 #user:before {
@@ -269,8 +247,7 @@ h1 {
   right: 0;
   font-size: 0.7em;
   color: #999;
-  /* font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif; */
-  font-family: 'font-play',Meiryo, sans-serif;
+  font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif;
 }
 
 #date:before {

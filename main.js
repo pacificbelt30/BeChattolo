@@ -12,7 +12,6 @@ const XHR_TIMEOUT_L = 1000 * 3600; // サーバリクエストのタイムアウ
 const MAINLOOP_TIMER = 1000 * 5; // メイン関数の実行間隔の時間 (ms)
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
-const PUSH_TIMER = 3000; // Push通知の表示時間
 const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
@@ -48,13 +47,11 @@ var room_show = 'Main_room'; // 現在アクティブなRoomの表示名
 var descrip_text = ''; // 現在アクティブなRoomのDescription
 var now_thread = 0; // 現在アクティブなRoomのthread
 var exec_cnt = 0; // main()の重複実行を抑えるために実行数をカウントする変数
+var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, サポートされているが、アクセス不可:2
 var sub_DB = []; // IndexedDBが使用できない場合、更新状態を配列で保持する. そのため確保しておく
 
-var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, サポートされているが、アクセス不可:2
-var support_push = 0; // NotificationAPI(Push通知)が利用可能:0, 非サポート:1, 許可されていない:2, 無視:3
-
 // ----- 設定情報用変数 デフォルト値 -----
-var notice_set = 0; // 通知の設定
+var notice_set = 1; // 通知の設定
 var notice2_set = 0; // 特殊な通知の設定
 var theme_set = 1; // Themeの設定
 var sendKey_set = 1; // 送信ショートカットの設定
@@ -72,7 +69,7 @@ window.onload = function Begin() {
   change_room(getParam('room')); // GET_valueでRoom変更
   ck_indexedDB(); // IndexedDBのサポート確認
   main(1); // main()に処理を渡す
-  console.log('%cＢｅちゃっとぉ%c Ver.0.8.9 20200403', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+  console.log('%cＢｅちゃっとぉ%c Ver.0.8.8 20200402', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
 }
 
@@ -321,7 +318,6 @@ function noti_setting() { // 通知設定更新
   if (notification_set.checked) {
     localStorage.setItem("Notice", "1");
     notice_set = 1;
-    push_cr(1); // 通知の許可確認
   } else {
     localStorage.setItem("Notice", "0");
     notice_set = 0;
@@ -400,7 +396,7 @@ function e_setting() {
 }
 
 // ----- 通知の作成 -----
-function notice() {
+function notice(message) {
   notice_set = localStorage.getItem('Notice'); // Localstrageから設定値取得
   notice2_set = localStorage.getItem('Notice2');
   if (notice2_set == 1) {
@@ -410,44 +406,18 @@ function notice() {
   } else if (notice2_set == 3) {
     m3_notice();
   }
-  if (document.hidden && notice_set === '1') {
-  // if (notice_set === '1') {
-      var mes = 'New message received!';
-    push_cr(2, mes, PUSH_TIMER); // Push通知 4秒間で消える
+  if (document.hidden && notice_set == 1) {
+    if (!message) {
+      message = 'New message received!';
+    }
+    Push.create(message, {
+      timeout: timer,
+      onClick: function () {
+        window.focus();
+        this.close();
+      }
+    });
   }
-}
-// ----- Push通知 -----
-function push_cr(mode, mes, times) {
-// mode===1: サポート/許可確認, ===2: 通知
-  if (mode===1) {
-    // ブラウザが通知をサポートしているか確認
-    if (!('Notification' in window)) {
-      support_push = 1; // 非サポート
-    }
-    else {
-      // 許可を求める
-      Notification.requestPermission()
-        .then((permission) => {
-          if (permission === 'granted') { // 許可
-            support_push = 0;
-          } else if (permission === 'denied') { // だめです
-            support_push = 2;
-          } else if (permission === 'default') { // 無視
-            support_push = 3;
-          }
-      });
-    }
-  } else if (mode === 2 && support_push === 0) {
-    console.log('notice');
-    // 通知作成
-    var notification = new Notification(mes);
-    notification.onClick = function() { // 通知クリック時の動作
-      window.focus();
-      this.close();
-    }
-    setTimeout(notification.close.bind(notification), times); // 通知を閉じる
-  }
-
 }
 
 // ----- メッセージを送信 -----
@@ -514,14 +484,19 @@ function nowD() {
 // ----- 時刻表示の更新 -----
 function date_update() {
   const TIME_B = document.getElementById('time_b'); // 時刻表示用(仮)
-  var week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  var week = ["日", "月", "火", "水", "木", "金", "土"];
   var date = new Date();
-  TIME_B.innerHTML = date.getFullYear() + '-' + zerosli((date.getMonth() + 1)) + '-' + zerosli(date.getDate()) + ' (' + week[date.getDay()] + ') ' + zerosli(date.getHours()) + '<span id=dot>:</span>' + zerosli(date.getMinutes());
-}
-
-// ----- 2桁の0埋め -----
-function zerosli(no) {
-  return ("00" + no).slice(-2);
+  if (date.getHours() < 10) {
+    date_hours = '0' + date.getHours();
+  } else {
+    date_hours = date.getHours();
+  }
+  if (date.getMinutes() < 10) {
+    date_minutes = '0' + date.getMinutes();
+  } else {
+    date_minutes = date.getMinutes();
+  }
+  TIME_B.innerHTML = date.getMonth() + 1 + '月' + date.getDate() + '日(' + week[date.getDay()] + ') ' + date_hours + '<span id=dot>:</span>' + date_minutes;
 }
 
 // ----- Ajaxにより非同期でサーバへリクエスト -----
@@ -872,9 +847,6 @@ function ck_setting() {
     localStorage.setItem("Notice", notice_set);
   } else {
     notice_set = localStorage.getItem("Notice");
-    if (notice_set === 1) {
-      push_cr(1); // 通知許可確認
-    }
   }
 
   if (!localStorage.getItem("Notice2")) { // 特殊な通知の設定の確認
