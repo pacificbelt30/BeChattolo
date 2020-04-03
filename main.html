@@ -6,37 +6,31 @@
   <!-- <meta charset="SJIS"> -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-title" content="Ｂｅちゃっとぉ">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#BBB">
-  <link rel="shortcut icon" href="fav32.png" id="favicon" type="image/png">
+  <link rel="shortcut icon" href="logo4.png" id="favicon" type="image/png">
   <title>Beちゃっとぉ</title>
 
   <meta http-equiv="x-dns-prefetch-control" content="on">
-  <link rel="preconnect dns-prefetch" href="//u2net.azurewebsites.net">
-  <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+  <link rel="preconnect" href="//u2net.azurewebsites.net">
+  <link rel="dns-prefetch" href="//u2net.azurewebsites.net">
   <link rel="dns-prefetch" href="//www.googletagmanager.com">
+  <link rel="preload" href="fa-solid.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="play.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="//www.googletagmanager.com/gtag/js?id=UA-122638281-2" as="script">
+
   <link rel="prefetch preload" href="style.css?ver088" as="style">
   <!-- <link rel="preload" href="style.min.css?ver088" as="style"> -->
-  <link rel="preload" href="m_notice.min.js" as="script">
-  <link rel="preload" href="fa-solid.woff2" as="font/woff2" crossorigin="anonymous">
-
   <link rel="stylesheet" type="text/css" href="style.css?ver088">
   <!-- <link rel="stylesheet" type="text/css" href="style.min.css?ver088"> -->
 
   <!-- メインのJS -->
-  <script charset="utf-8" src="main.js?ver088" defer></script>
-  <!-- <script charset="utf-8" src="main.min.js?ver088" defer></script> -->
-  <script charset="utf-8" src="//cdn.jsdelivr.net/npm/push.js@1/bin/push.min.js" defer></script>
+  <script charset="utf-8" src="main.js?ver089" defer></script>
+  <!-- <script charset="utf-8" src="main.min.js?ver089" defer></script> -->
+
   <script charset="utf-8" src="m_notice.min.js" defer></script>
   <script async src="//www.googletagmanager.com/gtag/js?id=UA-122638281-2"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag('js', new Date());
-    gtag('config', 'UA-122638281-2');
-  </script>
 </head>
 
 <body id="body">
@@ -142,6 +136,15 @@
 </body>
 <style id="style_c"></style>
 
-<script>
+<!-- <script>
   document.getElementById('conttt').innerHTML = "<div id='load'><video src='lg.mp4' muted autoplay loop></video></div>";
-</script>
+</script> -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+  gtag('js', new Date());
+  gtag('config', 'UA-122638281-2');
+  </script>
