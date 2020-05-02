@@ -70,7 +70,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.15 20200503', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.14 20200503', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -211,20 +211,20 @@ function ck_room_data() {
 // ----- Roomデータ取得 -----
 function get_room_data(option) { // タイムアウトを長くするオプション
   if (option === true) {
-    xhr('req=' + GET_MES + '&room=' + now_room, GET_MES, false, true, exe_room);
+    xhr('req=' + GET_MES + '&room=' + now_room, GET_MES, false, true);
   } else {
-    xhr('req=' + GET_MES + '&room=' + now_room, GET_MES, false, false, exe_room);
+    xhr('req=' + GET_MES + '&room=' + now_room, GET_MES, false, false);
   }
 }
 
 // ----- 追加読み込み判定 -----
-function get_room_data_plus(thr, str, exe_room) {
+function get_room_data_plus(thr, str) {
   const CONTTT = document.getElementById('conttt'); // メッセージ内容の表示部分
   if (str) {
     var r_list = JSON.parse(str);
     if (r_list["object"] && r_list["object"].length > 0) {
       CONTTT.innerHTML = CONTTT.innerHTML + parse_message(r_list); // メッセージを追加します
-      caches["mes"][exe_room]["object"].push = r_list;
+      caches["mes"][now_room]["object"].push = r_list;
     }
   }
   // 追加読み込み
@@ -563,7 +563,7 @@ function zerosli(no) {
 }
 
 // ----- Ajaxにより非同期でサーバへリクエスト -----
-function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内容, リクエストの種類, 追加読み込みの引継ぎ, 通信のタイムアウトを長くするか, 実行するRoom名(非同期なのでnew_roomは使えない)
+function xhr(send_data, send_mode, param1, option) { // POSTする内容, リクエストの種類, 追加読み込みの引継ぎ, 通信のタイムアウトを長くするか
   const req = new XMLHttpRequest();
   req.open('POST', SEND_SERVER, true);
   req.setRequestHeader('Pragma', 'no-cache'); // キャッシュを無効にするためのヘッダ指定
@@ -590,7 +590,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             } else {
               onload_flag["mes"] = true;
             }
-            caches["mes"][exe_room] = resData; // メッセージ内容を配列に保存しておく
+            caches["mes"][now_room] = resData; // メッセージ内容を配列に保存しておく
             break;
           case GET_DIR:
             if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
@@ -609,7 +609,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             }
             break;
           case JOINT_MES:
-            get_room_data_plus(param1, resData, exe_room); // 追加読み込み
+            get_room_data_plus(param1, resData); // 追加読み込み
             break;
         }
       } else {
