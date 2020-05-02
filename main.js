@@ -66,7 +66,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.11 20200430', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.12 20200502', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 window.onload = function Begin() {
@@ -595,7 +595,8 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
       // console.log(r_list);
 
       // Roomボタン生成
-      for (var i = 0; i < Object.keys(r_list).length; i++) {
+      var list_length = Object.keys(r_list).length;
+      for (var i = 0; i < list_length; i++) {
         if (document.getElementById('ro' + r_list[i]["dir_name"]) === null) {
           reset_list(r_list);
         }
@@ -603,13 +604,13 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
 
       if (support_indexedDB < 1) { // IndexedDBを使用できるか
         // Class追加 + DB操作
-        for (var i = 0; i < Object.keys(r_list).length; i++) {
+        for (var i = 0; i < list_length; i++) {
 
           // IndexedDB操作&画面更新
           db_connect(DB_N, OBJ_STORE_LAST, 'g_last', r_list[i]["dir_name"], i, r_list); // IndexedDB操作用関数を実行させる
         }
       } else { // IndexedDB使用不可
-        for (var i = 0; i < Object.keys(r_list).length; i++) {
+        for (var i = 0; i < list_length; i++) {
           update_disp_arr(i, r_list); // 画面更新
         }
       }
@@ -665,7 +666,8 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
 // r_listは配列で渡す必要があります
 function parse_message(r_list) {
   var list_put = ''; // 出力用の変数
-  for (var i = 0; i < r_list["object"].length; i++) {
+  var list_length = r_list["object"].length;
+  for (var i = 0; i < list_length; i++) {
     var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
     content = AutoLink(content); // リンクをAnchorに変換
     if (r_list["object"][i]['type'] === 'log') continue;
@@ -704,7 +706,8 @@ function getLink(str) {
 function reset_list(r_list) {
   var putData = ''; // RoomList
   const L_side = document.getElementById('L_side');
-  for (var i = 0; i < Object.keys(r_list).length; i++) {
+  var list_length =  Object.keys(r_list).length;
+  for (var i = 0; i < list_length; i++) {
     putData += "<button id='ro" + r_list[i]["dir_name"] + "' onclick=change_room('" + r_list[i]["dir_name"] + "')>" + r_list[i]["room_name"] + "</button><br>";
   }
   L_side.innerHTML = putData;

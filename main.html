@@ -6,35 +6,45 @@
   <!-- <meta charset="SJIS"> -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-title" content="Ｂｅちゃっとぉ">
-  <link rel="shortcut icon" href="fav32.png" id="favicon" type="image/png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#BBB">
+  <link rel="shortcut icon" href="https://u2dev.blob.core.windows.net/doc/logo4.png" id="favicon" type="image/png">
+  <!-- <link rel="shortcut icon" href="logo4.png" id="favicon" type="image/png"> -->
   <title>Beちゃっとぉ</title>
-  <link rel="preload" href="style.css?ver080" as="style">
-  <link rel="preload" href="m_notice.min.js" as="script">
-  <link rel="preload" href="fa-solid.woff2" as="font" crossorigin="anonymous">
 
-  <link rel="stylesheet" type="text/css" href="style.css?ver080">
+  <meta http-equiv="x-dns-prefetch-control" content="on">
+  <link rel="preconnect" href="//u2net.azurewebsites.net">
+  <link rel="dns-prefetch" href="//u2net.azurewebsites.net">
+  <link rel="dns-prefetch" href="//u2dev.blob.core.windows.net">
+  <link rel="dns-prefetch" href="//www.googletagmanager.com">
+  <!-- <link rel="preload" href="https://u2dev.blob.core.windows.net/doc/fa-solid.woff2" as="font" type="font/woff2" crossorigin> -->
+  <!-- <link rel="preload" href="https://u2dev.blob.core.windows.net/doc/play.woff2" as="font" type="font/woff2" crossorigin> -->
+  <link rel="preload" href="fa-solid.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="play.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="//www.googletagmanager.com/gtag/js?id=UA-122638281-2" as="script">
+
+  <!-- <link rel="prefetch preload" href="https://u2dev.blob.core.windows.net/doc/style.min.css?ver088" as="style"> -->
+  <link rel="prefetch preload" href="style.css?ver088" as="style">
+  <!-- <link rel="preload" href="style.min.css?ver088" as="style"> -->
+  <!-- <link rel="stylesheet" type="text/css" href="https://u2dev.blob.core.windows.net/doc/style.min.css?ver088"> -->
+  <link rel="stylesheet" type="text/css" href="style.css?ver088">
+  <!-- <link rel="stylesheet" type="text/css" href="style.min.css?ver088"> -->
 
   <!-- メインのJS -->
-  <script charset="utf-8" src="main.js" defer></script>
-  <script charset="utf-8" src="//cdn.jsdelivr.net/npm/push.js@1/bin/push.min.js" defer></script>
-  <script charset="utf-8" src="m_notice.min.js" defer></script>
-  <script async src="//www.googletagmanager.com/gtag/js?id=UA-122638281-2"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
+  <!-- <script charset="utf-8" src="https://u2dev.blob.core.windows.net/doc/main.min.js?ver089" async></script> -->
+  <script charset="utf-8" src="main.js?ver089" async></script>
+  <!-- <script charset="utf-8" src="main.min.js?ver089" async></script> -->
 
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag('js', new Date());
-    gtag('config', 'UA-122638281-2');
-  </script>
+  <script charset="utf-8" src="m_notice.min.js" defer></script>
+  <!-- <script charset="utf-8" src="https://u2dev.blob.core.windows.net/doc/m_notice.min.js" defer></script> -->
+  <script src="//www.googletagmanager.com/gtag/js?id=UA-122638281-2" defer></script>
 </head>
 
 <body id="body">
   <p id="time_b"></p>
   <header>
     <!-- <h2 style="font-size: 0.5em;" id="update_notice">アップデートがあります. リロードしてください.</h2> -->
-    <!-- <h1 style="font-size: 1em;">Bさんの<ruby><rb>非同期劘蔿<rb><rp>(</rp><rt>Beeeeeee------</rt><rp>)</rp></ruby>リアルタイムちゃっとぉ</h1> -->
     <h1 style="font-size: 1em;">Beちゃっとぉ<span id="room_top_name"></span></h1>
     <!-- <h1 style="font-size: 1em;">Beちゃっとぉ</h1> -->
     <div id="first_sc">
@@ -92,6 +102,9 @@
       <h3>Load Embedded Media</h3>
       <input type="checkbox" id="loadmedia" class="loadmedia" onchange="loadem_setting()"><label for="loadmedia"
         class="loadmedia">Enable</label>
+      <h3>ASCIIart Mode(β)</h3>
+      <input type="checkbox" id="aamode" class="aamode" onchange="aamode_setting()"><label for="aamode"
+        class="aamode">Enable</label>
     </div>
     <div id="create_room" onclick="room_editx(2)"><i class="fas fa-plus-circle"></i></div>
     <!-- <input type="text" name="b_send" id="chat_content" placeholder="Name"> -->
@@ -118,6 +131,7 @@
   <section>
     <div id="main_contents">
       <div id=main_conttt>
+        <div id="edit_message_b" onclick="edit_message()"><i class=""></i></div>
         <p id="conttt">
         </p>
         <noscript>
@@ -133,7 +147,17 @@
   </section>
 </body>
 <style id="style_c"></style>
+<style id="style_lifont"></style>
 
-<script>
+<!-- <script>
   document.getElementById('conttt').innerHTML = "<div id='load'><video src='lg.mp4' muted autoplay loop></video></div>";
-</script>
+</script> -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+  gtag('js', new Date());
+  gtag('config', 'UA-122638281-2');
+  </script>
