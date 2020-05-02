@@ -70,7 +70,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.13 20200503', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.14 20200503', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -515,16 +515,16 @@ function b_send() {
 function change_room(room) {
   if (room) {
     now_room = room;
-    if (need_update_caches) { // キャッシュの更新が必要
+  }
+  if (need_update_caches) { // キャッシュの更新が必要
+    main(1); // 更新
+    need_update_caches = false;
+  } else { // キャッシュの更新が必要ない場合
+    if (typeof caches["mes"][now_room] !== 'undefined') { // キャッシュが存在するか確認
+      update_disp(2, caches['mes'][now_room]); // メッセージ内容を更新
+      update_disp(1, caches['dir']); // Room表示更新
+    } else { // キャッシュがない場合
       main(1); // 更新
-      need_update_caches = false;
-    } else { // キャッシュの更新が必要ない場合
-      if (typeof caches["mes"][now_room] !== 'undefined') { // キャッシュが存在するか確認
-        update_disp(2, caches['mes'][now_room]); // メッセージ内容を更新
-        update_disp(1, caches['dir']); // Room表示更新
-      } else { // キャッシュがない場合
-        main(1); // 更新
-      }
     }
   }
 }
