@@ -52,6 +52,10 @@ var descrip_text = ''; // 現在アクティブなRoomのDescription
 var now_thread = 0; // 現在アクティブなRoomのthread
 var exec_cnt = 0; // main()の重複実行を抑えるために実行数をカウントする変数
 var sub_DB = []; // IndexedDBが使用できない場合、更新状態を配列で保持する. そのため確保しておく
+var onload_flag = {"onload":false,"mes":false,"dir":false}; // ページが読み込まれたかのフラグ
+var caches = {}; caches["mes"] = {}; // メッセージ保管用の配列 (キャッシュ)
+var need_update_caches = true; // キャッシュの更新が必要かのフラグ
+
 
 var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, サポートされているが、アクセス不可:2
 var support_push = 0; // NotificationAPI(Push通知)が利用可能:0, 非サポート:1, 許可されていない:2, 無視:3
@@ -66,16 +70,24 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.12 20200502', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.13 20200503', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
+ck_indexedDB(); // IndexedDBのサポート確認
+change_room(getParam('room')); // GET_valueでRoom変更 + main()に処理が渡される
 window.onload = function Begin() {
   c_page(1); // 表示更新
+  onload_flag["onload"] = true; // 反映待ち
+  if (onload_flag["mes"]){
+    update_disp(2, caches['mes'][now_room]); // メッセージ内容を更新
+    get_room_data_plus(now_thread); // 追加読み込み
+  }
+  if (onload_flag["dir"]) {
+    update_disp(1, caches['dir']); // Room表示更新
+  }
   client_width(true); // リスト表示するか
   change_theme(localStorage.getItem("theme")); // Theme適用
-  change_room(getParam('room')); // GET_valueでRoom変更
-  ck_indexedDB(); // IndexedDBのサポート確認
-  main(1); // main()に処理を渡す
+  // main(1); // main()に処理を渡す
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
 }
 
@@ -212,6 +224,7 @@ function get_room_data_plus(thr, str) {
     var r_list = JSON.parse(str);
     if (r_list["object"] && r_list["object"].length > 0) {
       CONTTT.innerHTML = CONTTT.innerHTML + parse_message(r_list); // メッセージを追加します
+      caches["mes"][now_room]["object"].push = r_list;
     }
   }
   // 追加読み込み
@@ -502,7 +515,17 @@ function b_send() {
 function change_room(room) {
   if (room) {
     now_room = room;
-    main(1); // 更新
+    if (need_update_caches) { // キャッシュの更新が必要
+      main(1); // 更新
+      need_update_caches = false;
+    } else { // キャッシュの更新が必要ない場合
+      if (typeof caches["mes"][now_room] !== 'undefined') { // キャッシュが存在するか確認
+        update_disp(2, caches['mes'][now_room]); // メッセージ内容を更新
+        update_disp(1, caches['dir']); // Room表示更新
+      } else { // キャッシュがない場合
+        main(1); // 更新
+      }
+    }
   }
 }
 
@@ -561,11 +584,21 @@ function xhr(send_data, send_mode, param1, option) { // POSTする内容, リク
             console.log('%cPOST_OK!', 'color: #00a0e9;');
             break;
           case GET_MES:
-            update_disp(2, resData);
-            get_room_data_plus(now_thread); // 追加読み込み
+            if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
+              update_disp(2, resData);
+              get_room_data_plus(now_thread); // 追加読み込み
+            } else {
+              onload_flag["mes"] = true;
+            }
+            caches["mes"][now_room] = resData; // メッセージ内容を配列に保存しておく
             break;
           case GET_DIR:
-            update_disp(1, resData);
+            if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
+              update_disp(1, resData);
+            } else {
+              onload_flag["dir"] = true;
+            }
+            caches["dir"] = resData; // Room情報を配列に保存しておく
             break;
           case SET_DIR:
           case DEL_DIR:
@@ -588,7 +621,6 @@ function xhr(send_data, send_mode, param1, option) { // POSTする内容, リク
 
 // ----- データ取得後の処理 -----
 function update_disp(sw, str, option1) { // 更新の種類, 更新データ
-
   switch (sw) {
     case 1: // Roomリスト更新
       var r_list = JSON.parse(str);
@@ -729,6 +761,7 @@ function update_disp_db(up_info, i, r_list) {
     // console.log(up_info["up_date"]+' '+r_list[i]["l_date"]);
     if (up_info["up_date"] !== r_list[i]["l_date"]) {
       // 最終更新時が古い場合
+      need_update_caches = true; // キャッシュの更新が必要
       if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれ、タブがアクティブ
         temp_id.classList.add("on_butt"); // ActiveRoom
         temp_id.classList.remove("new_mes"); // 通知削除
@@ -1134,7 +1167,7 @@ function ck_ex_content2() { // メインコンテンツの位置変更
 }
 
 // ----- メッセージ編集/削除 -----
-function edit_message(thread, id) {
+function edit_message(type, v_send, thread, id) { // id は 編集対象のメッセージID
   xhr('req=' + EDT_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send +'&thread='+thread+'&id='+id, EDT_MES, false, true);
   // xhr('req=' + EDT_MES + '&room=' + now_room, EDT_MES, false, true);
 }

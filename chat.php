@@ -14,7 +14,6 @@ JSON化、関数化、WebAPI向けに修正
 
 
 // ----- 予定 -----
-メッセージの保存ファイルをbbs/bbbを作っていたのをbbs(メイン)だけにする
 ピン固定
 スタンプ機能追加
 RoomListの並び替え
@@ -55,6 +54,10 @@ From: Markdownチートシート
 ## これはH2タグ
 
 // ----- 更新履歴 -----
+Ver.0.8.13
+メッセージデータをメモリに保管(キャッシュ)し、2回目以降同じRoomを開くときキャッシュを優先するようにした
+メッセージの保存ファイルをbbs/bbbを作っていたのをbbs(メイン)だけにする
+
 Ver.0.8.11
 AA対応
 
@@ -153,7 +156,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
       break;
       case 'edt': // メッセージ編集(削除)
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-        EdtMes(esc($_POST['room'],1), esc($_POST['thread'],0), esc($_POST['id'],0), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), esc($_POST['media'], 0));
+        EdtMes(esc($_POST['room'],1), esc($_POST['thread'],0), esc($_POST['id'],0), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0));
       break;
       case 'del': // ルーム(削除) // アクセス不可にする
         DelRoom(esc($_POST['room'],1), esc($_POST['name'],0));
@@ -279,7 +282,7 @@ function GetMes($room, $thread) { // $threadは分割されたスレッド番号
 }
 
 // ------ メッセージの編集/削除 -----
-function EdtMes($room, $thread, $no, $name, $type, $contents, $media) { // $no は 配列番
+function EdtMes($room, $thread, $no, $name, $type, $contents) { // $no は 配列番
   $save_f = "./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE;
   if (is_file($save_f)) { // 保存ファイルが既存の場合
     $open_json = fopen($save_f, 'r');
@@ -295,9 +298,6 @@ function EdtMes($room, $thread, $no, $name, $type, $contents, $media) { // $no �
       'date' => date('Y-m-d H:i:s'),
       'edit_log' => array()
     );
-    if (isset($media) && $media) {
-      $save_data['media'] = $media;
-    }
     if (isset($json_main['object'][$no]['edit_log'])) {
       $save_data['edit_log'] = $json_main['object'][$no]['edit_log'];
     }
@@ -306,8 +306,7 @@ function EdtMes($room, $thread, $no, $name, $type, $contents, $media) { // $no �
         'type' => $json_main['object'][$no]['type'],
         'contents' => $json_main['object'][$no]['contents'],
         'date' => $json_main['object'][$no]['date'],
-        'media' => $json_main['object'][$no]['media']
-      );
+    );
     // IPv4 > int 変換
     $save_data['i'] = ip2long($_SERVER["REMOTE_ADDR"]);
     $json_main['l_date'] = date('Y-m-d H:i:s'); // データを更新
