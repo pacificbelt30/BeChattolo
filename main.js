@@ -70,7 +70,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.15 20200503', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.16 20200503', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -87,6 +87,9 @@ window.onload = function Begin() {
   }
   client_width(true); // リスト表示するか
   change_theme(localStorage.getItem("theme")); // Theme適用
+  if (change_font_aa === 1 || change_font_aa === '1') { // AAモード?
+    aamode_tgg(true);
+  }
   // main(1); // main()に処理を渡す
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
 }
@@ -378,10 +381,14 @@ function loadem_setting() { // 埋め込みメディアの表示
 
 function aamode_setting() { // ASCIIart Modeの設定
   const aamode = document.getElementById('aamode');
+  aamode_tgg(aamode.checked);
+}
+
+function aamode_tgg(sw) { // ASCIIaer Mode を操作します
   const style_lifont = document.getElementById('style_lifont');
-  if (aamode.checked) {
+  if (sw) {
     localStorage.setItem('aamode', "1");
-    style_lifont.innerHTML = "#list, #list2 {font-family: 'M+IPAモナ','Mona','mona-gothic-jisx0208.1990-0',IPAMonaPGothic,'IPA モナー Pゴシック','MS PGothic AA','MS PGothic','ＭＳ Ｐゴシック',sans-serif;}";
+    style_lifont.innerHTML = "#list, #list2, #list:first-child {font-family: 'M+IPAモナ','Mona','mona-gothic-jisx0208.1990-0',IPAMonaPGothic,'IPA モナー Pゴシック','MS PGothic AA','MS PGothic','ＭＳ Ｐゴシック',sans-serif;}";
   } else {
     localStorage.setItem('aamode', "0");
     style_lifont.innerHTML = '';
@@ -398,6 +405,7 @@ function e_setting() {
   const L_side = document.getElementById('L_side');
   const create_room = document.getElementById('create_room');
   const loadmedia = document.getElementById('loadmedia');
+  const aamode = document.getElementById('aamode');
 
   if (setting.style.display === "none") {
     if (sp_mode) {
@@ -418,6 +426,11 @@ function e_setting() {
       loadmedia.checked = true;
     } else {
       loadmedia.checked = false;
+    }
+    if (localStorage.getItem("aamode") === '1') { // メディアの表示
+      aamode.checked = true;
+    } else {
+      aamode.checked = false;
     }
     special_option.value = localStorage.getItem("Notice2");
     theme.value = localStorage.getItem("theme");
@@ -704,7 +717,7 @@ function parse_message(r_list) {
     content = AutoLink(content); // リンクをAnchorに変換
     if (r_list["object"][i]['type'] === 'log') continue;
     if (r_list["object"][i]['type'] !== 'plain' && getLink(r_list["object"][i]["media"])) {
-      if (localStorage.getItem("loadEm") === '1') { // メディアを表示するか
+      if (load_media_set === '1') { // メディアを表示するか
         if (r_list["object"][i]['type'] === 'image') { // 画像
           var out_data = "<li id=list class='li li_img li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><img src='" + getLink(r_list["object"][i]['media']) + "' alt class='media media_img'>";
         } else if (r_list["object"][i]['type'] === 'iframe') { // iframe
@@ -861,7 +874,7 @@ function update_disp_arr(i, r_list) {
 }
 
 // ----- ページ切り替え -----
-L_side_toggle = 0;
+var L_side_toggle = 0;
 
 function c_page(no) {
   const setting = document.getElementById('setting');
@@ -953,10 +966,14 @@ function ck_setting() {
 
   if (!localStorage.getItem("loadEm")) { // 埋め込みメディアの読み込み
     localStorage.setItem("loadEm", load_media_set);
+  } else {
+    load_media_set = localStorage.getItem("loadEm");
   }
 
   if (!localStorage.getItem("aamode")) { // アスキーアート向けのフォントに変更
     localStorage.setItem("aamode", change_font_aa);
+  } else {
+    change_font_aa = localStorage.getItem("aamode");
   }
 }
 
