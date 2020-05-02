@@ -8,19 +8,24 @@ GET ?room=xxx の指定により、開くページを指定できます
 
 // ----- 定数定義 -----
 const XHR_TIMEOUT = 1000 * 5; // サーバリクエストのタイムアウト時間(ms)
+const XHR_TIMEOUT_L = 1000 * 3600; // サーバリクエストのタイムアウト時間(ms)(長い)
 const MAINLOOP_TIMER = 1000 * 5; // メイン関数の実行間隔の時間 (ms)
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
+const PUSH_TIMER = 3000; // Push通知の表示時間
 const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
+// const SEND_SERVER = 'http://fukube.biz.ht/chat.php'; // POSTする本番サーバ2URL
 
 // phpへのリクエスト種類
 const ADD_MES = 'add'; // メッセージの追加
 const GET_MES = 'mes'; // メッセージ取得
+const EDT_MES = 'edt'; // メッセージの編集/削除
 const GET_DIR = 'dir'; // メッセージのディレクトリ一覧取得
 const SET_DIR = 'set'; // メッセージのディレクトリ(Room)の作成・編集
 const DEL_DIR = 'del'; // ディレクトリ(Room)へのアクセス不可にする
+// メッセージは分割され、スクロールされたときに随時読み込むため結合が必要
 const JOINT_MES = 'joint' // メッセージの結合
 
 // メッセージの種類
@@ -46,30 +51,32 @@ var room_show = 'Main_room'; // 現在アクティブなRoomの表示名
 var descrip_text = ''; // 現在アクティブなRoomのDescription
 var now_thread = 0; // 現在アクティブなRoomのthread
 var exec_cnt = 0; // main()の重複実行を抑えるために実行数をカウントする変数
-var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, サポートされているが、アクセス不可:2
 var sub_DB = []; // IndexedDBが使用できない場合、更新状態を配列で保持する. そのため確保しておく
 
+var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, サポートされているが、アクセス不可:2
+var support_push = 0; // NotificationAPI(Push通知)が利用可能:0, 非サポート:1, 許可されていない:2, 無視:3
+
 // ----- 設定情報用変数 デフォルト値 -----
-var notice_set = 1; // 通知の設定
+var notice_set = 0; // 通知の設定
 var notice2_set = 0; // 特殊な通知の設定
 var theme_set = 1; // Themeの設定
 var sendKey_set = 1; // 送信ショートカットの設定
 var load_media_set = 1; // 埋め込みメディアの読み込み
-
+var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.11 20200430', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+ck_setting(); // Localstrage内の設定情報確認
+ck_user(); // ユーザー名確認
 window.onload = function Begin() {
-  console.log('%cＢｅちゃっとぉ%c Ver.0.8.0 20200331', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
-  console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
-  ck_indexedDB(); // IndexedDBのサポート確認
-  ck_setting(); // Localstrage内の設定情報確認
-  ck_user(); // ユーザー名確認
   c_page(1); // 表示更新
   client_width(true); // リスト表示するか
-  change_room(getParam('room')); // GET_valueでRoom変更
   change_theme(localStorage.getItem("theme")); // Theme適用
+  change_room(getParam('room')); // GET_valueでRoom変更
+  ck_indexedDB(); // IndexedDBのサポート確認
   main(1); // main()に処理を渡す
+  console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
 }
 
 // ----- メイン処理 -----
@@ -78,7 +85,7 @@ function main(option) {
   ck_room_data(); // Room更新確認
   sp_mode = client_width(false);
   if (option === 1) { // Roomのメッセージ取得が必要な時
-    get_room_data();
+    get_room_data(true); // タイムアウト長い
   }
   date_update(); // 表示時刻の更新
 
@@ -117,7 +124,7 @@ function db_connect(base_name, store_name, sw, param1, param2, param3, param4, p
     open_db.onupgradeneeded = function (event) {
       var store = event.target.result;
       store.createObjectStore(store_name, {
-        keyPath: key
+        keyPath: 'room_key'
       });
       // console.log('DB Upgrade');
     }
@@ -190,8 +197,12 @@ function ck_room_data() {
 }
 
 // ----- Roomデータ取得 -----
-function get_room_data() {
-  xhr('req=' + GET_MES + '&room=' + now_room, GET_MES);
+function get_room_data(option) { // タイムアウトを長くするオプション
+  if (option === true) {
+    xhr('req=' + GET_MES + '&room=' + now_room, GET_MES, false, true);
+  } else {
+    xhr('req=' + GET_MES + '&room=' + now_room, GET_MES, false, false);
+  }
 }
 
 // ----- 追加読み込み判定 -----
@@ -313,6 +324,7 @@ function noti_setting() { // 通知設定更新
   if (notification_set.checked) {
     localStorage.setItem("Notice", "1");
     notice_set = 1;
+    push_cr(1); // 通知の許可確認
   } else {
     localStorage.setItem("Notice", "0");
     notice_set = 0;
@@ -349,6 +361,18 @@ function loadem_setting() { // 埋め込みメディアの表示
     localStorage.setItem('loadEm', "0");
   }
   get_room_data(); // メッセージの再読み込みが必要。
+}
+
+function aamode_setting() { // ASCIIart Modeの設定
+  const aamode = document.getElementById('aamode');
+  const style_lifont = document.getElementById('style_lifont');
+  if (aamode.checked) {
+    localStorage.setItem('aamode', "1");
+    style_lifont.innerHTML = "#list, #list2 {font-family: 'M+IPAモナ','Mona','mona-gothic-jisx0208.1990-0',IPAMonaPGothic,'IPA モナー Pゴシック','MS PGothic AA','MS PGothic','ＭＳ Ｐゴシック',sans-serif;}";
+  } else {
+    localStorage.setItem('aamode', "0");
+    style_lifont.innerHTML = '';
+  }
 }
 
 function e_setting() {
@@ -401,18 +425,44 @@ function notice() {
   } else if (notice2_set == 3) {
     m3_notice();
   }
-  if (document.hidden && notice_set == 1) {
-    if (!message) {
-      message = 'New message received!';
-    }
-    Push.create(message, {
-      timeout: timer,
-      onClick: function () {
-        window.focus();
-        this.close();
-      }
-    });
+  if (document.hidden && notice_set === '1') {
+  // if (notice_set === '1') {
+      var mes = 'New message received!';
+    push_cr(2, mes, PUSH_TIMER); // Push通知 4秒間で消える
   }
+}
+// ----- Push通知 -----
+function push_cr(mode, mes, times) {
+// mode===1: サポート/許可確認, ===2: 通知
+  if (mode===1) {
+    // ブラウザが通知をサポートしているか確認
+    if (!('Notification' in window)) {
+      support_push = 1; // 非サポート
+    }
+    else {
+      // 許可を求める
+      Notification.requestPermission()
+        .then((permission) => {
+          if (permission === 'granted') { // 許可
+            support_push = 0;
+          } else if (permission === 'denied') { // だめです
+            support_push = 2;
+          } else if (permission === 'default') { // 無視
+            support_push = 3;
+          }
+      });
+    }
+  } else if (mode === 2 && support_push === 0) {
+    console.log('notice');
+    // 通知作成
+    var notification = new Notification(mes);
+    notification.onClick = function() { // 通知クリック時の動作
+      window.focus();
+      this.close();
+    }
+    setTimeout(notification.close.bind(notification), times); // 通知を閉じる
+  }
+
 }
 
 // ----- メッセージを送信 -----
@@ -460,6 +510,7 @@ function change_room(room) {
 function esc(str) {
   return encodeURI(str)
     .replace(/&/g, '%26')
+    .replace(/\+/g, '%2B')
     .replace(/\r?\n/g, '%0D%0A');
 }
 
@@ -478,29 +529,28 @@ function nowD() {
 // ----- 時刻表示の更新 -----
 function date_update() {
   const TIME_B = document.getElementById('time_b'); // 時刻表示用(仮)
-  var week = ["日", "月", "火", "水", "木", "金", "土"];
+  var week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   var date = new Date();
-  if (date.getHours() < 10) {
-    date_hours = '0' + date.getHours();
-  } else {
-    date_hours = date.getHours();
-  }
-  if (date.getMinutes() < 10) {
-    date_minutes = '0' + date.getMinutes();
-  } else {
-    date_minutes = date.getMinutes();
-  }
-  TIME_B.innerHTML = date.getMonth() + 1 + '月' + date.getDate() + '日(' + week[date.getDay()] + ') ' + date_hours + '<span id=dot>:</span>' + date_minutes;
+  TIME_B.innerHTML = date.getFullYear() + '-' + zerosli((date.getMonth() + 1)) + '-' + zerosli(date.getDate()) + ' (' + week[date.getDay()] + ') ' + zerosli(date.getHours()) + '<span id=dot>:</span>' + zerosli(date.getMinutes());
+}
+
+// ----- 2桁の0埋め -----
+function zerosli(no) {
+  return ("00" + no).slice(-2);
 }
 
 // ----- Ajaxにより非同期でサーバへリクエスト -----
-function xhr(send_data, send_mode, param1) { // POSTする内容, リクエストの種類
+function xhr(send_data, send_mode, param1, option) { // POSTする内容, リクエストの種類, 追加読み込みの引継ぎ, 通信のタイムアウトを長くするか
   const req = new XMLHttpRequest();
   req.open('POST', SEND_SERVER, true);
   req.setRequestHeader('Pragma', 'no-cache'); // キャッシュを無効にするためのヘッダ指定
   req.setRequestHeader('Cache-Control', 'no-cach');
   req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
-  req.timeout = XHR_TIMEOUT; // サーバリクエストのタイムアウト時間の指定
+  if (option === true) {
+    req.timeout = XHR_TIMEOUT_L; // サーバリクエストのタイムアウト時間(長い)の指定
+  } else {
+    req.timeout = XHR_TIMEOUT; // サーバリクエストのタイムアウト時間の指定
+  }
   req.send(send_data);
   req.onreadystatechange = function () { // 通信ステータスが変わったとき実行
     if (req.readyState === 4) {
@@ -599,12 +649,12 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
         if (r_list["object"] && r_list["object"].length > 0) {
           list_put = parse_message(r_list); // list_putに表示用に直したデータを代入します
         } else {
-          list_put = "<li id=list2>Info: A new thread has been created</li>";
+          list_put = "<li id=list2>Info: Don't bother with this Info</li>";
         }
         CONTTT.innerHTML = list_put;
       } else {
         descr.innerHTML = '';
-        CONTTT.innerHTML = "<li id=list2>Info: A new thread has been created</li>";
+        CONTTT.innerHTML = "<li id=list2>Info: Don't bother with this Info</li>";
       }
 
       break;
@@ -618,6 +668,7 @@ function parse_message(r_list) {
   for (var i = 0; i < r_list["object"].length; i++) {
     var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
     content = AutoLink(content); // リンクをAnchorに変換
+    if (r_list["object"][i]['type'] === 'log') continue;
     if (r_list["object"][i]['type'] !== 'plain' && getLink(r_list["object"][i]["media"])) {
       if (localStorage.getItem("loadEm") === '1') { // メディアを表示するか
         if (r_list["object"][i]['type'] === 'image') { // 画像
@@ -640,8 +691,12 @@ function parse_message(r_list) {
 // ----- 文字列からURLを取り出す関数 -----
 function getLink(str) {
   var result = str.match(/((https?|ftp):\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)/);
-  result = result[0];
-  result = result.replace('&quot;', ''); // 文字エスケープ時に「"」が残ってしまうのを取り除く
+  if (result) {
+    result = result[0];
+    result = result.replace('&quot;', ''); // 文字エスケープ時に「"」が残ってしまうのを取り除く
+  } else {
+    result = false;
+  }
   return result;
 }
 
@@ -671,14 +726,10 @@ function update_disp_db(up_info, i, r_list) {
     // console.log(up_info["up_date"]+' '+r_list[i]["l_date"]);
     if (up_info["up_date"] !== r_list[i]["l_date"]) {
       // 最終更新時が古い場合
-      if (now_room === r_list[i]["dir_name"]) {
+      if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれ、タブがアクティブ
         temp_id.classList.add("on_butt"); // ActiveRoom
         temp_id.classList.remove("new_mes"); // 通知削除
-        if (document.hidden) { // タブがパッシブ
-          favicon(1); // 通知オン
-        } else {
-          favicon(0); // 通知オフ
-        }
+        favicon(0); // 通知オフ
         get_room_data(); // アクティブなRoomのメッセージ取得
         // RoomがアクティブになったらIndexedDB更新
         db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
@@ -687,7 +738,7 @@ function update_disp_db(up_info, i, r_list) {
         temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
         favicon(1); // 通知オン
-        notice(); // 通知する
+        notice(false); // 通知する
         db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], up_info["up_date"], 1, r_list[i]["room_name"], r_list[i]["thread"]);
       } else { // 通知したが、未読
         temp_id.classList.remove("on_butt"); // PassiveRoom
@@ -705,7 +756,6 @@ function update_disp_db(up_info, i, r_list) {
         temp_id.classList.remove("on_butt"); // PassiveRoom
       }
       temp_id.classList.remove("new_mes"); // 通知削除
-      favicon(0); // 通知オフ
       db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
     }
   } else {
@@ -727,7 +777,7 @@ function update_disp_arr(i, r_list) {
 
   if (sub_DB[r_list[i]["dir_name"]]) {
     if (sub_DB[r_list[i]["dir_name"]]["l_date"] !== r_list[i]["l_date"]) { // 更新日時が古い場合
-      if (now_room === r_list[i]["dir_name"]) {
+      if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれ、タブがアクティブ
         // Roomがアクティブになったら更新
         sub_DB[r_list[i]["dir_name"]] = { // 配列追加
           l_date: r_list[i]["l_date"],
@@ -743,7 +793,7 @@ function update_disp_arr(i, r_list) {
         temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
         favicon(1); // 通知オン
-        notice(); // 通知する
+        notice(false); // 通知する
       } else { // 通知したが、未読
         temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
@@ -770,6 +820,7 @@ function update_disp_arr(i, r_list) {
     } else {
       temp_id.classList.remove("on_butt"); // PassiveRoom
     }
+    favicon(0); // 通知オフ
   }
 }
 
@@ -830,7 +881,7 @@ function AutoLink(str) {
   // var regexp_url = /((h?)(ttps?:\/\/[a-zA-Z0-9.\-_@:/~?%&;=+#',()*!]+))/g;
   var regexp_url = /((h?)(ttps?:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+))/g;
   var regexp_makeLink = function (all, url, h, href) {
-    return '<a href="' + href + '"  target="_blank" rel="noopener">' + url + '</a>';
+    return '<a href="h' + href + '"  target="_blank" rel="noopener">' + url + '</a>';
   }
   return str.replace(regexp_url, regexp_makeLink);
 }
@@ -841,6 +892,9 @@ function ck_setting() {
     localStorage.setItem("Notice", notice_set);
   } else {
     notice_set = localStorage.getItem("Notice");
+    if (notice_set === 1) {
+      push_cr(1); // 通知許可確認
+    }
   }
 
   if (!localStorage.getItem("Notice2")) { // 特殊な通知の設定の確認
@@ -863,6 +917,10 @@ function ck_setting() {
 
   if (!localStorage.getItem("loadEm")) { // 埋め込みメディアの読み込み
     localStorage.setItem("loadEm", load_media_set);
+  }
+
+  if (!localStorage.getItem("aamode")) { // アスキーアート向けのフォントに変更
+    localStorage.setItem("aamode", change_font_aa);
   }
 }
 
@@ -891,13 +949,13 @@ document.onkeydown = keydown;
 
 function keydown() {
   s_value = localStorage.getItem("sendKey");
-  if (s_value === '1' && event.altKey == true && event.keyCode == 13) { // Alt + Enter で送信
+  if (s_value === '1' && event.altKey === true && event.keyCode === 13) { // Alt + Enter で送信
     b_send();
-  } else if (s_value === '2' && event.shiftKey == true && event.keyCode == 13) { // Shift + Enter で送信
+  } else if (s_value === '2' && event.shiftKey === true && event.keyCode === 13) { // Shift + Enter で送信
     b_send();
-  } else if (s_value === '3' && event.ctrlKey == true && event.keyCode == 13) { // Ctrl + Enter で送信
+  } else if (s_value === '3' && event.ctrlKey === true && event.keyCode === 13) { // Ctrl + Enter で送信
     b_send();
-  } else if (s_value === '4' && event.keyCode == 13) { // Enter で送信
+  } else if (s_value === '4' && event.keyCode === 13) { // Enter で送信
     b_send();
   }
 }
@@ -918,10 +976,10 @@ function change_theme(no) {
       style_c.innerHTML = "";
       break;
     case '2':
-      style_c.innerHTML = "#list, #list2 {background: #000; color: #fff;} #body{background: #111;} #R_side{color: #BBB;} #R_side,#L_side{background: #000;}";
+      style_c.innerHTML = "#list, #list2, #list:first-child {background: #000; color: #fff;} #body{background: #111;} #R_side{color: #BBB;} #R_side,#L_side{background: rgba(0,0,0,0.97);}";
       break;
     case '3':
-      style_c.innerHTML = "#list, #list2 {background: #fff!important; color: #111!important; border-top: none;} #body{background: #BBB;} #R_side{color: #111;} #R_side,#L_side{background: #eee;} #descr_tit{background: #BBB!important; color: #222;}";
+      style_c.innerHTML = "#list, #list2 {background: #fff!important; color: #111!important; border-top: none;} #body{background: #BBB;} #R_side{color: #111;} #R_side,#L_side{background: rgba(238,238,238,0.97);} #descr_tit{background: #BBB!important; color: #222;} #u_icon{background: #fff; color: #666; box-shadow: 0 0 5px #BBB;}";
       break;
   }
 }
@@ -938,12 +996,16 @@ function getParam(name, url) {
 }
 
 // ----- ファビコンの変更 -----
+// ----- スマホの時はshow_roomlistの色
 function favicon(type) {
   const fav = document.getElementById('favicon');
+  const show_roomlist = document.getElementById('show_roomlist');
   if (type === 1) { // 通知
     fav.href = "fav32_2.png";
+    show_roomlist.style.color = '#00a0e9';
   } else { // デフォルト
     fav.href = "fav32.png";
+    show_roomlist.style.color = '#ddd';
   }
 }
 
@@ -951,7 +1013,7 @@ function favicon(type) {
 function client_width() {
   const L_side = document.getElementById('L_side');
   const create_room = document.getElementById('create_room');
-  if (window.outerWidth < MIN_WINDOW) {
+  if (window.innerWidth < MIN_WINDOW) {
     if (L_side_toggle !== 1) {
       L_side.style.display = "none";
       create_room.style.display = "none";
@@ -1013,7 +1075,7 @@ function ex_b_send(option1, option2) { // 動作種類, 特定の動作をする
 window.addEventListener("resize", function () { // スクロールイベント取得
   const L_side = document.getElementById('L_side');
   const create_room = document.getElementById('create_room');
-  if (window.outerWidth < MIN_WINDOW && L_side_toggle !== 1) {
+  if (window.outerWidth <= MIN_WINDOW && L_side_toggle !== 1) {
     L_side.style.display = "none";
     create_room.style.display = "none";
   } else {
@@ -1066,4 +1128,10 @@ function ck_ex_content2() { // メインコンテンツの位置変更
     top_default += 32;
   }
   main_contents.style.top = top_default + "px";
+}
+
+// ----- メッセージ編集/削除 -----
+function edit_message(thread, id) {
+  xhr('req=' + EDT_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send +'&thread='+thread+'&id='+id, EDT_MES, false, true);
+  // xhr('req=' + EDT_MES + '&room=' + now_room, EDT_MES, false, true);
 }
