@@ -10,6 +10,7 @@ GET ?room=xxx の指定により、開くページを指定できます
 const XHR_TIMEOUT = 1000 * 5; // サーバリクエストのタイムアウト時間(ms)
 const XHR_TIMEOUT_L = 1000 * 3600; // サーバリクエストのタイムアウト時間(ms)(長い)
 const MAINLOOP_TIMER = 1000 * 5; // メイン関数の実行間隔の時間 (ms)
+const SKIP_COUNT = 6; // タブがパッシブのmain関数を実行しない間隔 回数
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
 const PUSH_TIMER = 3000; // Push通知の表示時間
@@ -55,6 +56,7 @@ var sub_DB = []; // IndexedDBが使用できない場合、更新状態を配列
 var onload_flag = {"onload":false,"mes":false,"dir":false}; // ページが読み込まれたかのフラグ
 var caches = {}; caches["mes"] = {}; // メッセージ保管用の配列 (キャッシュ)
 var need_update_caches = true; // キャッシュの更新が必要かのフラグ
+var skip_hidden_count = 0; // パッシブ時の負荷を下げる ためにカウントしておく
 
 
 var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, サポートされているが、アクセス不可:2
@@ -70,7 +72,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.16 20200503', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.17 20200503', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -90,24 +92,28 @@ window.onload = function Begin() {
   if (change_font_aa === 1 || change_font_aa === '1') { // AAモード?
     aamode_tgg(true);
   }
-  // main(1); // main()に処理を渡す
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
 }
 
 // ----- メイン処理 -----
 function main(option) {
-  ck_user(); // ユーザー名確認
-  ck_room_data(); // Room更新確認
-  sp_mode = client_width(false);
-  if (option === 1) { // Roomのメッセージ取得が必要な時
-    get_room_data(true); // タイムアウト長い
-  }
-  date_update(); // 表示時刻の更新
-
-  if (exec_cnt < 1) {
-    exec_cnt++;
-    setTimeout(main, MAINLOOP_TIMER);
-    setTimeout(reserve_cnt, MAINLOOP_TIMER - 100);
+  if (document.hidden && skip_hidden_count < SKIP_COUNT) {
+    skip_hidden_count++
+  } else {
+    ck_user(); // ユーザー名確認
+    sp_mode = client_width(false);
+    ck_room_data(); // Room更新確認
+    if (option === 1) { // Roomのメッセージ取得が必要な時
+      get_room_data(true); // タイムアウト長い
+    }
+    date_update(); // 表示時刻の更新
+  
+    if (exec_cnt < 1) {
+      exec_cnt++;
+      setTimeout(main, MAINLOOP_TIMER);
+      setTimeout(reserve_cnt, MAINLOOP_TIMER - 100);
+    }
+    skip_hidden_count = 0;
   }
 }
 
@@ -388,7 +394,7 @@ function aamode_tgg(sw) { // ASCIIaer Mode を操作します
   const style_lifont = document.getElementById('style_lifont');
   if (sw) {
     localStorage.setItem('aamode', "1");
-    style_lifont.innerHTML = "#list, #list2, #list:first-child {font-family: 'M+IPAモナ','Mona','mona-gothic-jisx0208.1990-0',IPAMonaPGothic,'IPA モナー Pゴシック','MS PGothic AA','MS PGothic','ＭＳ Ｐゴシック',sans-serif;}";
+    style_lifont.innerHTML = "#list, #list:first-child {font-family: 'M+IPAモナ','Mona','mona-gothic-jisx0208.1990-0',IPAMonaPGothic,'IPA モナー Pゴシック','MS PGothic AA','MS PGothic','ＭＳ Ｐゴシック',sans-serif;}";
   } else {
     localStorage.setItem('aamode', "0");
     style_lifont.innerHTML = '';
@@ -451,7 +457,7 @@ function notice() {
   } else if (notice2_set == 3) {
     m3_notice();
   }
-  if (document.hidden && notice_set === '1') {
+  if (document.hidden && notice_set === '1') { // タブがパッシブ && 通知ON
   // if (notice_set === '1') {
       var mes = 'New message received!';
     push_cr(2, mes, PUSH_TIMER); // Push通知 4秒間で消える
@@ -641,7 +647,7 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
 
       // Roomボタン生成
       var list_length = Object.keys(r_list).length;
-      for (var i = 0; i < list_length; i++) {
+      for (let i = 0; i < list_length; i++) {
         if (document.getElementById('ro' + r_list[i]["dir_name"]) === null) {
           reset_list(r_list);
         }
@@ -649,13 +655,13 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
 
       if (support_indexedDB < 1) { // IndexedDBを使用できるか
         // Class追加 + DB操作
-        for (var i = 0; i < list_length; i++) {
+        for (let i = 0; i < list_length; i++) {
 
           // IndexedDB操作&画面更新
           db_connect(DB_N, OBJ_STORE_LAST, 'g_last', r_list[i]["dir_name"], i, r_list); // IndexedDB操作用関数を実行させる
         }
       } else { // IndexedDB使用不可
-        for (var i = 0; i < list_length; i++) {
+        for (let i = 0; i < list_length; i++) {
           update_disp_arr(i, r_list); // 画面更新
         }
       }
@@ -694,8 +700,11 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
         var list_put = ''; // 出力用の変数
         if (r_list["object"] && r_list["object"].length > 0) {
           list_put = parse_message(r_list); // list_putに表示用に直したデータを代入します
+          if (!list_put) {
+            list_put = "<li id=list2>Info: There is no message.</li>";
+          }
         } else {
-          list_put = "<li id=list2>Info: Don't bother with this Info</li>";
+          list_put = "<li id=list2>Info: There was no response from the server.</li>";
         }
         CONTTT.innerHTML = list_put;
       } else {
@@ -712,7 +721,7 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
 function parse_message(r_list) {
   var list_put = ''; // 出力用の変数
   var list_length = r_list["object"].length;
-  for (var i = 0; i < list_length; i++) {
+  for (let i = 0; i < list_length; i++) {
     var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
     content = AutoLink(content); // リンクをAnchorに変換
     if (r_list["object"][i]['type'] === 'log') continue;
@@ -752,7 +761,7 @@ function reset_list(r_list) {
   var putData = ''; // RoomList
   const L_side = document.getElementById('L_side');
   var list_length =  Object.keys(r_list).length;
-  for (var i = 0; i < list_length; i++) {
+  for (let i = 0; i < list_length; i++) {
     putData += "<button id='ro" + r_list[i]["dir_name"] + "' onclick=change_room('" + r_list[i]["dir_name"] + "')>" + r_list[i]["room_name"] + "</button><br>";
   }
   L_side.innerHTML = putData;

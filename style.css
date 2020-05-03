@@ -1,9 +1,25 @@
 @charset "UTF-8";
 
+/*
+ * Font Awesome Free 5.12.1 by @fontawesome - https://fontawesome.com
+ * License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
+ */
 @font-face {
   font-family: "font-awe_sol";
+  /* src: url("https://u2dev.blob.core.windows.net/doc/fa-solid.woff2") format("woff2"); */
   src: url("fa-solid.woff2") format("woff2");
 }
+
+/*
+ * Play by Jonas Hecksher
+ * License - http://scripts.sil.org/OFL (Fonts: SIL OFL 1.1)
+ */
+ @font-face {
+  font-family: "font-play";
+  /* src: url("https://u2dev.blob.core.windows.net/doc/play.woff2") format("woff2"); */
+  src: url("play.woff2") format("woff2");
+}
+
 
 body {
   width: 100%;
@@ -17,6 +33,10 @@ body {
   /* font-family: flop,"\30D2\30E9\30AE\30CE\89D2\30B4 Pro W3",Hiragino Kaku Gothic Pro,"\30E1\30A4\30EA\30AA",Meiryo,"\FF2D\FF33 \FF30\30B4\30B7\30C3\30AF",MS P,sans-serif!important; */
   /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
   font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif;
+}
+
+#descr_tit, #edit_room, #time_b, button, a {
+  font-family: 'font-play',Meiryo, sans-serif;
 }
 
 header h1 {
@@ -39,7 +59,7 @@ header h1 {
 
 #L_side {
   padding: 10px 0;
-  background: #111;
+  /* background: #111; */
   width: 150px;
   height: calc(100% - 20px - 42px);
   position: fixed;
@@ -49,6 +69,10 @@ header h1 {
   overflow-x: hidden;
   -ms-overflow-style: none;
   scrollbar-width: thin;
+  background: rgba(17,17,17,0.97);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  box-shadow: 0 0 3px #000;
 }
 
 #R_side {
@@ -63,6 +87,10 @@ header h1 {
   overflow-x: hidden;
   -ms-overflow-style: none;
   scrollbar-width: thin;
+  background: rgba(17,17,17,0.97);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  box-shadow: 0 0 3px #000;
 }
 
 .L_side button:first-child {
@@ -83,6 +111,8 @@ header h1 {
   cursor: pointer;
   width: 100%;
   text-align: right;
+  font-weight: bolder;
+  font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .L_side #romain {
@@ -159,9 +189,11 @@ h1 {
   padding: 3px 10px 6px 10px;
   border: none;
   border-top: dashed 1px #111;
-  border-left: solid 4px #444;
+  border-left: solid 2px #444;
   word-break: break-all;
   font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* font-family: 'M+IPAモナ','Mona','mona-gothic-jisx0208.1990-0',IPAMonaPGothic,'IPA モナー Pゴシック','MS PGothic AA','MS PGothic','ＭＳ Ｐゴシック',sans-serif; */
+  /* font-family: 'ＭＳ Ｐゴシック','MS PGothic',RobotoJAA,Monapo,'IPA モナー Pゴシック',IPAMonaPGothic,Mona,'梅Pゴシック',Textar,sans-serif; */
   position: static;
   padding-left: 55px;
 }
@@ -174,20 +206,23 @@ h1 {
   padding: 3px 10px 6px 10px;
   /* border: solid 1px #00a0e9; */
   /* border-top: dashed 1px #111; */
-  border-left: solid 4px #00a0e9;
+  border-left: solid 2px #00a0e9;
   word-break: break-all;
   font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* font-family: Mona,IPAMonaPGothic,'IPA モナー Pゴシック','MS PGothic AA','MS PGothic','ＭＳ Ｐゴシック',sans-serif; */
+  /* font-family: 'ＭＳ Ｐゴシック','MS PGothic',RobotoJAA,Monapo,'IPA モナー Pゴシック',IPAMonaPGothic,Mona,'梅Pゴシック',Textar,sans-serif; */
   position: static;
   padding-left: 55px;
 }
 
 #list2 {
   color: #777;
-  border-left: solid 5px #111;
+  border-left: solid 2px #111;
+  font-family: 'font-play',Meiryo, sans-serif;
 }
 
 #conttt .li_media {
-  border-left: solid 5px orange;
+  border-left: solid 2px orange;
 }
 
 #conttt .media {
@@ -201,19 +236,23 @@ h1 {
 
 #u_icon {
   display: block;
-  color: #111;
+  color: #ddd;
   text-align: center;
-  font-size: 0.9em;
-  line-height: 2.6;
+  font-size: 0.75em;
+  line-height: 31px;
   font-weight: 900;
-  width: 35px;
-  height: 35px;
-  background: #999;
+  width: 31px;
+  height: 31px;
+  background: #1B1B1B;
   border-radius: 50%;
+  border: solid 2px #888;
+  box-shadow: 0 0 5px #000;
   position: absolute;
   margin-top: 3px;
   left: 10px;
   overflow: hidden;
+  /* font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; */
+  font-family: 'font-play',Meiryo, sans-serif;
 }
 
 #user {
@@ -222,6 +261,7 @@ h1 {
   font-weight: bold;
   font-size: 0.9em;
   position: relative;
+  font-family: 'font-play',Meiryo, sans-serif;
 }
 
 #user:before {
@@ -236,7 +276,8 @@ h1 {
   right: 0;
   font-size: 0.7em;
   color: #999;
-  font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif;
+  /* font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif; */
+  font-family: 'font-play',Meiryo, sans-serif;
 }
 
 #date:before {
@@ -453,10 +494,13 @@ h1 {
   top: 0;
   left: 0;
   z-index: 100;
-  background: #222;
+  /* background: #222; */
   color: #aaa;
   text-align: center;
-  /* display: none; */
+  background: rgba(17, 17, 17, 0.95);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  display: none;
 }
 
 #first_sc h1 {
@@ -475,6 +519,7 @@ h1 {
   width: 100%;
   height: 100%;
   z-index: 6;
+  display: none;
 }
 
 #edit_room h2 {
@@ -570,6 +615,7 @@ h1 {
   z-index: 5;
   text-align: center;
   display: none;
+  color: #ddd;
 }
 
 .bars:before {
@@ -581,7 +627,6 @@ h1 {
   font-size: 1.4em;
   font-style: normal;
   z-index: 5;
-  color: #ddd;
   vertical-align: baseline;
   text-align: center;
 }
@@ -592,11 +637,14 @@ h1 {
   top: 0;
   left: 0;
   z-index: 2;
-  background: #222;
+  /* background: #222; */
   /* background: #1B1B1B; */
   color: #aaa;
   text-align: center;
   padding: 10px 0;
+  background: rgba(17,17,17,0.9);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 
 #enter_setting {
@@ -661,6 +709,7 @@ h1 {
 }
 
 .notice,
+.aamode,
 .loadmedia {
   padding: 10px;
   color: #00a0e9;
@@ -673,6 +722,7 @@ h1 {
   background: #666;
   color: #FFF;
   border: none;
+  box-shadow: 0 0 3px #000;
 }
 
 header {
@@ -680,7 +730,9 @@ header {
   position: fixed;
   top: 0;
   width: inherit;
-  background: #222;
+  /* background: #222; */
+  background: rgba(34,34,34,0.97);
+  box-shadow: 0 0 3px #000;
 }
 
 #time_b {
@@ -768,11 +820,10 @@ span#dot {
   #conttt .media {
     max-height: 250px;
     max-width: 100%;
+    height: auto;
   }
 
   #conttt .media_ifr {
-    /* max-height: 56.25%; */
-    /* max-height: auto; */
     height: auto;
   }
 
