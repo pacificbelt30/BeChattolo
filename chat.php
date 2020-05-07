@@ -54,6 +54,9 @@ From: Markdownチートシート
 ## これはH2タグ
 
 // ----- 更新履歴 -----
+Ver.0.8.20?
+時間を date('Y-m-d H:i:s') から date('c') ISO8601日付 に変更
+
 Ver.0.8.13
 メッセージデータをメモリに保管(キャッシュ)し、2回目以降同じRoomを開くときキャッシュを優先するようにした
 メッセージの保存ファイルをbbs/bbbを作っていたのをbbs(メイン)だけにする
@@ -122,10 +125,15 @@ define("SPLIT_SIZE", 104858); // メッセージの分割条件のファイル�
 //define("MAX_ROOMS", 21474836); // 最大Room数
 define("DEFAULT_PERMISSION", 0770); // アクセス権の制御
 
+define("CK_TIMING", 5); // ファイルの更新頻度(sec)
+define("CK_UP", 5); // ファイル確認頻度を下げるタイミング(min)
+
 // ----- 設定 -----
 date_default_timezone_set('Asia/Tokyo'); // タイムゾーン設定
 // header("Access-Control-Allow-Origin: *"); // CORS
 set_time_limit(180); // 通信タイムアウト時間設定
+
+first_roomc(); // MainRoomを作らないと始まらないよ。
 
 // ----- メイン処理 (分岐) -----
 if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
@@ -141,9 +149,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
 
     switch ($_POST['req']) {
       case 'dir': // ディレクトリ一覧&更新日時取得
-        header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-      // header("Content-Encoding: gzip"); echo gzencode(json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
-      echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+      header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
+      header("Content-Encoding: gzip"); echo gzencode(json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
+      // echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
       break;
       case 'mes': // メッセージ取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
@@ -151,7 +159,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
           GetMes(esc($_POST['room'],1), -1); }
       break;
       case 'add': // メッセージ追加
-        first_roomc(); // MainRoomを作らないと始まらないよ。
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
         if (isset($_POST['media'])) {
           AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), esc($_POST['media'], 0));
@@ -178,13 +185,17 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
   }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') { // GETではReadのみ
   if (isset($_GET['sse_dir'])){ // Server-Sent Events で 初回はRoomList一覧、その後は更新があるたびに一覧が送信されます
+    header('X-Accel-Buffering: no');
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
+    header('Content-Encoding: none');
     SseDir();
   } elseif (isset($_GET['sse_mes']) && isset($_GET['room'])) {
-      header('Content-Type: text/event-stream');
-      header('Cache-Control: no-cache');
-      SseMes(esc($_GET['room'],1));
+    header('X-Accel-Buffering: no');
+    header('Content-Type: text/event-stream');
+    header('Cache-Control: no-cache');
+    header('Content-Encoding: none');
+    SseMes(esc($_GET['room'],1));
   } elseif(isset($_GET['room'])) {
     if (isset($_GET['thread'])) {
       GetMes(esc($_GET['room'],1), esc($_GET['thread'],0));
@@ -232,7 +243,7 @@ function AddMes($room, $name, $type, $contents, $media) {
       $save_f = "./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.'0'.SAVEFILE_EXTE;
       $json_main = array(
         'room_name' => $room,
-        'l_date' => date('Y-m-d H:i:s'),
+        'l_date' => date('c'),
         'thread' => 0,
         'object' => array(),
         'descr' => ''
@@ -240,7 +251,7 @@ function AddMes($room, $name, $type, $contents, $media) {
     }
     // キーが存在しない場合の処理
     if (!array_key_exists('room_name', $json_main)) $json_main['room_name'] = $room;
-    if (!array_key_exists('l_date', $json_main)) $json_main['l_date'] = date('Y-m-d H:i:s');
+    if (!array_key_exists('l_date', $json_main)) $json_main['l_date'] = date('c');
     if (!array_key_exists('thread', $json_main)) $json_main['thread'] = latestMes($room, false)[1];
     if (!array_key_exists('object', $json_main)) $json_main['object'] = array();
     if (!array_key_exists('descr', $json_main)) $json_main['descr'] = '';
@@ -249,18 +260,18 @@ function AddMes($room, $name, $type, $contents, $media) {
         'user' => $name,
         'type' => $type,
         'contents' => $contents,
-        'date' => date('Y-m-d H:i:s')
+        'date' => date('c')
       );
       if (isset($media) && $media) {
         $save_data['media'] = $media;
       }
       $save_data['i'] = ip_hex();
-      $json_main['l_date'] = date('Y-m-d H:i:s'); // データを更新
+      $json_main['l_date'] = date('c'); // データを更新
       $json_main['object'][] = $save_data; // データ追加
       // (array)$json_main["object"][] = $save_data; // データを追加
       // var_dump($json_main["object"]);
       // array_push($json_main["object"], $save_data);
-      $open_json = fopen($save_f, 'c');
+      $open_json = fopen($save_f, 'w');
       $write_stat = fwrite($open_json, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
       fclose($open_json);
       if ($write_stat === false) {
@@ -281,21 +292,24 @@ function GetMes($room, $thread) { // $threadは分割されたスレッド番号
   if($thread >= 0) {
     $file_n = "./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE;
     if(is_file($file_n)) {
-      readfile($file_n);
-      /* $open_json = fopen($file_n, 'r'); $read_json = fread($open_json, filesize($file_n)); fclose($open_json);   // .htaccessを操作できずgzipできないサーバー向け
-      header("Content-Encoding: gzip"); echo gzencode($read_json, 1); */
+      /* while (ob_get_level()) { ob_end_clean(); }
+      readfile($file_n); */
+      $open_json = fopen($file_n, 'r'); $read_json = fread($open_json, filesize($file_n)); fclose($open_json);   // .htaccessを操作できずgzipできないサーバー向け
+      header("Content-Encoding: gzip"); echo gzencode($read_json, 1);
       // echo file_get_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE);
     }
   } else {
     // echo file_get_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.SAVEFILE_EXTE);
     $file_n = latestMes($room, false)[0];
     if(is_file($file_n)) {
-      readfile($file_n); // 最新のメッセージを表示
-      /* $open_json = fopen($file_n, 'r'); $read_json = fread($open_json, filesize($file_n)); fclose($open_json);   // .htaccessを操作できずgzipできないサーバー向け
-      header("Content-Encoding: gzip"); echo gzencode($read_json, 1); */
+      /* while (ob_get_level()) { ob_end_clean(); }
+      readfile($file_n); // 最新のメッセージを表示 */
+      $open_json = fopen($file_n, 'r'); $read_json = fread($open_json, filesize($file_n)); fclose($open_json);   // .htaccessを操作できずgzipできないサーバー向け
+      header("Content-Encoding: gzip"); echo gzencode($read_json, 1);
       // echo file_get_contents(latestMes($room, false)[0]); // 最新のメッセージを表示
     }
   }
+  exit;
 }
 
 // ------ メッセージの編集/削除 -----
@@ -312,7 +326,7 @@ function EdtMes($room, $thread, $no, $name, $type, $contents) { // $no は 配�
       'user' => $name,
       'type' => $type,
       'contents' => $contents,
-      'date' => date('Y-m-d H:i:s'),
+      'date' => date('c'),
       'edit_log' => array()
     );
     if (isset($json_main['object'][$no]['edit_log'])) {
@@ -326,7 +340,7 @@ function EdtMes($room, $thread, $no, $name, $type, $contents) { // $no は 配�
     );
     // IPv4 > int 変換
     $save_data['i'] = ip_hex();
-    $json_main['l_date'] = date('Y-m-d H:i:s'); // データを更新
+    $json_main['l_date'] = date('c'); // データを更新
     $json_main['object'][$no] = $save_data; // データ追加
 
   }
@@ -358,7 +372,7 @@ function GetDir() {
 // ----- RoomNameを取得する -----
 function GetRoomName($dir) {
   $l_file = latestMes($dir, false)[0];
-  if(is_file($l_file)) {
+  if(is_file($l_file) && filesize($l_file) > 0) {
     $open_json = fopen($l_file, 'r');
     $read_json = fread($open_json, filesize($l_file));
     fclose($open_json);
@@ -385,7 +399,7 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
         $json_main2 = json_decode( $read_json2, true); // JSONファイルを連想配列でデコード
         // キーが存在しない場合の処理
         if (!array_key_exists('room_name', $json_main2)) $json_main2['room_name'] = $room;
-        if (!array_key_exists('l_date', $json_main2)) $json_main2['l_date'] = date('Y-m-d H:i:s');
+        if (!array_key_exists('l_date', $json_main2)) $json_main2['l_date'] = date('c');
         if (!array_key_exists('thread', $json_main2)) $json_main2['thread'] = latestMes($room, false)[1];
         if (!array_key_exists('object', $json_main2)) $json_main2['object'] = array();
         if (!array_key_exists('descr', $json_main2)) $json_main2['descr'] = '';
@@ -393,13 +407,13 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
           'user' => $name,
           'type' => 'log',
           'contents' => 'Log: ChangeRoomSetting'."\r\n".'Old:'.$json_main2['room_name']."\t".$json_main2['descr']."\r\n".'New:'.$new_name."\t".$new_descr,
-          'date' => date('Y-m-d H:i:s'),
+          'date' => date('c'),
           'i' => ip_hex()
         );
         $json_main2['object'][] = $up_log;
         $json_main2['room_name'] = $new_name;
         $json_main2['descr'] = $new_descr;
-        $open_json = fopen($save_f, 'c');
+        $open_json = fopen($save_f, 'w');
         $write_stat = fwrite($open_json, json_encode($json_main2, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
         fclose($open_json);
         // file_put_contents($save_f2, json_encode($json_main2, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)); // ファイル上書き保存, LOCK_EXだと同時接続不可説
@@ -425,7 +439,7 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
       if (is_dir("./".BBS_FOLDER."/".$new_folder_no)) {
         $json_main = array(
           'room_name' => $new_name,
-          'l_date' => date('Y-m-d H:i:s'),
+          'l_date' => date('c'),
           'thread' => 0,
           'object' => array(),
           'descr' => $new_descr
@@ -435,12 +449,12 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
           'user' => $name,
           'type' => 'log',
           'contents' => 'Log: CreateRoom'."\r\n".'New:'.$new_name."\t".$new_descr,
-          'date' => date('Y-m-d H:i:s'),
+          'date' => date('c'),
           'i' => ip_hex()
         );
         $json_main['object'][] = $up_log;
         $save_f2 = "./".BBS_FOLDER."/".$new_folder_no."/".SAVEFILE_NAME.'0'.SAVEFILE_EXTE;
-        $open_json = fopen($save_f2, 'c');
+        $open_json = fopen($save_f2, 'w');
         $write_stat = fwrite($open_json, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
         fclose($open_json);
         // file_put_contents($save_f2, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)); // ファイル上書き保存
@@ -513,12 +527,12 @@ function autoSplit($room) {
     $json_main = json_decode( $read_json, true); // JSONファイルを連想配列でデコード
     $n_format = array ( // 設定などを前のthreadから引き継ぐ
       'room_name' => $json_main["room_name"],
-      'l_date' => date('Y-m-d H:i:s'),
+      'l_date' => date('c'),
       'object' => array(),
       'descr' => $json_main["descr"],
       'thread' => $l_file[1]+1
     );
-    $open_json = fopen("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, 'c');
+    $open_json = fopen("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, 'w');
     $write_stat = fwrite($open_json, json_encode($n_format, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
     fclose($open_json);
     chmod("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, DEFAULT_PERMISSION);
@@ -540,28 +554,36 @@ function ip_hex() {
 
 // ----- SSE RoomListの更新を監視します
 function SseDir() {
+  while (ob_get_level()) { ob_end_clean(); }
   $oldDir = GetDir();
-  echo 'data: '.json_encode($oldDir, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)."\n\n";
-  flush();
-  ob_flush();
+  // echo 'data: '.json_encode($oldDir, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)."\n\n";
+  // ob_flush();
+  // flush();
   $counter = 0;
-  while (true) {
+  while (!connection_aborted()) { // 接続中は継続
     $nowDir = GetDir();
     if ($oldDir !== $nowDir) {
       echo 'data: '.json_encode($nowDir, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)."\n\n";
-      flush();
       ob_flush();
+      flush();
       $oldDir = $nowDir;
       $counter = 0;
     } else {
-      if ($counter%10 === 9) {
-        echo ':'."\n\n"; // KeepStream
-        flush();
-        ob_flush();
-      }
       ++$counter;
     }
-    sleep(1);
+    if ($counter*CK_TIMING < CK_UP*60) {
+      if ($counter%5 === 4) {
+        echo ':'."\n\n"; // KeepStream
+        ob_flush();
+        flush();
+      }
+      sleep(CK_TIMING);
+    } else {
+      echo ':'."\n\n"; // KeepStream
+      ob_flush();
+      flush();
+    sleep(CK_TIMING*CK_TIMING);
+    }
   }
 }
 // ----- SSE メッセージの更新を監視します (使わない予定の関数)
@@ -569,17 +591,18 @@ function SseMes($room) {
     // echo file_get_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.SAVEFILE_EXTE);
     $file_n = latestMes($room, false)[0];
     if(is_file($file_n) && !is_file("./".BBS_FOLDER."/".$room."/".PROTECTED_ROOM)) {
-      $open_json = fopen($file_n, 'r');
-      $read_json = fread($open_json, filesize($file_n));
-      fclose($open_json);
-      echo 'data: '.$read_json."\n\n";
-      flush();
-      ob_flush();
+      while (ob_get_level()) { ob_end_clean(); }
+      // $open_json = fopen($file_n, 'r');
+      // $read_json = fread($open_json, filesize($file_n));
+      // fclose($open_json);
+      // echo 'data: '.$read_json."\n\n";
+      // ob_flush();
+      // flush();
 /* $open_json = fopen($file_n, 'r'); $read_json = fread($open_json, filesize($file_n)); fclose($open_json);   // .htaccessを操作できずgzipできないサーバー向け
       header("Content-Encoding: gzip"); echo gzencode($read_json, 1); */
       $oldMes = filemtime($file_n);
       $counter = 0;
-      while (true) {
+      while (!connection_aborted()) {
         $nowMes = filemtime($file_n);
         if ($oldMes !== $nowMes) {
           if(is_file($file_n) && !is_file("./".BBS_FOLDER."/".$room."/".PROTECTED_ROOM)) {
@@ -587,8 +610,8 @@ function SseMes($room) {
             $read_json = fread($open_json, filesize($file_n));
             fclose($open_json);
             echo 'data: '.$read_json."\n\n";
-            flush();
             ob_flush();
+            flush();
           } else {
             echo ':error'."\n\n";
             exit;
@@ -596,15 +619,22 @@ function SseMes($room) {
           $oldMes = $nowMes;
           $counter = 0;
         } else {
-          if ($counter%10 === 9) {
-            echo ':'."\n\n"; // KeepStream
-            flush();
-            ob_flush();
-          }
           ++$counter;
         }
-        sleep(1);
-      }
+        if ($counter < CK_UP*60) {
+          if ($counter%5 === 4) {
+            echo ':'."\n\n"; // KeepStream
+            ob_flush();
+            flush();
+          }
+          sleep(CK_TIMING);
+        } else {
+            echo ':'."\n\n"; // KeepStream
+            ob_flush();
+            flush();
+          sleep(CK_TIMING*CK_TIMING);
+        }
+     }
   }
 }
 ?>

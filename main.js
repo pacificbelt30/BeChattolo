@@ -14,10 +14,13 @@ const SKIP_COUNT = 6; // タブがパッシブのmain関数を実行しない間
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
 const PUSH_TIMER = 3000; // Push通知の表示時間
-const SEND_SERVER = 'chat.php';
+// const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
 // const SEND_SERVER = 'http://fukube.biz.ht/chat.php'; // POSTする本番サーバ2URL
+// const SEND_SERVER = 'http://fukube.biz.ht/chat_dev/chat.php';
+const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
+// const SEND_SERVER = 'https://u2dev.azurewebsites.net/chat/chat.php'; // 新しい試験サーバ
 
 // phpへのリクエスト種類
 const ADD_MES = 'add'; // メッセージの追加
