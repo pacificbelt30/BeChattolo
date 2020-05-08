@@ -19,8 +19,8 @@ const PUSH_TIMER = 3000; // Push通知の表示時間
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
 // const SEND_SERVER = 'http://fukube.biz.ht/chat/chat.php'; // POSTする本番サーバ2URL
 // const SEND_SERVER = 'http://fukube.biz.ht/chat_dev/chat.php';
-// const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
-const SEND_SERVER = 'https://u2dev.azurewebsites.net/chat/chat.php'; // 新しい試験サーバ
+const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
+// const SEND_SERVER = 'https://u2dev.azurewebsites.net/chat/chat.php'; // 新しい試験サーバ
 
 // phpへのリクエスト種類
 const ADD_MES = 'add'; // メッセージの追加
@@ -867,6 +867,7 @@ function update_disp_db(up_info, i, r_list) {
       if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれ、タブがアクティブ
         temp_id.classList.remove("new_mes"); // 通知削除
         favicon(0); // 通知オフ
+        change_room(now_room);
         // get_room_data(); // アクティブなRoomのメッセージ取得
         // RoomがアクティブになったらIndexedDB更新
         db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
@@ -910,6 +911,7 @@ function update_disp_arr(i, r_list) {
           notice_flag: 0
         }
         favicon(0); // 通知オフ
+        change_room(now_room);
         // get_room_data(); // アクティブなRoomのメッセージ取得
         temp_id.classList.remove("new_mes"); // 通知削除
       } else if (sub_DB[r_list[i]["dir_name"]]["notice_flag"] === 0) {
