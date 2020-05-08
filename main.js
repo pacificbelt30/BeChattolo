@@ -60,7 +60,6 @@ var exec_cnt = 0; // main()の重複実行を抑えるために実行数をカ�
 var sub_DB = []; // IndexedDBが使用できない場合、更新状態を配列で保持する. そのため確保しておく
 var onload_flag = {"onload":false,"mes":false,"dir":false}; // ページが読み込まれたかのフラグ
 var caches = {}; caches["mes"] = {}; // メッセージ保管用の配列 (キャッシュ)
-var need_update_caches = true; // キャッシュの更新が必要かのフラグ
 var skip_hidden_count = 0; // パッシブ時の負荷を下げる ためにカウントしておく
 var close_sse_session = true; // セッションが閉じられているかのフラグ
 
@@ -79,7 +78,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.19 20200504', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.20 20200508', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -416,22 +415,27 @@ function name_setting() {
 function theme_setting() {
   const theme = document.getElementById('theme');
   localStorage.setItem('theme', theme.value);
+  theme_set = theme.value;
   change_theme(theme.value); // theme更新
 }
 
 function sendkey_setting() {
   const send_key = document.getElementById('send_key');
   localStorage.setItem('sendKey', send_key.value);
+  send_key = send_key.value;
 }
 
 function loadem_setting() { // 埋め込みメディアの表示
   const loadmedia = document.getElementById('loadmedia');
   if (loadmedia.checked) {
     localStorage.setItem('loadEm', "1");
+    load_media_set = '1';
   } else {
     localStorage.setItem('loadEm', "0");
+    load_media_set = '0';
   }
-  get_room_data(); // メッセージの再読み込みが必要。
+  // get_room_data(); // メッセージの再読み込みが必要。
+  change_room(now_room);
 }
 
 function aamode_setting() { // ASCIIart Modeの設定
@@ -585,7 +589,7 @@ function change_room(room) {
     before_room = now_room;
     now_room = room;
   }
-  if (need_update_caches || typeof caches["mes"][now_room] == 'undefined') { // キャッシュの更新が必要
+  if (!caches["mes"][now_room] || caches["mes"][now_room]["need_update_caches"]) { // キャッシュの更新が必要
     if (support_eventsource === 0) { // sseサポート
       if (close_sse_session) {
         ck_room_data(); // 普通にデータを1回取得
@@ -598,7 +602,7 @@ function change_room(room) {
     } else {
       main(1); // 更新
     }
-    need_update_caches = false;
+    caches["mes"][now_room] = {need_update_caches : false};
   } else { // キャッシュの更新が必要ない場合
     update_disp(1, caches['dir']); // Room表示更新
     update_disp(2, caches['mes'][now_room]); // メッセージ内容を更新
@@ -859,11 +863,11 @@ function update_disp_db(up_info, i, r_list) {
     // console.log(up_info["up_date"]+' '+r_list[i]["l_date"]);
     if (up_info["up_date"] !== r_list[i]["l_date"]) {
       // 最終更新時が古い場合
-      need_update_caches = true; // キャッシュの更新が必要
+      caches["mes"][r_list[i]["dir_name"]] = {need_update_caches : true}; // キャッシュの更新が必要
       if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれ、タブがアクティブ
         temp_id.classList.remove("new_mes"); // 通知削除
         favicon(0); // 通知オフ
-        get_room_data(); // アクティブなRoomのメッセージ取得
+        // get_room_data(); // アクティブなRoomのメッセージ取得
         // RoomがアクティブになったらIndexedDB更新
         db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
       } else if (up_info["notice_flag"] === 0) {
@@ -898,6 +902,7 @@ function update_disp_arr(i, r_list) {
 
   if (sub_DB[r_list[i]["dir_name"]]) {
     if (sub_DB[r_list[i]["dir_name"]]["l_date"] !== r_list[i]["l_date"]) { // 更新日時が古い場合
+      caches["mes"][r_list[i]["dir_name"]] = {need_update_caches : true}; // キャッシュの更新が必要
       if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれ、タブがアクティブ
         // Roomがアクティブになったら更新
         sub_DB[r_list[i]["dir_name"]] = { // 配列追加
@@ -905,29 +910,21 @@ function update_disp_arr(i, r_list) {
           notice_flag: 0
         }
         favicon(0); // 通知オフ
-        get_room_data(); // アクティブなRoomのメッセージ取得
-        temp_id.classList.add("on_butt"); // ActiveRoom
+        // get_room_data(); // アクティブなRoomのメッセージ取得
         temp_id.classList.remove("new_mes"); // 通知削除
       } else if (sub_DB[r_list[i]["dir_name"]]["notice_flag"] === 0) {
         // 通知フラグが1以外の時通知、最終更新時は更新しない
         sub_DB[r_list[i]["dir_name"]]["notice_flag"] = 1; // 通知フラグの更新
-        temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
         favicon(1); // 通知オン
         notice(false); // 通知する
       } else { // 通知したが、未読
-        temp_id.classList.remove("on_butt"); // PassiveRoom
         temp_id.classList.add("new_mes"); // 通知追加
         favicon(1); // 通知オン
       }
     } else {
       // 更新なし
       sub_DB[r_list[i]["dir_name"]]["notice_flag"] = 0; // 通知フラグの更新
-      if (now_room === r_list[i]["dir_name"]) {
-        temp_id.classList.add("on_butt"); // ActiveRoom
-      } else {
-        temp_id.classList.remove("on_butt"); // PassiveRoom
-      }
       temp_id.classList.remove("new_mes"); // 通知削除
     }
   } else {
@@ -935,11 +932,6 @@ function update_disp_arr(i, r_list) {
     sub_DB[r_list[i]["dir_name"]] = { // 配列追加
       l_date: r_list[i]["l_date"],
       notice_flag: 3
-    }
-    if (now_room === r_list[i]["dir_name"]) {
-      temp_id.classList.add("on_butt"); // ActiveRoom
-    } else {
-      temp_id.classList.remove("on_butt"); // PassiveRoom
     }
     favicon(0); // 通知オフ
   }
