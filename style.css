@@ -7,7 +7,7 @@
 @font-face {
   font-family: "font-awe_sol";
   /* src: url("https://u2dev.blob.core.windows.net/doc/fa-solid.woff2") format("woff2"); */
-  src: url("fa-solid.woff2") format("woff2");
+  src: url("./res/fa-solid.woff2") format("woff2");
 }
 
 /*
@@ -17,7 +17,7 @@
  @font-face {
   font-family: "font-play";
   /* src: url("https://u2dev.blob.core.windows.net/doc/play.woff2") format("woff2"); */
-  src: url("play.woff2") format("woff2");
+  src: url("./res/play.woff2") format("woff2");
 }
 
 
