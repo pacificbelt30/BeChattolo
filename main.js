@@ -17,10 +17,10 @@ const PUSH_TIMER = 3000; // Push通知の表示時間
 // const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
-// const SEND_SERVER = 'http://fukube.biz.ht/chat.php'; // POSTする本番サーバ2URL
+// const SEND_SERVER = 'http://fukube.biz.ht/chat/chat.php'; // POSTする本番サーバ2URL
 // const SEND_SERVER = 'http://fukube.biz.ht/chat_dev/chat.php';
-const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
-// const SEND_SERVER = 'https://u2dev.azurewebsites.net/chat/chat.php'; // 新しい試験サーバ
+// const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
+const SEND_SERVER = 'https://u2dev.azurewebsites.net/chat/chat.php'; // 新しい試験サーバ
 
 // phpへのリクエスト種類
 const ADD_MES = 'add'; // メッセージの追加
@@ -59,7 +59,7 @@ var now_thread = 0; // 現在アクティブなRoomのthread
 var exec_cnt = 0; // main()の重複実行を抑えるために実行数をカウントする変数
 var sub_DB = []; // IndexedDBが使用できない場合、更新状態を配列で保持する. そのため確保しておく
 var onload_flag = {"onload":false,"mes":false,"dir":false}; // ページが読み込まれたかのフラグ
-var caches = {}; caches["mes"] = {}; // メッセージ保管用の配列 (キャッシュ)
+var cache = {}; cache["mes"] = {}; // メッセージ保管用の配列 (キャッシュ)
 var skip_hidden_count = 0; // パッシブ時の負荷を下げる ためにカウントしておく
 var close_sse_session = true; // セッションが閉じられているかのフラグ
 
@@ -88,11 +88,11 @@ window.onload = function Begin() {
   // c_page(1); // 表示更新
   onload_flag["onload"] = true; // 反映待ち
   if (onload_flag["mes"]){
-    update_disp(2, caches['mes'][now_room]); // メッセージ内容を更新
+    update_disp(2, cache['mes'][now_room]); // メッセージ内容を更新
     get_room_data_plus(now_thread); // 追加読み込み
   }
   if (onload_flag["dir"]) {
-    update_disp(1, caches['dir']); // Room表示更新
+    update_disp(1, cache['dir']); // Room表示更新
   }
   client_width(true); // リスト表示するか
   change_theme(localStorage.getItem("theme")); // Theme適用
@@ -256,7 +256,7 @@ function ck_room_datas() {
     var dir_ev = new EventSource(SEND_SERVER+'?'+SSE_DIR);
     dir_ev.addEventListener('message', function(event) { // RoomListを受け取ったときに更新
     update_disp(1, event.data);
-    caches["dir"] = event.data; // Room情報を配列に保存しておく
+    cache["dir"] = event.data; // Room情報を配列に保存しておく
     });
   }
 }
@@ -269,7 +269,7 @@ function get_room_datas(exe_room) {
     mes_ev.addEventListener ('message', function(event) { // メッセージを受け取ったときに更新
     update_disp(2, event.data);
     get_room_data_plus(now_thread);
-    caches["mes"][exe_room] = event.data; // メッセージ内容を配列に保存しておく
+    cache["mes"][exe_room] = event.data; // メッセージ内容を配列に保存しておく
     });
   }
 }
@@ -281,7 +281,7 @@ function get_room_data_plus(thr, str, exe_room) {
     var r_list = JSON.parse(str);
     if (r_list["object"] && r_list["object"].length > 0) {
       CONTTT.innerHTML = CONTTT.innerHTML + parse_message(r_list); // メッセージを追加します
-      caches["mes"][exe_room]["object"].push = r_list;
+      cache["mes"][exe_room]["object"].push = r_list;
     }
   }
   // 追加読み込み
@@ -589,23 +589,23 @@ function change_room(room) {
     before_room = now_room;
     now_room = room;
   }
-  if (!caches["mes"][now_room] || caches["mes"][now_room]["need_update_caches"]) { // キャッシュの更新が必要
+  if (!cache["mes"][now_room] || cache["mes"][now_room]["need_update_caches"]) { // キャッシュの更新が必要
     if (support_eventsource === 0) { // sseサポート
       if (close_sse_session) {
         ck_room_data(); // 普通にデータを1回取得
         ck_room_datas();
         close_sse_session = false;
       } else {
-        update_disp(1, caches['dir']); // Room表示更新
+        update_disp(1, cache['dir']); // Room表示更新
       }
       main(2);
     } else {
       main(1); // 更新
     }
-    caches["mes"][now_room] = {need_update_caches : false};
+    cache["mes"][now_room] = {need_update_caches : false};
   } else { // キャッシュの更新が必要ない場合
-    update_disp(1, caches['dir']); // Room表示更新
-    update_disp(2, caches['mes'][now_room]); // メッセージ内容を更新
+    update_disp(1, cache['dir']); // Room表示更新
+    update_disp(2, cache['mes'][now_room]); // メッセージ内容を更新
   }
 }
 
@@ -670,7 +670,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             } else {
               onload_flag["mes"] = true;
             }
-            caches["mes"][exe_room] = resData; // メッセージ内容を配列に保存しておく
+            cache["mes"][exe_room] = resData; // メッセージ内容を配列に保存しておく
             break;
           case GET_DIR:
             if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
@@ -678,7 +678,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             } else {
               onload_flag["dir"] = true;
             }
-            caches["dir"] = resData; // Room情報を配列に保存しておく
+            cache["dir"] = resData; // Room情報を配列に保存しておく
             break;
           case SET_DIR:
           case DEL_DIR:
@@ -863,7 +863,7 @@ function update_disp_db(up_info, i, r_list) {
     // console.log(up_info["up_date"]+' '+r_list[i]["l_date"]);
     if (up_info["up_date"] !== r_list[i]["l_date"]) {
       // 最終更新時が古い場合
-      caches["mes"][r_list[i]["dir_name"]] = {need_update_caches : true}; // キャッシュの更新が必要
+      cache["mes"][r_list[i]["dir_name"]] = {need_update_caches : true}; // キャッシュの更新が必要
       if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれ、タブがアクティブ
         temp_id.classList.remove("new_mes"); // 通知削除
         favicon(0); // 通知オフ
@@ -902,7 +902,7 @@ function update_disp_arr(i, r_list) {
 
   if (sub_DB[r_list[i]["dir_name"]]) {
     if (sub_DB[r_list[i]["dir_name"]]["l_date"] !== r_list[i]["l_date"]) { // 更新日時が古い場合
-      caches["mes"][r_list[i]["dir_name"]] = {need_update_caches : true}; // キャッシュの更新が必要
+      cache["mes"][r_list[i]["dir_name"]] = {need_update_caches : true}; // キャッシュの更新が必要
       if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれ、タブがアクティブ
         // Roomがアクティブになったら更新
         sub_DB[r_list[i]["dir_name"]] = { // 配列追加
