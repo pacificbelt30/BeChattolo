@@ -78,7 +78,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.20 20200508', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.21 20200508', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -589,6 +589,7 @@ function change_room(room) {
     before_room = now_room;
     now_room = room;
   }
+  document.getElementById('conttt').innerHTML = '<p style="font-size: 0.8em; text-align: center; ">NOW LOADING!!!! &ensp; Hold on a second.</p>'; // メッセージ内容の表示部分
   if (!cache["mes"][now_room] || cache["mes"][now_room]["need_update_caches"]) { // キャッシュの更新が必要
     if (support_eventsource === 0) { // sseサポート
       if (close_sse_session) {
@@ -603,7 +604,7 @@ function change_room(room) {
       main(1); // 更新
     }
     cache["mes"][now_room] = {need_update_caches : false};
-  } else { // キャッシュの更新が必要ない場合
+  } else { // キャッシュの更新が不要な場合
     update_disp(1, cache['dir']); // Room表示更新
     update_disp(2, cache['mes'][now_room]); // メッセージ内容を更新
   }
@@ -667,18 +668,16 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
               update_disp(2, resData);
               get_room_data_plus(now_thread); // 追加読み込み
-            } else {
-              onload_flag["mes"] = true;
             }
             cache["mes"][exe_room] = resData; // メッセージ内容を配列に保存しておく
+            onload_flag["mes"] = true;
             break;
           case GET_DIR:
             if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
               update_disp(1, resData);
-            } else {
-              onload_flag["dir"] = true;
             }
             cache["dir"] = resData; // Room情報を配列に保存しておく
+            onload_flag["dir"] = true;
             break;
           case SET_DIR:
           case DEL_DIR:
@@ -786,27 +785,27 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
 // r_listは配列で渡す必要があります
 function parse_message(r_list) {
   var list_put = ''; // 出力用の変数
-  var list_length = r_list["object"].length;
-  for (let i = 0; i < list_length; i++) {
-    var content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
+  var list_length = r_list["object"].length - 1;
+  var out_data, content; // temporary variable
+  for (let i = list_length; i !== -1; i--) {
+    content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
     content = AutoLink(content); // リンクをAnchorに変換
     if (r_list["object"][i]['type'] === 'log') continue;
     if (r_list["object"][i]['type'] !== 'plain' && getLink(r_list["object"][i]["media"])) {
       if (load_media_set === '1') { // メディアを表示するか
         if (r_list["object"][i]['type'] === 'image') { // 画像
-          var out_data = "<li id=list class='li li_img li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><img src='" + getLink(r_list["object"][i]['media']) + "' alt class='media media_img'>";
+          out_data = "<li id=list class='li li_img li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><img src='" + getLink(r_list["object"][i]['media']) + "' alt class='media media_img'>";
         } else if (r_list["object"][i]['type'] === 'iframe') { // iframe
-          var out_data = "<li id=list class='li li_ifr li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><iframe src='" + getLink(r_list["object"][i]['media']) + "' frameborder=0 class='media media_ifr'></iframe>";
+          out_data = "<li id=list class='li li_ifr li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><iframe src='" + getLink(r_list["object"][i]['media']) + "' frameborder=0 class='media media_ifr'></iframe>";
         }
       } else {
-        var out_data = "<li id=list class='li li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br>Media: <a href='" + getLink(r_list["object"][i]['media']) + "' target='_blank' rel='noopener'>" + getLink(r_list["object"][i]['media']) + "</a>";
+        out_data = "<li id=list class='li li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br>Media: <a href='" + getLink(r_list["object"][i]['media']) + "' target='_blank' rel='noopener'>" + getLink(r_list["object"][i]['media']) + "</a>";
       }
     } else {
-      var out_data = "<li id=list class='li li_pla'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
+      out_data = "<li id=list class='li li_pla'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
     }
-    list_put = out_data + list_put;
+    list_put += out_data;
   }
-
   return list_put;
 }
 
@@ -1120,10 +1119,10 @@ function favicon(type) {
   const fav = document.getElementById('favicon');
   const show_roomlist = document.getElementById('show_roomlist');
   if (type === 1) { // 通知
-    fav.href = "fav32_2.png";
+    fav.href = "./res/fav32_2.png";
     show_roomlist.style.color = '#00a0e9';
   } else { // デフォルト
-    fav.href = "fav32.png";
+    fav.href = "./res/fav32.png";
     show_roomlist.style.color = '#ddd';
   }
 }
