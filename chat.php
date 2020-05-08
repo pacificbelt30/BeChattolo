@@ -150,7 +150,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
     switch ($_POST['req']) {
       case 'dir': // ディレクトリ一覧&更新日時取得
       header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-      header("Content-Encoding: gzip"); echo gzencode(json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
+      header("Content-Encoding: gzip");
+      echo gzencode(json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
       // echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
       break;
       case 'mes': // メッセージ取得
@@ -353,8 +354,9 @@ function GetDir() {
   $count_s = count($rdir_list); // 存在数を変数に代入しておく
   for ($i=2; $i < $count_s; ++$i) { // ,/, ../ を含むので$i=2
     if (is_dir("./".BBS_FOLDER."/".$rdir_list[$i]) && !is_file("./".BBS_FOLDER."/".$rdir_list[$i]."/".PROTECTED_ROOM)) { // ディレクトリ, アクセス可能か
-      if(is_file(latestMes($rdir_list[$i], false)[0])) { // Room名があればその名前を、他はディレクトリ名
-        $l_meth = latestMes($rdir_list[$i], false)[0];
+      $latest = latestMes($rdir_list[$i], false);
+      if(is_file($latest[0])) { // Room名があればその名前を、他はディレクトリ名
+        $l_meth = $latest[0];
       } else {
         $l_meth = "./".BBS_FOLDER."/".$rdir_list[$i];
       }
@@ -362,7 +364,7 @@ function GetDir() {
         'dir_name' => $rdir_list[$i],
         'room_name' => GetRoomName($rdir_list[$i]),
         'l_date' => date("YmdHis" ,filemtime($l_meth)),
-        'thread' => latestMes($rdir_list[$i], false)[1]
+        'thread' => $latest[1]
       );
     }
   }
@@ -389,9 +391,9 @@ function GetRoomName($dir) {
 function SetRoom($mode, $name, $room, $new_name, $new_descr) {
   if ($mode === '1') { // 編集モード
     if (is_dir("./".BBS_FOLDER."/".$room) && !is_file("./".BBS_FOLDER."/".$room."/".PROTECTED_ROOM)) { // アクセスしてよいか
-      if (is_file(latestMes($room, false)[0])) {
+      $save_f = latestMes($room, false)[0];
+      if ($save_f) {
         // JSONファイル更新
-        $save_f = latestMes($room, false)[0];
         $open_json = fopen($save_f, 'r');
         $read_json2 = fread($open_json, filesize($save_f));
         fclose($open_json);
@@ -499,13 +501,13 @@ function latestMes($room, $mode_back) { // $mode_back = true の時、バック�
     $rdir_list2 = scandir("./".BBS_FOLDER."/".$room."/");
     $count_s = count($rdir_list2); // ファイル数を変数に代入しておく
     if ($mode_back === false) {
-      for ($i=$count_s; $i >= 0; --$i) {
+      for ($i=$count_s; $i !== -1; --$i) {
         if(is_file("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$i.SAVEFILE_EXTE)) {
           return ["./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$i.SAVEFILE_EXTE, $i];
         }
       }
     } else {
-      for ($i=$count_s; $i >= 0; --$i) {
+      for ($i=$count_s; $i !== -1; --$i) {
         if(is_file("./".BBS_FOLDER."/".$room."/".SAVEFILE2_NAME.$i.SAVEFILE2_EXTE)) {
           return ["./".BBS_FOLDER."/".$room."/".SAVEFILE2_NAME.$i.SAVEFILE2_EXTE, $i];
         }
@@ -560,8 +562,9 @@ function SseDir() {
   // ob_flush();
   // flush();
   $counter = 0;
-  while (!connection_aborted()) { // 接続中は継続
-    $nowDir = GetDir();
+  // while (!connection_aborted()) { // 接続中は継続
+  while (true) { // 接続中は継続
+      $nowDir = GetDir();
     if ($oldDir !== $nowDir) {
       echo 'data: '.json_encode($nowDir, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)."\n\n";
       ob_flush();
@@ -582,7 +585,7 @@ function SseDir() {
       echo ':'."\n\n"; // KeepStream
       ob_flush();
       flush();
-    sleep(CK_TIMING*CK_TIMING);
+      sleep(CK_TIMING*CK_TIMING);
     }
   }
 }
