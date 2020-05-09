@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#BBB">
   <link rel="shortcut icon" href="https://u2dev.blob.core.windows.net/doc/logo4.png" id="favicon" type="image/png">
   <!-- <link rel="shortcut icon" href="./res/logo4.png" id="favicon" type="image/png"> -->
-  <title>Beちゃっとぉ</title>
+  <title>BeChattolo</title>
 
   <meta http-equiv="x-dns-prefetch-control" content="on">
   <link rel="preconnect" href="//u2net.azurewebsites.net">
@@ -43,12 +43,13 @@
   <p id="time_b"></p>
   <header>
     <!-- <h2 style="font-size: 0.5em;" id="update_notice">アップデートがあります. リロードしてください.</h2> -->
-    <h1 style="font-size: 1em;">Beちゃっとぉ<span id="room_top_name"></span></h1>
+    <h1 style="font-size: 1em;">BeChattolo<span id="room_top_name"></span></h1>
     <!-- <h1 style="font-size: 1em;">Beちゃっとぉ</h1> -->
     <div id="first_sc">
-      <h1>ようこそ Ｂｅちゃっとぉ へ</h1>
-      <p><br><br>オープンなリアルタイムチャットを今すぐ始めよう！<br><br>開発中の機能も今後実装予定です<br>バグ・不具合等の情報収集にご協力ください</p>
-      <input type="text" id="user_name" placeholder="ユーザー名を入力">
+      <h1 style="padding-top: 30px;">Welcome to BeChattolo!</h1>
+      <img src="./res/logo4.png" alt="Logo" style="width: 100px; height: 100px; margin: 20px 10px 10px 10px;">
+      <p>Start your open, real-time chat today!<br><br>Features under development will be implemented in the future.<br>Please cooperate with us in collecting information on bugs, bugs, etc.</p>
+      <input type="text" id="user_name" placeholder="Enter your user name!">
       <button type="button" id="submit_b" onclick="user_submit()">></button>
     </div>
     <div id="edit_room">
@@ -68,7 +69,7 @@
     <div id="setting" style="display: none;">
       <h2>Setting</h2>
       <h3>Name</h3>
-      <input type="text" id="user_name2" placeholder="ユーザー名を入力" onchange="name_setting()">
+      <input type="text" id="user_name2" placeholder="Enter your user name!" onchange="name_setting()">
       <h3>Notice Push / Sound</h3>
       <input type="checkbox" id="notification" class="notice" onchange="noti_setting()"><label for="notification"
         class="notice">Enable</label>

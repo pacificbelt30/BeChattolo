@@ -31,6 +31,7 @@ const SET_DIR = 'set'; // メッセージのディレクトリ(Room)の作成・
 const DEL_DIR = 'del'; // ディレクトリ(Room)へのアクセス不可にする
 const SSE_DIR = 'sse_dir'; // メッセージのディレクトリ一覧取得(SSE)
 const SSE_MES = 'sse_mes'; // メッセージ取得(SSE)
+const MES_DIF = 'mes_dif'; // メッセージ差分取得
 // メッセージは分割され、スクロールされたときに随時読み込むため結合が必要
 const JOINT_MES = 'joint' // メッセージの結合
 
@@ -83,7 +84,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.24 20200509', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.25 20200510', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -104,7 +105,7 @@ window.onload = function Begin() {
   if (change_font_aa === 1 || change_font_aa === '1') { // AAモード?
     aamode_tgg(true);
   }
-  console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
+  console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', '');
 }
 
 // ----- メイン処理 -----
@@ -242,6 +243,14 @@ function get_room_data(option) { // タイムアウトを長くするオプシ�
     xhr('req=' + GET_MES + '&room=' + now_room, GET_MES, false, true, now_room);
   } else {
     xhr('req=' + GET_MES + '&room=' + now_room, GET_MES, false, false, now_room);
+  }
+}
+
+// ----- Roomデータ(メッセージ)差分取得 -----
+function get_room_diff() {
+  // cache["mes"][now_room].push = {'id_offset' :cache["mes"][now_room]["object"].length}; // 実験用
+  if (cache["mes"][now_room]["id_offset"]) {
+    xhr('req=' + MES_DIF + '&room=' + now_room + '&thread=' + cache["mes"][now_room]["thread"] + '&id=' + cache["mes"][now_room]["id_offset"], MES_DIF, false, false, now_room);
   }
 }
 
@@ -593,6 +602,7 @@ function change_room(room) {
   if (room) {
     before_room = now_room;
     now_room = room;
+    change_url('?room=' + room); // 表示URLの変更
   }
   if (!cache["mes"][now_room] || cache["mes"][now_room]["need_update_caches"]) { // キャッシュの更新が必要
     if (!cache["mes"][now_room]) { // 各Room初回読み込み
@@ -618,6 +628,13 @@ function change_room(room) {
     update_disp(2, cache['mes'][now_room], 1); // メッセージ内容を更新
   }
 }
+
+// ----- URLを変更する ----- //
+// 参考: https://www.google.co.jp/ime/___o/
+function change_url(str) {
+  history.replaceState('','',str);
+}
+
 
 // ----- 文字エスケープ -----
 function esc(str) {
@@ -698,6 +715,12 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             break;
           case JOINT_MES:
             get_room_data_plus(param1, resData, exe_room); // 追加読み込み
+            break;
+          case MES_DIF:
+            if (resData) {
+              cache["mes"][exe_room]["object"].push = JSON.parse(resData);
+              update_disp(2, cache["mes"][exe_room], 1);
+            }
             break;
         }
       } else {
