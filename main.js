@@ -14,12 +14,12 @@ const SKIP_COUNT = 6; // タブがパッシブのmain関数を実行しない間
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
 const PUSH_TIMER = 3000; // Push通知の表示時間
-// const SEND_SERVER = 'chat.php';
+const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
 // const SEND_SERVER = 'http://fukube.biz.ht/chat/chat.php'; // POSTする本番サーバ2URL
 // const SEND_SERVER = 'http://fukube.biz.ht/chat_dev/chat.php';
-const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
+// const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
 // const SEND_SERVER = 'https://u2dev.azurewebsites.net/chat/chat.php'; // 新しい試験サーバ
 
 // phpへのリクエスト種類
@@ -83,7 +83,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.23 20200509', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.24 20200509', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -93,11 +93,11 @@ window.onload = function Begin() {
   // c_page(1); // 表示更新
   onload_flag["onload"] = true; // 反映待ち
   if (onload_flag["mes"]) {
-    update_disp(2, cache['mes'][now_room]); // メッセージ内容を更新
+    update_disp(2, cache['mes'][now_room], 1); // メッセージ内容を更新
     get_room_data_plus(now_thread); // 追加読み込み
   }
   if (onload_flag["dir"]) {
-    update_disp(1, cache['dir']); // Room表示更新
+    update_disp(1, cache['dir'], 1); // Room表示更新
   }
   client_width(true); // リスト表示するか
   change_theme(localStorage.getItem("theme")); // Theme適用
@@ -261,8 +261,8 @@ function ck_room_datas() {
     // dir_ev.close(); // イベントストリームを閉じる
     var dir_ev = new EventSource(SEND_SERVER + '?' + SSE_DIR);
     dir_ev.addEventListener('message', function (event) { // RoomListを受け取ったときに更新
-      update_disp(1, event.data);
-      cache["dir"] = event.data; // Room情報を配列に保存しておく
+      cache["dir"] = JSON.parse(event.data); // Room情報を配列に保存しておく
+      update_disp(1, cache["dir"], 1);
     });
   }
 }
@@ -273,9 +273,9 @@ function get_room_datas(exe_room) {
     // mes_ev.close(); // イベントストリームを閉じる
     var mes_ev = new EventSource(SEND_SERVER + '?' + SSE_MES + '&room=' + exe_room);
     mes_ev.addEventListener('message', function (event) { // メッセージを受け取ったときに更新
-      update_disp(2, event.data);
+      cache["mes"][exe_room] = JSON.parse(event.data); // メッセージ内容を配列に保存しておく
+      update_disp(2, cache["mes"][exe_room], 1);
       get_room_data_plus(now_thread);
-      cache["mes"][exe_room] = event.data; // メッセージ内容を配列に保存しておく
     });
   }
 }
@@ -605,7 +605,7 @@ function change_room(room) {
         ck_room_datas();
         close_sse_session = false;
       } else {
-        update_disp(1, cache['dir']); // Room表示更新
+        update_disp(1, cache['dir'], 1); // Room表示更新
       }
     } else {
       main(); // 更新+mainループ
@@ -614,8 +614,8 @@ function change_room(room) {
       need_update_caches: false
     };
   } else { // キャッシュの更新が不要な場合
-    update_disp(1, cache['dir']); // Room表示更新
-    update_disp(2, cache['mes'][now_room]); // メッセージ内容を更新
+    update_disp(1, cache['dir'], 1); // Room表示更新
+    update_disp(2, cache['mes'][now_room], 1); // メッセージ内容を更新
   }
 }
 
@@ -674,18 +674,18 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             console.log('%cPOST_OK!', 'color: #00a0e9;');
             break;
           case GET_MES:
+            cache["mes"][exe_room] = JSON.parse(resData); // メッセージ内容を配列に保存しておく
             if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
-              update_disp(2, resData);
+              update_disp(2, cache["mes"][exe_room], 1);
               get_room_data_plus(now_thread); // 追加読み込み
             }
-            cache["mes"][exe_room] = resData; // メッセージ内容を配列に保存しておく
             onload_flag["mes"] = true;
             break;
           case GET_DIR:
+            cache["dir"] = JSON.parse(resData); // Room情報を配列に保存しておく
             if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
-              update_disp(1, resData);
+              update_disp(1, cache["dir"], 1);
             }
-            cache["dir"] = resData; // Room情報を配列に保存しておく
             onload_flag["dir"] = true;
             break;
           case SET_DIR:
@@ -709,9 +709,14 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
 
 // ----- データ取得後の処理 -----
 function update_disp(sw, str, option1) { // 更新の種類, 更新データ
+if (!option1) {
+  var r_list = JSON.parse(str);
+}  else if (option1 === 1) {
+  var r_list = str;
+}
+
   switch (sw) {
     case 1: // Roomリスト更新
-      var r_list = JSON.parse(str);
       // console.log(r_list);
 
       // Roomボタン生成
@@ -747,7 +752,6 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
       const room_top_name = document.getElementById('room_top_name'); // ページ上部のRoom名表示
 
       if (str) { // サーバからのレスポンスがあるかどうか
-        var r_list = JSON.parse(str);
         // console.log(r_list);
 
         /*
@@ -759,7 +763,7 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
                 }
         */
         // 現在のthreadを変数に代入
-        now_thread = r_list["thread"];
+          now_thread = r_list["thread"];
 
         // 表示部分更新
         room_show = r_list["room_name"]; // 変数更新
@@ -785,7 +789,6 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
         descr.innerHTML = '';
         CONTTT.innerHTML = "<li id=list2>Info: Don't bother with this Info</li>";
       }
-
       break;
   }
 }
@@ -795,23 +798,25 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
 function parse_message(r_list) {
   var list_put = ''; // 出力用の変数
   var list_length = r_list["object"].length - 1;
-  var out_data, content; // temporary variable
+  var out_data, content, obj_piece, get_link; // temporary variable
   for (let i = list_length; i !== -1; i--) {
-    content = r_list["object"][i]["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
+    obj_piece = r_list["object"][i];
+    content = obj_piece["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
     content = AutoLink(content); // リンクをAnchorに変換
-    if (r_list["object"][i]['type'] === 'log') continue;
-    if (r_list["object"][i]['type'] !== 'plain' && getLink(r_list["object"][i]["media"])) {
+    if (obj_piece['type'] === 'log') continue;
+    if (obj_piece['type'] === 'plain') { // 通常のテキスト
+      out_data = "<li id=list class='li li_pla'><span id=u_icon>" + obj_piece["user"] + "</span> <span id=user>" + obj_piece["user"] + "</span> <span id=date>" + obj_piece["date"] + "</span>" + content;
+    } else if (getLink(obj_piece["media"])) {
+      get_link = getLink(obj_piece["media"]);
       if (load_media_set === '1') { // メディアを表示するか
-        if (r_list["object"][i]['type'] === 'image') { // 画像
-          out_data = "<li id=list class='li li_img li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><img src='" + getLink(r_list["object"][i]['media']) + "' alt class='media media_img'>";
-        } else if (r_list["object"][i]['type'] === 'iframe') { // iframe
-          out_data = "<li id=list class='li li_ifr li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br><br><iframe src='" + getLink(r_list["object"][i]['media']) + "' frameborder=0 class='media media_ifr'></iframe>";
+        if (obj_piece['type'] === 'image') { // 画像
+          out_data = "<li id=list class='li li_img li_media'><span id=u_icon>" + obj_piece["user"] + "</span> <span id=user>" + obj_piece["user"] + "</span> <span id=date>" + obj_piece["date"] + "</span>" + content + "<br><br><img src='" + get_link + "' alt class='media media_img'>";
+        } else if (obj_piece['type'] === 'iframe') { // iframe
+          out_data = "<li id=list class='li li_ifr li_media'><span id=u_icon>" + obj_piece["user"] + "</span> <span id=user>" + obj_piece["user"] + "</span> <span id=date>" + obj_piece["date"] + "</span>" + content + "<br><br><iframe src='" + get_link + "' frameborder=0 class='media media_ifr'></iframe>";
         }
-      } else {
-        out_data = "<li id=list class='li li_media'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content + "<br>Media: <a href='" + getLink(r_list["object"][i]['media']) + "' target='_blank' rel='noopener'>" + getLink(r_list["object"][i]['media']) + "</a>";
-      }
-    } else {
-      out_data = "<li id=list class='li li_pla'><span id=u_icon>" + r_list["object"][i]["user"] + "</span> <span id=user>" + r_list["object"][i]["user"] + "</span> <span id=date>" + r_list["object"][i]["date"] + "</span>" + content;
+      } else { // 埋め込みメディアの非表示
+        out_data = "<li id=list class='li li_media'><span id=u_icon>" + obj_piece["user"] + "</span> <span id=user>" + obj_piece["user"] + "</span> <span id=date>" + obj_piece["date"] + "</span>" + content + "<br>Media: <a href='" + get_link + "' target='_blank' rel='noopener'>" + get_link + "</a>";
+     }
     }
     list_put += out_data;
   }
