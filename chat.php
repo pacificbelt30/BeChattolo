@@ -141,9 +141,14 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
 //  if(isset($_POST['req'])) {
   if (filter_input(INPUT_POST, 'req')) {
 
-    if (isset($_POST['room']) && is_file("./".BBS_FOLDER."/".esc($_POST['room'],1)."/".PROTECTED_ROOM)) { // アクセスしてよいか判定
-      if($_POST['req'] === 'add' || $_POST['req'] === 'mes' || $_POST['req'] === 'del') {
-        echo 'error';
+    if (isset($_POST['room'])) {
+      if (is_file("./".BBS_FOLDER."/".esc($_POST['room'],1)."/".PROTECTED_ROOM)) { // アクセスしてよいか判定
+        header("HTTP/1.0 403 Forbidden");
+        echo 'ERROR: "Room" has been deleted.';
+        exit;
+      } elseif (!is_dir("./".BBS_FOLDER."/".esc($_POST['room'],1))) { // ディレクトリが存在しない
+        header("HTTP/1.0 403 Forbidden");
+        echo 'ERROR: Requested "Room" does not exist.';
         exit;
       }
     }
