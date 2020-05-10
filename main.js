@@ -85,7 +85,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.25_2 20200510', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.25_3 20200510', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -95,7 +95,7 @@ window.onload = function Begin() {
   // c_page(1); // 表示更新
   onload_flag["onload"] = true; // 反映待ち
   if (onload_flag["mes"]) {
-    update_disp(2, cache['mes'][now_room], 1); // メッセージ内容を更新
+    update_disp(2, cache['mes'][now_room], 1, now_room); // メッセージ内容を更新
     get_room_data_plus(now_thread); // 追加読み込み
   }
   if (onload_flag["dir"]) {
@@ -288,7 +288,7 @@ function get_room_datas(exe_room) {
     var mes_ev = new EventSource(SEND_SERVER + '?' + SSE_MES + '&room=' + exe_room);
     mes_ev.addEventListener('message', function (event) { // メッセージを受け取ったときに更新
       cache["mes"][exe_room] = JSON.parse(event.data); // メッセージ内容を配列に保存しておく
-      update_disp(2, cache["mes"][exe_room], 1);
+      update_disp(2, cache["mes"][exe_room], 1, now_room);
       get_room_data_plus(now_thread);
     });
   }
@@ -631,7 +631,7 @@ function change_room(room) {
     cache["mes"][now_room]["need_update_caches"] = false;
   } else { // キャッシュの更新が不要な場合
     update_disp(1, cache['dir'], 1); // Room表示更新
-    update_disp(2, cache['mes'][now_room], 1); // メッセージ内容を更新
+    update_disp(2, cache['mes'][now_room], 1, now_room); // メッセージ内容を更新
   }
 }
 
@@ -699,7 +699,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
           case GET_MES:
             cache["mes"][exe_room] = JSON.parse(resData); // メッセージ内容を配列に保存しておく
             if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
-              update_disp(3, cache["mes"][exe_room], 1);
+              update_disp(3, cache["mes"][exe_room], 1, now_room);
               get_room_data_plus(now_thread); // 追加読み込み
             }
             onload_flag["mes"] = true;
@@ -725,7 +725,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
           case MES_DIF:
             if (resData) {
               cache["mes"][exe_room]["object"].push = JSON.parse(resData);
-              update_disp(3, cache["mes"][exe_room], 1);
+              update_disp(3, cache["mes"][exe_room], 1, now_room);
             }
             break;
         }
@@ -738,7 +738,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
 }
 
 // ----- データ取得後の処理 -----
-function update_disp(sw, str, option1) { // 更新の種類, 更新データ
+function update_disp(sw, str, option1, exe_room) { // 更新の種類, 更新データ
 if (!option1) {
   var r_list = JSON.parse(str);
 }  else if (option1 === 1) {
@@ -777,9 +777,8 @@ if (!option1) {
       break;
 
     case 2: // キャッシュ優先でメッセージ表示部分更新
-      if (out_cache[r_list["room_name"]]) {
-        var list_put = out_cache[r_list["room_name"]];
-        console.log('b');
+      if (out_cache[exe_room]) {
+        var list_put = out_cache[exe_room];
       }
     case 3: // メッセージ表示部分更新
       const CONTTT = document.getElementById('conttt'); // メッセージ内容の表示部分
@@ -798,7 +797,7 @@ if (!option1) {
                 }
         */
         // 現在のthreadを変数に代入
-          now_thread = r_list["thread"];
+        now_thread = r_list["thread"];
 
         // 表示部分更新
         room_show = r_list["room_name"]; // 変数更新
@@ -810,11 +809,11 @@ if (!option1) {
           descr.innerHTML = r_list["descr"].replace(/\r?\n/g, '<br>'); // 改行を置換 + Descriptionの更新
         }
         // メッセージ部分更
-        if (sw === 3 || !out_cache[r_list["room_name"]]) var list_put = ''; // 出力用の変数
+        if (sw === 3 || !out_cache[exe_room]) var list_put = ''; // 出力用の変数
         if (r_list["object"] && r_list["object"].length > 0) {
-          if (sw === 3 || !out_cache[r_list["room_name"]]) {
+          if (sw === 3 || !out_cache[exe_room]) {
             list_put = parse_message(r_list); // list_putに表示用に直したデータを代入します
-            out_cache[r_list["room_name"]] = list_put;
+            out_cache[exe_room] = list_put;
           }
           if (!list_put) {
             list_put = "<li id=list2>Info: There is no message.</li>";
