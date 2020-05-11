@@ -141,19 +141,19 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
 //  if(isset($_POST['req'])) {
   if (filter_input(INPUT_POST, 'req')) {
 
-    if (isset($_POST['room'])) {
-      if (is_file("./".BBS_FOLDER."/".esc($_POST['room'],1)."/".PROTECTED_ROOM)) { // アクセスしてよいか判定
+    if (filter_input(INPUT_POST, 'room')) {
+      if (is_file("./".BBS_FOLDER."/".filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW)."/".PROTECTED_ROOM)) { // アクセスしてよいか判定
         header("HTTP/1.0 403 Forbidden");
         echo 'ERROR: "Room" has been deleted.';
         exit;
-      } elseif (!is_dir("./".BBS_FOLDER."/".esc($_POST['room'],1))) { // ディレクトリが存在しない
+      } elseif (!is_dir("./".BBS_FOLDER."/".filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW))) { // ディレクトリが存在しない
         header("HTTP/1.0 403 Forbidden");
         echo 'ERROR: Requested "Room" does not exist.';
         exit;
       }
     }
 
-    switch ($_POST['req']) {
+    switch (filter_input(INPUT_POST, 'req')) {
       case 'dir': // ディレクトリ一覧&更新日時取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
         header("Content-Encoding: gzip");
@@ -163,34 +163,26 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
       case 'mes': // メッセージ取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
         header("Content-Encoding: gzip");
-        if (isset($_POST['thread'])) {
-          echo gzencode(GetMes(esc($_POST['room'],1), esc($_POST['thread'],0)),1);
-        } else {
-          echo gzencode(GetMes(esc($_POST['room'],1), -1),1);
-        }
+        echo gzencode(GetMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW)),1);
       break;
       case 'mes_dif': // メッセージ差分取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
         header("Content-Encoding: gzip");
-        echo gzencode(json_encode(GetMesDif(esc($_POST['room'],1), esc($_POST['thread'], 0), esc($_POST['id'], 0)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
+        echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
       break;
       case 'add': // メッセージ追加
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-        if (isset($_POST['media'])) {
-          AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), esc($_POST['media'], 0));
-        } else {
-          AddMes(esc($_POST['room'],1), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0), false);
-        }
-        autoSplit(esc($_POST['room'],1)); // 自動分割
+        AddMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'media', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        autoSplit(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW)); // 自動分割
       break;
       case 'edt': // メッセージ編集(削除)
-        EdtMes(esc($_POST['room'],1), esc($_POST['thread'],0), esc($_POST['id'],0), esc($_POST['name'],0), esc($_POST['type'],0), esc($_POST['contents'],0));
+        EdtMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
       break;
       case 'del': // ルーム(削除) // アクセス不可にする
-        DelRoom(esc($_POST['room'],1), esc($_POST['name'],0));
+        DelRoom(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
       break;
       case 'set': // ルーム(作成/編集)
-        SetRoom(esc($_POST['mode'],0), esc($_POST['name'],0), esc($_POST['room'],1), esc($_POST['new_name'],0), esc($_POST['new_descr'],0));
+        SetRoom(filter_input(INPUT_POST, 'mode', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'new_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'new_descr', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
       break;
       default:
         header("HTTP/1.0 400 Bad Request");
@@ -199,25 +191,21 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
     }
   }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') { // GETではReadのみ
-  if (isset($_GET['sse_dir'])){ // Server-Sent Events で 初回はRoomList一覧、その後は更新があるたびに一覧が送信されます
+  if (filter_input(INPUT_GET, 'sse_dir')){ // Server-Sent Events で 初回はRoomList一覧、その後は更新があるたびに一覧が送信されます
     header('X-Accel-Buffering: no');
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Content-Encoding: none');
     SseDir();
-  } elseif (isset($_GET['sse_mes']) && isset($_GET['room'])) {
+  } elseif (filter_input(INPUT_GET, 'sse_mes') && filter_input(INPUT_GET, 'room')) {
     header('X-Accel-Buffering: no');
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Content-Encoding: none');
-    SseMes(esc($_GET['room'],1));
-  } elseif(isset($_GET['room'])) {
-    if (isset($_GET['thread'])) {
-      GetMes(esc($_GET['room'],1), esc($_GET['thread'],0));
-    } else {
-      GetMes(esc($_GET['room'],1), -1);
-    }
-  } elseif (isset($_GET['dir'])) {
+    SseMes(filter_input(INPUT_GET, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
+  } elseif(filter_input(INPUT_GET, 'room')) {
+    GetMes(filter_input(INPUT_GET, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_GET, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
+  } elseif (filter_input(INPUT_GET, 'dir')) {
     header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
     echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
   } else {
@@ -273,7 +261,7 @@ function AddMes($room, $name, $type, $contents, $media) {
         'contents' => $contents,
         'date' => date('c')
       );
-      if (isset($media) && $media) {
+      if ($media) {
         $save_data['media'] = $media;
       }
       $save_data['i'] = ip_hex();
@@ -300,7 +288,7 @@ function AddMes($room, $name, $type, $contents, $media) {
 
 // ----- メッセージを取得 -----
 function GetMes($room, $thread) { // $threadは分割されたスレッド番号(オプション) -> ない場合は最新のものを取得
-  if($thread === -1) {
+  if($thread) {
     $file_n = latestMes($room, false)[0];
   } elseif ($thread >= 0) {
     $file_n = "./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE;
@@ -372,7 +360,7 @@ function GetDir() {
 // ----- RoomNameを取得する -----
 function GetRoomName($dir) {
   $l_file = latestMes($dir, false)[0];
-  if(is_file($l_file) && filesize($l_file) > 0) {
+  if($l_file && filesize($l_file) > 0) {
     $get_name_json = json_parse($l_file);
     if (!isset($get_name_json["room_name"])) return $dir;
     return $get_name_json["room_name"];
@@ -480,6 +468,8 @@ function DelRoom($room, $name) {
 function esc($text, $mode) { // mode=1 : basename()+htmlspecial~~, else : htmlspecialchats
   if ($mode === 1) {
     return basename(htmlspecialchars($text, ENT_QUOTES, "UTF-8"));
+  } elseif ($mode === 2) {
+    return basename($text);
   } else {
     return htmlspecialchars($text, ENT_QUOTES, "UTF-8");
   }
