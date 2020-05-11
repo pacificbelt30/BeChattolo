@@ -769,6 +769,52 @@ span#dot {
   }
 }
 
+#conttt_loading_ani {
+  text-align: center;
+  font-size: 1;
+  color: #00a0e9;
+}
+#conttt_loading_ani0,
+#conttt_loading_ani1,
+#conttt_loading_ani2 {
+  margin: 1px;
+  padding: 0;
+  /* border-top:dashed 1px #bbb;
+  border-bottom:dashed 1px #bbb; */
+  /* text-decoration: underline;
+  text-decoration-color: #bbb; */
+}
+#conttt_loading_ani0 {
+  animation: anim4 0.9s 0s infinite;
+}
+#conttt_loading_ani1 {
+  animation: anim4 0.9s 0.3s infinite;
+}
+#conttt_loading_ani2 {
+  animation: anim4 0.9s 0.6s infinite;
+}
+@keyframes anim4 {
+  0% {
+    opacity: 1;
+  }
+
+  40% {
+    opacity: 0.8;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  60% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
 @media screen and (max-width:768px) {
   #main_contents {
     position: absolute;

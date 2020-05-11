@@ -85,7 +85,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.25_4 20200511', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.25_5 20200511', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -609,10 +609,10 @@ function change_room(room) {
     now_room = room;
     change_url('?room=' + room); // 表示URLの変更
   }
+  document.getElementById('conttt').innerHTML = '<h4 id=conttt_loading_ani><span id=conttt_loading_ani0>■</span><span id=conttt_loading_ani1>■</span><span id=conttt_loading_ani2>■</span></h4><p style="font-size: 0.8em; text-align: center; ">NOW LOADING!!!! &ensp; Hold on a second.</p>'; // メッセージ内容の表示部分
   if (!cache["mes"][now_room] || cache["mes"][now_room]["need_update_caches"]) { // キャッシュの更新が必要
     if (!cache["mes"][now_room]) { // 各Room初回読み込み
       cache["mes"][now_room] = {};
-      document.getElementById('conttt').innerHTML = '<p style="font-size: 0.8em; text-align: center; ">NOW LOADING!!!! &ensp; Hold on a second.</p>'; // メッセージ内容の表示部分
       main(2);
     } else {
       get_room_data();
