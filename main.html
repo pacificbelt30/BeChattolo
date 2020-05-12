@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <!-- <meta charset="SJIS"> -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="apple-mobile-web-app-title" content="Ｂｅちゃっとぉ">
+  <meta name="apple-mobile-web-app-title" content="BeChattolo">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#BBB">
@@ -48,9 +48,12 @@
     <div id="first_sc">
       <h1 style="padding-top: 30px;">Welcome to BeChattolo!</h1>
       <img src="./res/logo4.png" alt="Logo" style="width: 100px; height: 100px; margin: 20px 10px 10px 10px;">
-      <p>Start your open, real-time chat today!<br><br>Features under development will be implemented in the future.<br>Please cooperate with us in collecting information on bugs, bugs, etc.</p>
-      <input type="text" id="user_name" placeholder="Enter your user name!">
-      <button type="button" id="submit_b" onclick="user_submit()">></button>
+      <p>Start your open, real-time chat today!</p>
+      <div id="user_name_input">
+        <input type="text" id="user_name" placeholder="Enter your user name!">
+        <button type="button" id="submit_b" onclick="user_submit()">></button>
+      </div>
+      <p style="opacity: 0.3; padding: 20px;">Please cooperate with us in collecting information on bugs, bugs, etc.</p>
     </div>
     <div id="edit_room">
       <h2>Room Editor Ver.0.1.1</h2>

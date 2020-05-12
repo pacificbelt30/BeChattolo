@@ -873,4 +873,26 @@ span#dot {
     height: auto;
   }
 
+  #user_name_input {
+    position: relative;
+    height: 48px;
+  }
+  #user_name {
+    position: absolute;
+    top: 0;
+    left: 13px;
+    margin: 0;
+    width: calc(80% - 32px);
+  }
+  #submit_b {
+    position: absolute;
+    top: 0;
+    right: 13px;
+    margin: 0;
+    width: calc(20% - 30px);
+    text-align: center;
+    font-size: 0.6em;
+    height: 100%;
+  }
+
 }
