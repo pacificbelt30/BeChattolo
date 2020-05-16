@@ -394,12 +394,14 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
         if (!array_key_exists('thread', $json_main2)) $json_main2['thread'] = latestMes($room, false)[1];
         if (!array_key_exists('object', $json_main2)) $json_main2['object'] = array();
         if (!array_key_exists('descr', $json_main2)) $json_main2['descr'] = '';
+        if (!array_key_exists('id_offset', $json_main)) setId($room);
         $up_log = array(
           'user' => $name,
           'type' => 'log',
           'contents' => 'Log: ChangeRoomSetting'."\r\n".'Old:'.$json_main2['room_name']."\t".$json_main2['descr']."\r\n".'New:'.$new_name."\t".$new_descr,
           'date' => date('c'),
-          'i' => ip_hex()
+          'i' => ip_hex(),
+          'id' => count($json_main2['object'])
         );
         $json_main2['object'][] = $up_log;
         $json_main2['room_name'] = $new_name;
@@ -434,7 +436,8 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
           'l_date' => date('c'),
           'thread' => 0,
           'object' => array(),
-          'descr' => $new_descr
+          'descr' => $new_descr,
+          'ip_offset' => 0
         );
         // データを追加して保存
         $up_log = array(
@@ -442,7 +445,8 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
           'type' => 'log',
           'contents' => 'Log: CreateRoom'."\r\n".'New:'.$new_name."\t".$new_descr,
           'date' => date('c'),
-          'i' => ip_hex()
+          'i' => ip_hex(),
+          'id' => 0
         );
         $json_main['object'][] = $up_log;
         $save_f2 = "./".BBS_FOLDER."/".$new_folder_no."/".SAVEFILE_NAME.'0'.SAVEFILE_EXTE;
@@ -522,7 +526,8 @@ function autoSplit($room) {
       'l_date' => date('c'),
       'object' => array(),
       'descr' => $json_main["descr"],
-      'thread' => $l_file[1]+1
+      'thread' => $l_file[1]+1,
+      'id_offset' => count($json_main['object'])
     );
     $open_json = fopen("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, 'w');
     $write_stat = fwrite($open_json, json_encode($n_format, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
