@@ -8,8 +8,10 @@ GET ?room=xxx の指定により、開くページを指定できます
 
 // ----- 定数定義 -----
 const XHR_TIMEOUT = 1000 * 5; // サーバリクエストのタイムアウト時間(ms)
-const XHR_TIMEOUT_L = 1000 * 3600; // サーバリクエストのタイムアウト時間(ms)(長い)
+// const XHR_TIMEOUT_L = 1000 * 3600; // サーバリクエストのタイムアウト時間(ms)(長い)
+const XHR_TIMEOUT_L = 0; // サーバリクエストのタイムアウト時間(ms)(長い)
 const MAINLOOP_TIMER = 1000 * 5; // メイン関数の実行間隔の時間 (ms)
+const SUBLOOP_TIMER = 1000 * 1; // サブ関数の実行間隔の時間 (ms)
 const SKIP_COUNT = 6; // タブがパッシブのmain関数を実行しない間隔 回数
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
@@ -64,8 +66,8 @@ var onload_flag = {
   "mes": false,
   "dir": false
 }; // ページが読み込まれたかのフラグ
-var cache = {};
-cache["mes"] = {}; // メッセージ保管用の配列 (キャッシュ)
+var cache_m = {};
+cache_m["mes"] = {}; // メッセージ保管用の配列 (キャッシュ)
 var out_cache = {}; // 画面更新用の文字列保存用の配列 (画面更新用キャッシュ?)
 var skip_hidden_count = 0; // パッシブ時の負荷を下げる ためにカウントしておく
 var close_sse_session = true; // セッションが閉じられているかのフラグ
@@ -83,9 +85,10 @@ var sendKey_set = 1; // 送信ショートカットの設定
 var load_media_set = 1; // 埋め込みメディアの読み込み
 var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
+var old_date; // 時刻更新比較用
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.25_5 20200511', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.26 20200517', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -95,17 +98,18 @@ window.onload = function Begin() {
   // c_page(1); // 表示更新
   onload_flag["onload"] = true; // 反映待ち
   if (onload_flag["mes"]) {
-    update_disp(2, cache['mes'][now_room], 1); // メッセージ内容を更新
+    update_disp(2, cache_m['mes'][now_room], 1); // メッセージ内容を更新
     get_room_data_plus(now_thread); // 追加読み込み
   }
   if (onload_flag["dir"]) {
-    update_disp(1, cache['dir'], 1); // Room表示更新
+    update_disp(1, cache_m['dir'], 1); // Room表示更新
   }
   client_width(true); // リスト表示するか
   change_theme(localStorage.getItem("theme")); // Theme適用
   if (change_font_aa === 1 || change_font_aa === '1') { // AAモード?
     aamode_tgg(true);
   }
+  sub_routine(); // サブ(時刻更新など)開始
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', '');
 }
 
@@ -114,17 +118,15 @@ function main(option) {
   if (document.hidden && skip_hidden_count < SKIP_COUNT) {
     skip_hidden_count++
   } else {
-    ck_user(); // ユーザー名確認
     sp_mode = client_width(false);
     if (option === 1) { // Roomのメッセージ取得が必要な時
       get_room_data(true); // タイムアウト長い
-      ck_room_data(); // Room更新確認
+      ck_room_data(true); // Room更新確認
     } else if (option === 2) {
       get_room_data(true); // タイムアウト長い
     } else {
       ck_room_data(); // Room更新確認
     }
-    date_update(); // 表示時刻の更新
 
     skip_hidden_count = 0;
   }
@@ -135,6 +137,12 @@ function main(option) {
     }
     setTimeout(reserve_cnt, MAINLOOP_TIMER - 100);
   }
+}
+
+function sub_routine() { // 定期実行する関数
+  ck_user(); // ユーザー名確認
+  date_update(); // 表示時刻の更新
+  setTimeout(sub_routine, SUBLOOP_TIMER);
 }
 
 
@@ -234,13 +242,17 @@ function ck_indexedDB() {
 }
 
 // ----- Room更新確認 -----
-function ck_room_data() {
-  xhr('req=' + GET_DIR, GET_DIR);
+function ck_room_data(option) { // タイムアウトを長くするオプション
+  if (option === true) {
+    xhr('req=' + GET_DIR, GET_DIR, false , true);
+  } else {
+    xhr('req=' + GET_DIR, GET_DIR);
+  }
 }
 
 // ----- Roomデータ(メッセージ)取得 -----
 function get_room_data(option) { // タイムアウトを長くするオプション
-  if (!cache["mes"][now_room]["id_offset"]) {
+  if (!cache_m["mes"][now_room]["id"]) {
     if (option === true) {
       xhr('req=' + GET_MES + '&thread=false&room=' + now_room, GET_MES, false, true, now_room);
     } else {
@@ -253,9 +265,10 @@ function get_room_data(option) { // タイムアウトを長くするオプシ�
 
 // ----- Roomデータ(メッセージ)差分取得 -----
 function get_room_diff() {
-  // cache["mes"][now_room].push = {'id_offset' :cache["mes"][now_room]["object"].length}; // 実験用
-  if (cache["mes"][now_room]["id_offset"]) {
-    xhr('req=' + MES_DIF + '&room=' + now_room + '&thread=' + cache["mes"][now_room]["thread"] + '&id=' + cache["mes"][now_room]["id_offset"], MES_DIF, false, false, now_room);
+  // cache_m["mes"][now_room].push = {'id' :cache_m["mes"][now_room]["object"].length}; // 実験用
+  if (cache_m["mes"][now_room]["id"]) {
+    // console.log('req=' + MES_DIF + '&room=' + now_room + '&thread=' + cache_m["mes"][now_room]["thread"] + '&id=' + cache_m["mes"][now_room]["id"]);
+    xhr('req=' + MES_DIF + '&room=' + now_room + '&thread=' + cache_m["mes"][now_room]["thread"] + '&id=' + cache_m["mes"][now_room]["id"], MES_DIF, false, false, now_room);
   }
 }
 
@@ -275,8 +288,8 @@ function ck_room_datas() {
     // dir_ev.close(); // イベントストリームを閉じる
     var dir_ev = new EventSource(SEND_SERVER + '?' + SSE_DIR + '=b');
     dir_ev.addEventListener('message', function (event) { // RoomListを受け取ったときに更新
-      cache["dir"] = JSON.parse(event.data); // Room情報を配列に保存しておく
-      update_disp(1, cache["dir"], 1);
+      cache_m["dir"] = JSON.parse(event.data); // Room情報を配列に保存しておく
+      update_disp(1, cache_m["dir"], 1);
     });
   }
 }
@@ -287,8 +300,8 @@ function get_room_datas(exe_room) {
     // mes_ev.close(); // イベントストリームを閉じる
     var mes_ev = new EventSource(SEND_SERVER + '?' + SSE_MES + '&room=' + exe_room);
     mes_ev.addEventListener('message', function (event) { // メッセージを受け取ったときに更新
-      cache["mes"][exe_room] = JSON.parse(event.data); // メッセージ内容を配列に保存しておく
-      update_disp(2, cache["mes"][exe_room], 1);
+      cache_m["mes"][exe_room] = JSON.parse(event.data); // メッセージ内容を配列に保存しておく
+      update_disp(2, cache_m["mes"][exe_room], 1);
       get_room_data_plus(now_thread);
     });
   }
@@ -301,7 +314,7 @@ function get_room_data_plus(thr, str, exe_room) {
     var r_list = JSON.parse(str);
     if (r_list["object"] && r_list["object"].length > 0) {
       CONTTT.innerHTML = CONTTT.innerHTML + parse_message(r_list); // メッセージを追加します
-      cache["mes"][exe_room]["object"].push = r_list;
+      cache_m["mes"][exe_room]["object"].push = r_list;
     }
   }
   // 追加読み込み
@@ -440,9 +453,9 @@ function theme_setting() {
 }
 
 function sendkey_setting() {
-  const send_key = document.getElementById('send_key');
-  localStorage.setItem('sendKey', send_key.value);
-  send_key = send_key.value;
+  const send_key_e = document.getElementById('send_key');
+  send_key = send_key_e.value;
+  localStorage.setItem('sendKey', send_key_e.value);
 }
 
 function loadem_setting() { // 埋め込みメディアの表示
@@ -599,7 +612,7 @@ function b_send() {
   }
   ex_b_send(0, true); // 送信オプションを閉じる
   ck_ex_content('', 0); // メッセージ入力欄のサイズ
-  ck_room_data(); // アクティブなRoomのメッセージ取得
+  ck_room_data(true); // アクティブなRoomのメッセージ取得
 }
 
 // ----- アクティブなRoomを変更
@@ -609,29 +622,29 @@ function change_room(room) {
     now_room = room;
     change_url('?room=' + room); // 表示URLの変更
   }
-  document.getElementById('conttt').innerHTML = '<h4 id=conttt_loading_ani><span id=conttt_loading_ani0>■</span><span id=conttt_loading_ani1>■</span><span id=conttt_loading_ani2>■</span></h4><p style="font-size: 0.8em; text-align: center; ">NOW LOADING!!!! &ensp; Hold on a second.</p>'; // メッセージ内容の表示部分
-  if (!cache["mes"][now_room] || cache["mes"][now_room]["need_update_caches"]) { // キャッシュの更新が必要
-    if (!cache["mes"][now_room]) { // 各Room初回読み込み
-      cache["mes"][now_room] = {};
+  if (!cache_m["mes"][now_room] || cache_m["mes"][now_room]["need_update_caches"]) { // キャッシュの更新が必要
+    document.getElementById('conttt').innerHTML = '<h4 id=conttt_loading_ani><span id=conttt_loading_ani0>■</span><span id=conttt_loading_ani1>■</span><span id=conttt_loading_ani2>■</span></h4><p style="font-size: 0.8em; text-align: center; ">NOW LOADING!!!! &ensp; Hold on a second.</p>'; // メッセージ内容の表示部分
+    if (!cache_m["mes"][now_room]) { // 各Room初回読み込み
+      cache_m["mes"][now_room] = {};
       main(2);
     } else {
       get_room_data();
     }
     if (support_eventsource === 0) { // sseサポート
       if (close_sse_session) {
-        ck_room_data(); // 普通にデータを1回取得
+        ck_room_data(true); // 普通にデータを1回取得
         ck_room_datas();
         close_sse_session = false;
       } else {
-        update_disp(1, cache['dir'], 1); // Room表示更新
+        update_disp(1, cache_m['dir'], 1); // Room表示更新
       }
     } else {
       main(); // 更新+mainループ
     }
-    cache["mes"][now_room]["need_update_caches"] = false;
+    cache_m["mes"][now_room]["need_update_caches"] = false;
   } else { // キャッシュの更新が不要な場合
-    update_disp(1, cache['dir'], 1); // Room表示更新
-    update_disp(2, cache['mes'][now_room], 1); // メッセージ内容を更新
+    update_disp(1, cache_m['dir'], 1); // Room表示更新
+    update_disp(2, cache_m['mes'][now_room], 1); // メッセージ内容を更新
   }
 }
 
@@ -664,10 +677,14 @@ function nowD() {
 
 // ----- 時刻表示の更新 -----
 function date_update() {
-  const TIME_B = document.getElementById('time_b'); // 時刻表示用(仮)
-  var week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   var date = new Date();
-  TIME_B.innerHTML = date.getFullYear() + '-' + zerosli((date.getMonth() + 1)) + '-' + zerosli(date.getDate()) + ' (' + week[date.getDay()] + ') ' + zerosli(date.getHours()) + '<span id=dot>:</span>' + zerosli(date.getMinutes());
+  var week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  var date_out = date.getFullYear() + '-' + zerosli((date.getMonth() + 1)) + '-' + zerosli(date.getDate()) + ' (' + week[date.getDay()] + ') ' + zerosli(date.getHours()) + '<span id=dot>:</span>' + zerosli(date.getMinutes());
+  if (date_out !== old_date) {
+    const TIME_B = document.getElementById('time_b'); // 時刻表示用(仮)
+    old_date = date_out;
+    TIME_B.innerHTML = date_out;
+  }
 }
 
 // ----- 2桁の0埋め -----
@@ -679,8 +696,8 @@ function zerosli(no) {
 function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内容, リクエストの種類, 追加読み込みの引継ぎ, 通信のタイムアウトを長くするか, 実行するRoom名(非同期なのでnew_roomは使えない)
   const req = new XMLHttpRequest();
   req.open('POST', SEND_SERVER, true);
-  req.setRequestHeader('Pragma', 'no-cache'); // キャッシュを無効にするためのヘッダ指定
-  req.setRequestHeader('Cache-Control', 'no-cach');
+  req.setRequestHeader('Pragma', 'no-cache_m'); // キャッシュを無効にするためのヘッダ指定
+  req.setRequestHeader('cache_m-Control', 'no-cach');
   req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
   if (option === true) {
     req.timeout = XHR_TIMEOUT_L; // サーバリクエストのタイムアウト時間(長い)の指定
@@ -697,17 +714,17 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             console.log('%cPOST_OK!', 'color: #00a0e9;');
             break;
           case GET_MES:
-            cache["mes"][exe_room] = JSON.parse(resData); // メッセージ内容を配列に保存しておく
+            cache_m["mes"][exe_room] = JSON.parse(resData); // メッセージ内容を配列に保存しておく
             if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
-              update_disp(2, cache["mes"][exe_room], 1);
+              update_disp(2, cache_m["mes"][exe_room], 1);
               get_room_data_plus(now_thread); // 追加読み込み
             }
             onload_flag["mes"] = true;
             break;
           case GET_DIR:
-            cache["dir"] = JSON.parse(resData); // Room情報を配列に保存しておく
+            cache_m["dir"] = JSON.parse(resData); // Room情報を配列に保存しておく
             if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
-              update_disp(1, cache["dir"], 1);
+              update_disp(1, cache_m["dir"], 1);
             }
             onload_flag["dir"] = true;
             break;
@@ -724,8 +741,9 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             break;
           case MES_DIF:
             if (resData) {
-              cache["mes"][exe_room]["object"].push = JSON.parse(resData);
-              update_disp(2, cache["mes"][exe_room], 1);
+              mes_obj = {...cache_m["mes"][exe_room]["object"], ...JSON.parse(resData)}; // オブジェクト結合
+              cache_m["mes"][exe_room]["object"] =  Object.entries(mes_obj).map(([key, value]) => (value)); // オブジェクトから配列にして代入
+              update_disp(2, cache_m["mes"][exe_room], 1);
             }
             break;
         }
@@ -801,6 +819,9 @@ if (!option1) {
         room_show = r_list["room_name"]; // 変数更新
         room_top_name.innerHTML = ' / ' + r_list["room_name"]; // 表示更新
         document.title = r_list["room_name"] + ' / Beちゃっとぉ'; // title更新
+        if (r_list["id_offset"] || r_list["id_offset"] === 0) {
+          cache_m["mes"][now_room]["id"] = r_list["id_offset"] + r_list["object"].length - 1;
+        }
 
         descrip_text = r_list["descr"];
         if (r_list["descr"]) {
@@ -915,14 +936,14 @@ function update_disp_db(up_info, i, r_list) {
         // RoomがアクティブになったらIndexedDB更新
         db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
       } else if (up_info["notice_flag"] === 0) { // 未通知時
-        cache["mes"][now_room]["need_update_caches"] = true; // キャッシュの更新が必要
+        cache_m["mes"][now_room]["need_update_caches"] = true; // キャッシュの更新が必要
         // 通知フラグが1以外の時通知, 最終更新時は更新しない
         temp_id.classList.add("new_mes"); // 通知追加
         favicon(1); // 通知オン
         notice(false); // 通知する
         db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], up_info["up_date"], 1, r_list[i]["room_name"], r_list[i]["thread"]);
       } else { // 通知したが、未読
-        cache["mes"][now_room]["need_update_caches"] = true; // キャッシュの更新が必要
+        cache_m["mes"][now_room]["need_update_caches"] = true; // キャッシュの更新が必要
         temp_id.classList.add("new_mes"); // 通知追加
         favicon(1); // 通知オン
       }
@@ -958,14 +979,14 @@ function update_disp_arr(i, r_list) {
         get_room_data(); // アクティブなRoomのメッセージ取得
         temp_id.classList.remove("new_mes"); // 通知削除
       } else if (sub_DB[r_list[i]["dir_name"]]["notice_flag"] === 0) {
-        cache["mes"][now_room]["need_update_caches"] = true; // キャッシュの更新が必要
+        cache_m["mes"][now_room]["need_update_caches"] = true; // キャッシュの更新が必要
         // 通知フラグが1以外の時通知、最終更新時は更新しない
         sub_DB[r_list[i]["dir_name"]]["notice_flag"] = 1; // 通知フラグの更新
         temp_id.classList.add("new_mes"); // 通知追加
         favicon(1); // 通知オン
         notice(false); // 通知する
       } else { // 通知したが、未読
-        cache["mes"][now_room]["need_update_caches"] = true; // キャッシュの更新が必要
+        cache_m["mes"][now_room]["need_update_caches"] = true; // キャッシュの更新が必要
         temp_id.classList.add("new_mes"); // 通知追加
         favicon(1); // 通知オン
       }

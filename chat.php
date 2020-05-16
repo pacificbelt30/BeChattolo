@@ -4,6 +4,7 @@
 ファイル置き場 5
 Beちゃっとぉ
 
+ProjectStart: 2020/2/27~
 2020 Fukuda-B/Dakhuf
 
 chat_v1.6
@@ -167,8 +168,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
       break;
       case 'mes_dif': // メッセージ差分取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-        header("Content-Encoding: gzip");
-        echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
+        // header("Content-Encoding: gzip");
+        // echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
+        echo json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);  // .htaccessを操作できずgzipできないサーバー向け
       break;
       case 'add': // メッセージ追加
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
@@ -218,7 +220,7 @@ exit;
 // ----- MainRoomの作成 -----
 function first_roomc(){
   if (!is_dir("./".BBS_FOLDER)) {
-    mkdir("./".BBS_FOLDER, DEFAULT_PERMISSION); 
+    mkdir("./".BBS_FOLDER, DEFAULT_PERMISSION);
   };
   if (!is_dir("./".BBS_FOLDER."/".MAIN_ROOM_DIR)) {
     mkdir("./".BBS_FOLDER."/".MAIN_ROOM_DIR, DEFAULT_PERMISSION);
@@ -245,7 +247,8 @@ function AddMes($room, $name, $type, $contents, $media) {
         'l_date' => date('c'),
         'thread' => 0,
         'object' => array(),
-        'descr' => ''
+        'descr' => '',
+        'id_offset' => 0
       );
     }
     // キーが存在しない場合の処理
@@ -254,17 +257,21 @@ function AddMes($room, $name, $type, $contents, $media) {
     if (!array_key_exists('thread', $json_main)) $json_main['thread'] = latestMes($room, false)[1];
     if (!array_key_exists('object', $json_main)) $json_main['object'] = array();
     if (!array_key_exists('descr', $json_main)) $json_main['descr'] = '';
+    if (!array_key_exists('id_offset', $json_main)) setId($room);
 
+      $id_cnt = count($json_main['object']);
       $save_data = array( // 保存ファイルに追加するデータ
         'user' => $name,
         'type' => $type,
         'contents' => $contents,
-        'date' => date('c')
+        'date' => date('c'),
+        'id' => $id_cnt,
+        'i' => ip_hex()
       );
       if ($media) {
         $save_data['media'] = $media;
       }
-      $save_data['i'] = ip_hex();
+      // $save_data['i'] = ip_hex();
       $json_main['l_date'] = date('c'); // データを更新
       $json_main['object'][] = $save_data; // データ追加
       // (array)$json_main["object"][] = $save_data; // データを追加
@@ -274,6 +281,7 @@ function AddMes($room, $name, $type, $contents, $media) {
       $write_stat = fwrite($open_json, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
       fclose($open_json);
       if ($write_stat === false) {
+        header("HTTP/1.0 500 Internal Server Error");
         echo 'ERROR: Unwritable';
       } else {
         echo 'ok';
@@ -299,6 +307,9 @@ function GetMes($room, $thread) { // $threadは分割されたスレッド番号
      $open_json = fopen($file_n, 'r'); $read_json = fread($open_json, filesize($file_n)); fclose($open_json);
     return $read_json;
     // echo file_get_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE);
+  } else {
+    header("HTTP/1.0 404 Not Found");
+    return 'Error: There is no thread.';
   }
   exit;
 }
@@ -398,6 +409,7 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
         fclose($open_json);
         // file_put_contents($save_f2, json_encode($json_main2, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)); // ファイル上書き保存, LOCK_EXだと同時接続不可説
         if ($write_stat === false) {
+          header("HTTP/1.0 500 Internal Server Error");
           echo 'ERROR: Unwritable';
         } else {
           echo 'ok';
@@ -439,6 +451,7 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
         fclose($open_json);
         // file_put_contents($save_f2, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)); // ファイル上書き保存
         if ($write_stat === false) {
+          header("HTTP/1.0 500 Internal Server Error");
           echo 'ERROR: Unwritable';
         } else {
           echo 'ok';
@@ -460,7 +473,8 @@ function DelRoom($room, $name) {
     chmod("./".BBS_FOLDER."/".$room."/", DEFAULT_PERMISSION);
     echo 'ok';
   } else {
-    echo 'error';
+    header("HTTP/1.0 404 Not Found");
+    return 'Error: There is no thread.';
   }
 }
 
@@ -567,6 +581,10 @@ function SseDir() {
 }
 // ----- SSE メッセージの更新を監視します (使わない予定の関数)
 function SseMes($room) {
+  header("HTTP/1.0 501 Not Implemented");
+  return 'Error: Unimplemented function.';
+  exit;
+
     // echo file_get_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.SAVEFILE_EXTE);
     $file_n = latestMes($room, false)[0];
     if(is_file($file_n) && !is_file("./".BBS_FOLDER."/".$room."/".PROTECTED_ROOM)) {
@@ -614,6 +632,9 @@ function SseMes($room) {
           sleep(CK_TIMING*CK_TIMING);
         }
      }
+  } else {
+    header("HTTP/1.0 404 Not Found");
+    return 'Error: There is no thread.';
   }
 }
 
@@ -621,7 +642,7 @@ function SseMes($room) {
 // ----- メッセージ差分の取得 -----
 function GetMesDif($room, $thread, $id) { // $idに指定されたID以降～最新までのメッセージを返します
   $path = "./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE;
-  if (is_file($path) && $id) {
+  if (is_file($path) && isset($id)) {
     $json_main = json_parse($path);
 
     if (!isset($json_main['id_offset'])) {
@@ -635,9 +656,14 @@ function GetMesDif($room, $thread, $id) { // $idに指定されたID以降～最
       $arr_length = $id_cnt - $arr_no; // idと最新のメッセージまでの数
       $res_arr = array(); // return用配列
       if ($arr_no >= 0 && $arr_no < $id_cnt) {
+        if (!isset($json_main['object'][$arr_no]['id'])) { // idがない場合
+          setId($room);
+          GetMesDif($room, $thread, $id);
+        }
         if ($json_main['object'][$arr_no]['id'] == $id) {
           for($i=0; $i<$arr_length-1; ++$i) {
-            $res_arr[] = $json_main['object'][$arr_no+$i+1];
+            $set_id = $arr_no+$i+1;
+            $res_arr[$set_id] = $json_main['object'][$set_id];
           }
           return $res_arr;
         } elseif ($arr_no+$id-$json_main['object'][$arr_no]['id']<$id_cnt && $arr_no+$id-$json_main['object'][$arr_no]['id'] >= 0 && $json_main['object'][$arr_no+$id-$json_main['object'][$arr_no]['id']]['id'] === $id) { // 振られたidがずれていた場合
