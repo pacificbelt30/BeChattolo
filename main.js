@@ -88,7 +88,7 @@ var sp_mode = false; // スマホモード
 var old_date; // 時刻更新比較用
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.26 20200517', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.27 20200517', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -259,7 +259,7 @@ function get_room_data(option) { // タイムアウトを長くするオプシ�
       xhr('req=' + GET_MES + '&thread=false&room=' + now_room, GET_MES, false, false, now_room);
     }
   } else {
-    get_room_diff();
+    get_room_diff(option);
   }
 }
 
@@ -268,7 +268,7 @@ function get_room_diff() {
   // cache_m["mes"][now_room].push = {'id' :cache_m["mes"][now_room]["object"].length}; // 実験用
   if (cache_m["mes"][now_room]["id"]) {
     // console.log('req=' + MES_DIF + '&room=' + now_room + '&thread=' + cache_m["mes"][now_room]["thread"] + '&id=' + cache_m["mes"][now_room]["id"]);
-    xhr('req=' + MES_DIF + '&room=' + now_room + '&thread=' + cache_m["mes"][now_room]["thread"] + '&id=' + cache_m["mes"][now_room]["id"], MES_DIF, false, false, now_room);
+    xhr('req=' + MES_DIF + '&room=' + now_room + '&thread=' + cache_m["mes"][now_room]["thread"] + '&id=' + cache_m["mes"][now_room]["id"], MES_DIF, false, true, now_room);
   }
 }
 

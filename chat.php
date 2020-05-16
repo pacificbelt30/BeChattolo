@@ -168,9 +168,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
       break;
       case 'mes_dif': // メッセージ差分取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-        // header("Content-Encoding: gzip");
-        // echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
-        echo json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);  // .htaccessを操作できずgzipできないサーバー向け
+        header("Content-Encoding: gzip");
+        echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
+        // echo json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);  // .htaccessを操作できずgzipできないサーバー向け
       break;
       case 'add': // メッセージ追加
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
@@ -206,10 +206,13 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
     header('Content-Encoding: none');
     SseMes(filter_input(INPUT_GET, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
   } elseif(filter_input(INPUT_GET, 'room')) {
-    GetMes(filter_input(INPUT_GET, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_GET, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
+    echo GetMes(filter_input(INPUT_GET, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_GET, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
   } elseif (filter_input(INPUT_GET, 'dir')) {
     header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
     echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+  } elseif (filter_input(INPUT_GET, 'setid_room')) { // setIdのためだけ
+    setId(filter_input(INPUT_GET, 'setid_room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
+    echo GetMes(filter_input(INPUT_GET, 'setid_room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_GET, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
   } else {
     header("HTTP/1.0 400 Bad Request");
     echo 'ERROR: No shuch request type.';
@@ -296,7 +299,7 @@ function AddMes($room, $name, $type, $contents, $media) {
 
 // ----- メッセージを取得 -----
 function GetMes($room, $thread) { // $threadは分割されたスレッド番号(オプション) -> ない場合は最新のものを取得
-  if($thread) {
+  if($thread!==0 && empty($thread) || $thread === "false") {
     $file_n = latestMes($room, false)[0];
   } elseif ($thread >= 0) {
     $file_n = "./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE;
@@ -723,6 +726,5 @@ function setId($room) {
       fclose($open_json);
     }
   }
-
 }
 ?>
