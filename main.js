@@ -71,6 +71,7 @@ cache_m["mes"] = {}; // メッセージ保管用の配列 (キャッシュ)
 var out_cache = {}; // 画面更新用の文字列保存用の配列 (画面更新用キャッシュ?)
 var skip_hidden_count = 0; // パッシブ時の負荷を下げる ためにカウントしておく
 var close_sse_session = true; // セッションが閉じられているかのフラグ
+var old_date; // 時刻更新比較用
 
 
 var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, サポートされているが、アクセス不可:2
@@ -82,13 +83,13 @@ var notice_set = 0; // 通知の設定
 var notice2_set = 0; // 特殊な通知の設定
 var theme_set = 1; // Themeの設定
 var sendKey_set = 1; // 送信ショートカットの設定
+var breakKey_set = 1 // 改行キーの設定
 var load_media_set = 1; // 埋め込みメディアの読み込み
 var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
-var old_date; // 時刻更新比較用
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.27 20200517', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.28 20200517', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -99,7 +100,7 @@ window.onload = function Begin() {
   onload_flag["onload"] = true; // 反映待ち
   if (onload_flag["mes"]) {
     update_disp(2, cache_m['mes'][now_room], 1); // メッセージ内容を更新
-    get_room_data_plus(now_thread); // 追加読み込み
+    get_room_data_plus(now_thread,false,now_room); // 追加読み込み
   }
   if (onload_flag["dir"]) {
     update_disp(1, cache_m['dir'], 1); // Room表示更新
@@ -302,7 +303,7 @@ function get_room_datas(exe_room) {
     mes_ev.addEventListener('message', function (event) { // メッセージを受け取ったときに更新
       cache_m["mes"][exe_room] = JSON.parse(event.data); // メッセージ内容を配列に保存しておく
       update_disp(2, cache_m["mes"][exe_room], 1);
-      get_room_data_plus(now_thread);
+      get_room_data_plus(now_thread,false,now_room);
     });
   }
 }
@@ -313,8 +314,13 @@ function get_room_data_plus(thr, str, exe_room) {
   if (str) {
     var r_list = JSON.parse(str);
     if (r_list["object"] && r_list["object"].length > 0) {
-      CONTTT.innerHTML = CONTTT.innerHTML + parse_message(r_list); // メッセージを追加します
-      cache_m["mes"][exe_room]["object"].push = r_list;
+      CONTTT.innerHTML += parse_message(r_list); // メッセージを追加します
+      var mes_arr = r_list["object"].concat(cache_m["mes"][exe_room]["object"]);
+      cache_m["mes"][exe_room]["object"] = mes_arr;
+      cache_m["mes"][exe_room]["id_offset"] += r_list.length;
+      // var mes_obj = {...r_list["object"], ...cache_m["mes"][exe_room]["object"]}; // オブジェクト結合
+      // cache_m["mes"][exe_room]["object"] = Object.entries(mes_obj).map(([key, value]) => (value)); // オブジェクトから配列にして代入
+      // cache_m["mes"][exe_room]["object"].push = r_list;
     }
   }
   // 追加読み込み
@@ -322,7 +328,7 @@ function get_room_data_plus(thr, str, exe_room) {
   // console.log(b_height + ' ' + thr);
   if (thr > 0 && b_height < READ_AHEAD || thr > 0 && now_thread === thr) {
     // console.log("Load: Old Thread");
-    xhr('req=' + GET_MES + '&room=' + now_room + '&thread=' + (thr - 1), JOINT_MES, thr - 1);
+    xhr('req=' + GET_MES + '&room=' + now_room + '&thread=' + (thr - 1), JOINT_MES, thr - 1, true, exe_room);
   } else if (thr > 0) {
     ready_getDataNo = thr;
     ready_getDataPlus = true; // 追加読み込みの実行OK
@@ -343,7 +349,7 @@ function getRoomData_exec() {
     requestAnimationFrame(function () {
       ready_animFrame = false;
       ready_getDataPlus = false; // 追加読み込みの実行ブロック
-      get_room_data_plus(ready_getDataNo); // 追加読み込み
+      get_room_data_plus(ready_getDataNo,false,now_room); // 追加読み込み
     });
     ready_animFrame = true;
   }
@@ -406,7 +412,8 @@ function room_editx(mode) { // 0:Cancel 1:Edit 2:Create 3:exec
       } else if (room_edit_mode === 4) { // 削除
         xhr('req=' + DEL_DIR + '&name=' + localStorage.getItem("userName") + '&room=' + now_room, DEL_DIR);
       }
-      main(1);
+      //main(1);
+      change_room(now_room);
       room_edit_mode = 0;
       edit_room.style.display = "none";
       break;
@@ -606,13 +613,10 @@ function b_send() {
     } else { // 通常のテキスト以外
       console.log(v_send_media);
     }
-    xhr('req=' + ADD_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send + '&media=' + v_send_media);
-    div_top.value = '';
-    chat_url.value = '';
+    xhr('req=' + ADD_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send + '&media=' + v_send_media, ADD_MES, false, true, now_room);
   }
   ex_b_send(0, true); // 送信オプションを閉じる
-  ck_ex_content('', 0); // メッセージ入力欄のサイズ
-  ck_room_data(true); // アクティブなRoomのメッセージ取得
+  // ck_ex_content('', 0); // メッセージ入力欄のサイズ
 }
 
 // ----- アクティブなRoomを変更
@@ -712,12 +716,23 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
         switch (send_mode) {
           case ADD_MES:
             console.log('%cPOST_OK!', 'color: #00a0e9;');
+            cache_m["dir"] = JSON.parse(resData); // Room情報を配列に保存しておく
+            if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
+              update_disp(1, cache_m["dir"], 1);
+            }
+
+            const div_top = document.getElementById('chat_content');
+            const chat_url = document.getElementById('chat_url');
+            div_top.value = '';
+            chat_url.value = '';
+            ck_ex_content(0); // メッセージ入力欄調整
+
             break;
           case GET_MES:
             cache_m["mes"][exe_room] = JSON.parse(resData); // メッセージ内容を配列に保存しておく
             if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
               update_disp(2, cache_m["mes"][exe_room], 1);
-              get_room_data_plus(now_thread); // 追加読み込み
+              get_room_data_plus(now_thread,false,exe_room); // 追加読み込み
             }
             onload_flag["mes"] = true;
             break;
@@ -741,8 +756,8 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             break;
           case MES_DIF:
             if (resData) {
-              mes_obj = {...cache_m["mes"][exe_room]["object"], ...JSON.parse(resData)}; // オブジェクト結合
-              cache_m["mes"][exe_room]["object"] =  Object.entries(mes_obj).map(([key, value]) => (value)); // オブジェクトから配列にして代入
+              var mes_obj = {...cache_m["mes"][exe_room]["object"], ...JSON.parse(resData)}; // オブジェクト結合
+              cache_m["mes"][exe_room]["object"] = Object.entries(mes_obj).map(([key, value]) => (value)); // オブジェクトから配列にして代入
               update_disp(2, cache_m["mes"][exe_room], 1);
             }
             break;
@@ -799,7 +814,6 @@ if (!option1) {
     case 2: // キャッシュ優先でメッセージ表示部分更新
       const CONTTT = document.getElementById('conttt'); // メッセージ内容の表示部分
       const descr = document.getElementById('descr'); // Description部分
-      const room_top_name = document.getElementById('room_top_name'); // ページ上部のRoom名表示
 
       if (str) { // サーバからのレスポンスがあるかどうか
         // console.log(r_list);
@@ -815,18 +829,12 @@ if (!option1) {
         // 現在のthreadを変数に代入
         now_thread = r_list["thread"];
 
-        // 表示部分更新
-        room_show = r_list["room_name"]; // 変数更新
-        room_top_name.innerHTML = ' / ' + r_list["room_name"]; // 表示更新
-        document.title = r_list["room_name"] + ' / Beちゃっとぉ'; // title更新
-        if (r_list["id_offset"] || r_list["id_offset"] === 0) {
-          cache_m["mes"][now_room]["id"] = r_list["id_offset"] + r_list["object"].length - 1;
+        if (r_list["id_offset"] || r_list["id_offset"] === 0 || r_list["id"]) {
+          // cache_m["mes"][now_room]["id"] = r_list["id_offset"] + r_list["object"].length - 1;
+          cache_m["mes"][now_room]["id"] = r_list["object"][r_list["object"].length-1]["id"];
         }
+        update_disp_tit(r_list["room_name"], r_list["descr"], r_list["thread"]); // Room名,Titleの更新
 
-        descrip_text = r_list["descr"];
-        if (r_list["descr"]) {
-          descr.innerHTML = r_list["descr"].replace(/\r?\n/g, '<br>'); // 改行を置換 + Descriptionの更新
-        }
         // メッセージ部分更
         var list_put = ''; // 出力用の変数
         if (r_list["object"] && r_list["object"].length > 0) {
@@ -846,17 +854,38 @@ if (!option1) {
   }
 }
 
+function update_disp_tit(title, descr, thread) {// 表示部分更新
+  const descr_e = document.getElementById('descr'); // Description部分
+  const room_top_name = document.getElementById('room_top_name'); // ページ上部のRoom名表示
+  if (thread >= now_thread) { // 追加読み込みの時、古いデータで更新されるのを防ぐ
+    room_show = title; // 変数更新
+    room_top_name.innerHTML = ' / ' + title; // 表示更新
+    document.title = title + ' / Beちゃっとぉ'; // title更新
+    descrip_text = descr;
+    if (descr) {
+      descr_e.innerHTML = descr.replace(/\r?\n/g, '<br>'); // 改行を置換 + Descriptionの更新
+    }
+  }
+}
+
 // ----- メッセージの表示部分を取得データから生成する -----
 // r_listは配列で渡す必要があります
 function parse_message(r_list) {
   var list_put = ''; // 出力用の変数
   var list_length = r_list["object"].length - 1;
   var out_data, content, obj_piece, get_link; // temporary variable
+  var changed_flag = false; // Room名,Titleの更新フラグ
   for (let i = list_length; i !== -1; i--) {
     obj_piece = r_list["object"][i];
+    if (obj_piece['type'] === 'log') { // ログの時
+      if ( changed_flag === false && obj_piece['contents'][0] === 'ChangeRoomSetting') {
+        update_disp_tit(obj_piece['contents'][1], obj_piece['contents'][2], r_list["thread"]); // Room名,Titleの更新
+        changed_flag = true;
+      }
+      continue;
+    }
     content = obj_piece["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
     content = AutoLink(content); // リンクをAnchorに変換
-    if (obj_piece['type'] === 'log') continue;
     if (obj_piece['type'] === 'plain') { // 通常のテキスト
       out_data = "<li id=list class='li li_pla'><span id=u_icon>" + obj_piece["user"] + "</span> <span id=user>" + obj_piece["user"] + "</span> <span id=date>" + obj_piece["date"] + "</span>" + content;
     } else if (getLink(obj_piece["media"])) {
@@ -1133,6 +1162,8 @@ function ck_user() {
 document.onkeydown = keydown;
 
 function keydown() {
+  // const chat_content = document.getElementById('chat_content');
+  // b_value = localStorage.getItem("breakKey");
   s_value = localStorage.getItem("sendKey");
   if (s_value === '1' && event.altKey === true && event.keyCode === 13) { // Alt + Enter で送信
     b_send();

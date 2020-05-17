@@ -125,6 +125,7 @@ define("PROTECTED_ROOM", 'PROTECTED'); // Roomのアクセス判定用のファ�
 define("SPLIT_SIZE", 104858); // メッセージの分割条件のファイルサイズ 0.1MiB = 104858Byte
 //define("MAX_ROOMS", 21474836); // 最大Room数
 define("DEFAULT_PERMISSION", 0777); // アクセス権の制御
+define("COMPRESS_LV", 1); // gzip圧縮レベル
 
 define("CK_TIMING", 5); // ファイルの更新頻度(sec)
 define("CK_UP", 5); // ファイル確認頻度を下げるタイミング(min)
@@ -138,7 +139,7 @@ set_time_limit(86400); // 通信タイムアウト時間設定
 first_roomc(); // MainRoomを作らないと始まらないよ。
 
 // ----- メイン処理 (分岐) -----
-if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
+if ($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
 //  if(isset($_POST['req'])) {
   if (filter_input(INPUT_POST, 'req')) {
 
@@ -158,24 +159,29 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
       case 'dir': // ディレクトリ一覧&更新日時取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
         header("Content-Encoding: gzip");
-        echo gzencode(json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
+        echo gzencode(json_encode(GetDir()) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
+        // echo gzencode(json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
         // echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
       break;
       case 'mes': // メッセージ取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
         header("Content-Encoding: gzip");
-        echo gzencode(GetMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW)),1);
+        echo gzencode(GetMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW)),COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
+        // echo json_encode(GetMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW)));
       break;
       case 'mes_dif': // メッセージ差分取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
         header("Content-Encoding: gzip");
-        echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , 1);  // .htaccessを操作できずgzipできないサーバー向け
-        // echo json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);  // .htaccessを操作できずgzipできないサーバー向け
+        echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS))) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
+        // echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
+        // echo json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
       break;
       case 'add': // メッセージ追加
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
+        header("Content-Encoding: gzip");
         AddMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'media', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
         autoSplit(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW)); // 自動分割
+        echo gzencode(json_encode(GetDir()) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
       break;
       case 'edt': // メッセージ編集(削除)
         EdtMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
@@ -209,7 +215,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
     echo GetMes(filter_input(INPUT_GET, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_GET, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
   } elseif (filter_input(INPUT_GET, 'dir')) {
     header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-    echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+    header("Content-Encoding: gzip");
+    echo gzencode(json_encode(GetDir()) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
+    // echo json_encode(GetDir(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
   } elseif (filter_input(INPUT_GET, 'setid_room')) { // setIdのためだけ
     setId(filter_input(INPUT_GET, 'setid_room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
     echo GetMes(filter_input(INPUT_GET, 'setid_room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_GET, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
@@ -268,7 +276,7 @@ function AddMes($room, $name, $type, $contents, $media) {
         'type' => $type,
         'contents' => $contents,
         'date' => date('c'),
-        'id' => $id_cnt,
+        'id' => $id_cnt+$json_main['id_offset'],
         'i' => ip_hex()
       );
       if ($media) {
@@ -287,19 +295,18 @@ function AddMes($room, $name, $type, $contents, $media) {
         header("HTTP/1.0 500 Internal Server Error");
         echo 'ERROR: Unwritable';
       } else {
-        echo 'ok';
+        // echo 'ok';
       }
       chmod($save_f, DEFAULT_PERMISSION);
       // file_put_contents($save_f, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)); // ファイル上書き保存, LOCK_EXだと同時接続不可説
 
       // echo file_get_contents($save_f); // ファイルを出力
-
   }
 }
 
 // ----- メッセージを取得 -----
 function GetMes($room, $thread) { // $threadは分割されたスレッド番号(オプション) -> ない場合は最新のものを取得
-  if($thread!==0 && empty($thread) || $thread === "false") {
+  if($thread!=0 && empty($thread) || $thread === "false") {
     $file_n = latestMes($room, false)[0];
   } elseif ($thread >= 0) {
     $file_n = "./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE;
@@ -397,11 +404,17 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
         if (!array_key_exists('thread', $json_main2)) $json_main2['thread'] = latestMes($room, false)[1];
         if (!array_key_exists('object', $json_main2)) $json_main2['object'] = array();
         if (!array_key_exists('descr', $json_main2)) $json_main2['descr'] = '';
-        if (!array_key_exists('id_offset', $json_main)) setId($room);
+        if (!array_key_exists('id_offset', $json_main2)) setId($room);
         $up_log = array(
           'user' => $name,
           'type' => 'log',
-          'contents' => 'Log: ChangeRoomSetting'."\r\n".'Old:'.$json_main2['room_name']."\t".$json_main2['descr']."\r\n".'New:'.$new_name."\t".$new_descr,
+          'contents' => array( 
+            'ChangeRoomSetting',
+            $new_name, // 変更後のRoom名
+            $new_descr, // 変更後のRoom説明
+            $json_main2['room_name'], // 変更前のRoom名
+            $json_main2['descr'] // 変更前のRoom説明
+          ),
           'date' => date('c'),
           'i' => ip_hex(),
           'id' => count($json_main2['object'])
@@ -446,7 +459,11 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
         $up_log = array(
           'user' => $name,
           'type' => 'log',
-          'contents' => 'Log: CreateRoom'."\r\n".'New:'.$new_name."\t".$new_descr,
+          'contents' => array(
+            'CreateRoom',
+            $new_name, // 新しいRoom名
+            $new_descr // 新しいRoom説明
+          ),
           'date' => date('c'),
           'i' => ip_hex(),
           'id' => 0
@@ -530,7 +547,7 @@ function autoSplit($room) {
       'object' => array(),
       'descr' => $json_main["descr"],
       'thread' => $l_file[1]+1,
-      'id_offset' => count($json_main['object'])
+      'id_offset' => count($json_main['object'])+$json_main['id_offset']
     );
     $open_json = fopen("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, 'w');
     $write_stat = fwrite($open_json, json_encode($n_format, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
@@ -604,7 +621,7 @@ function SseMes($room) {
       // ob_flush();
       // flush();
 /* $open_json = fopen($file_n, 'r'); $read_json = fread($open_json, filesize($file_n)); fclose($open_json);   // .htaccessを操作できずgzipできないサーバー向け
-      header("Content-Encoding: gzip"); echo gzencode($read_json, 1); */
+      header("Content-Encoding: gzip"); echo gzencode($read_json, COMPRESS_LV); */
       $oldMes = filemtime($file_n);
       $counter = 0;
       while (!connection_aborted()) {
@@ -671,7 +688,7 @@ function GetMesDif($room, $thread, $id) { // $idに指定されたID以降～最
         if ($json_main['object'][$arr_no]['id'] == $id) {
           for($i=0; $i<$arr_length-1; ++$i) {
             $set_id = $arr_no+$i+1;
-            $res_arr[$set_id] = $json_main['object'][$set_id];
+            $res_arr[$set_id+$json_main['id_offset']] = $json_main['object'][$set_id];
           }
           return $res_arr;
         } elseif ($arr_no+$id-$json_main['object'][$arr_no]['id']<$id_cnt && $arr_no+$id-$json_main['object'][$arr_no]['id'] >= 0 && $json_main['object'][$arr_no+$id-$json_main['object'][$arr_no]['id']]['id'] === $id) { // 振られたidがずれていた場合
@@ -718,12 +735,13 @@ function setId($room) {
       for($j=0; $j<$id_cnt; ++$j) {
         $json_main['object'][$j]['id'] = $j + $id_off;
       }
-      if (!array_key_exists('id_offset', $json_main)) $json_main['id_offset'] = $id_off;
+      $json_main['id_offset'] = $id_off;
       $id_off += $id_cnt;
 
       $open_json = fopen($path, 'w');
       $write_stat = fwrite($open_json, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
       fclose($open_json);
+      chmod($path, DEFAULT_PERMISSION); // パーミッション設定
     }
   }
 }
