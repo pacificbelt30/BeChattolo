@@ -83,13 +83,13 @@ var notice_set = 0; // 通知の設定
 var notice2_set = 0; // 特殊な通知の設定
 var theme_set = 1; // Themeの設定
 var sendKey_set = 1; // 送信ショートカットの設定
-var breakKey_set = 1 // 改行キーの設定
+var breakKey_set = 4; // 改行キーの設定
 var load_media_set = 1; // 埋め込みメディアの読み込み
 var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.28 20200517', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.29 20200519', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -100,7 +100,7 @@ window.onload = function Begin() {
   onload_flag["onload"] = true; // 反映待ち
   if (onload_flag["mes"]) {
     update_disp(2, cache_m['mes'][now_room], 1); // メッセージ内容を更新
-    get_room_data_plus(now_thread,false,now_room); // 追加読み込み
+    get_room_data_plus(now_thread, false, now_room); // 追加読み込み
   }
   if (onload_flag["dir"]) {
     update_disp(1, cache_m['dir'], 1); // Room表示更新
@@ -115,6 +115,17 @@ window.onload = function Begin() {
 }
 
 // ----- メイン処理 -----
+/*
+関数: main
+  Roomの更新を確認する関数を定期的に実行する関数
+引数: option: 値により、更新する内容を変えます
+  option === 1 : メッセージとRoomの更新を確認する
+  option === 2 : メッセージの更新のみ確認する
+  option else  : Roomの更新のみ確認する
+補足:
+  option !== 2 : 定期的に実行されるようになります。(Ajax用)
+戻り値: なし
+*/
 function main(option) {
   if (document.hidden && skip_hidden_count < SKIP_COUNT) {
     skip_hidden_count++
@@ -140,6 +151,12 @@ function main(option) {
   }
 }
 
+/*
+関数: sub_routine
+  Roomの更新確認に関する関数以外の関数を定期的に実行する関数
+引数: なし
+戻り値: なし
+*/
 function sub_routine() { // 定期実行する関数
   ck_user(); // ユーザー名確認
   date_update(); // 表示時刻の更新
@@ -148,6 +165,12 @@ function sub_routine() { // 定期実行する関数
 
 
 // ----- データ取得の重複実行を抑えるためのカウント関数 -----
+/*
+関数: reserve_cnt
+  main関数から実行され、グローバル変数のexec_cntの値を減らすことで、main関数が連続で実行されることを防ぐ
+引数: なし
+戻り値: なし
+*/
 function reserve_cnt() {
   if (exec_cnt > 0) {
     exec_cnt--;
@@ -156,6 +179,21 @@ function reserve_cnt() {
 
 // ----- IndexedDB (データベース接続+ObjectStore) -----
 
+/*
+関数: db_connect
+  IndexedDBのデータベース操作に加え、他関数の実行を行います
+引数:
+  base_name : データベース名
+  store_name: オブジェクトストア名
+  sw        : IndexedDBの操作の種類を指定する
+  param1    : データベースに保存されるのRoomのサーバー上でのディレクトリ名($room_dir)。値を取り出すときにキーとなります
+  param2    : データベースに保存されるRoomの最終更新日時
+  param3    : データベースに保存されるRoomを更新したかどうかのフラグ情報
+  param4    : データベースに保存されるRoomの名前($room_name)。
+  param5    : データベースに保存されるRoomのメッセージのスレッド数
+  param6    : データベースに保存されるRoomのDescription(概要説明)情報
+戻り値: なし
+*/
 /*
 // IndexedDB使えたら使う
 window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
@@ -235,6 +273,13 @@ function db_connect(base_name, store_name, sw, param1, param2, param3, param4, p
 }
 
 // ----- IndexedDBが使用可能か確認 -----
+/*
+関数: ck_indexedDB
+  IndexedDBをサポートしているか確認します
+  サポートしていない場合は、グローバル変数のsupport_indexedDBを1にします
+引数: なし
+戻り値: なし
+*/
 function ck_indexedDB() {
   if (!window.indexedDB) { // IndexedDBをサポートしているか
     console.log('Does not support IndexedDB');
@@ -243,11 +288,17 @@ function ck_indexedDB() {
 }
 
 // ----- Room更新確認 -----
+/*
+関数: ck_room_data
+  Roomの更新を確認するためのサーバーリクエスト内容を決定し、関数xhrを実行します
+引数: option : 値により通信のタイムアウト時間の切り替えを行う
+戻り値: なし
+*/
 function ck_room_data(option) { // タイムアウトを長くするオプション
   if (option === true) {
-    xhr('req=' + GET_DIR, GET_DIR, false , true);
+    xhr('req=' + GET_DIR, GET_DIR, false, true);
   } else {
-    xhr('req=' + GET_DIR, GET_DIR);
+    xhr('req=' + GET_DIR, GET_DIR, false, false);
   }
 }
 
@@ -303,7 +354,7 @@ function get_room_datas(exe_room) {
     mes_ev.addEventListener('message', function (event) { // メッセージを受け取ったときに更新
       cache_m["mes"][exe_room] = JSON.parse(event.data); // メッセージ内容を配列に保存しておく
       update_disp(2, cache_m["mes"][exe_room], 1);
-      get_room_data_plus(now_thread,false,now_room);
+      get_room_data_plus(now_thread, false, now_room);
     });
   }
 }
@@ -349,7 +400,7 @@ function getRoomData_exec() {
     requestAnimationFrame(function () {
       ready_animFrame = false;
       ready_getDataPlus = false; // 追加読み込みの実行ブロック
-      get_room_data_plus(ready_getDataNo,false,now_room); // 追加読み込み
+      get_room_data_plus(ready_getDataNo, false, now_room); // 追加読み込み
     });
     ready_animFrame = true;
   }
@@ -461,8 +512,14 @@ function theme_setting() {
 
 function sendkey_setting() {
   const send_key_e = document.getElementById('send_key');
-  send_key = send_key_e.value;
+  sendKey_set = send_key_e.value;
   localStorage.setItem('sendKey', send_key_e.value);
+}
+
+function breakkey_setting() {
+  const break_key_e = document.getElementById('break_key');
+  breakKey_set = break_key_e.value;
+  localStorage.setItem('breakKey', break_key_e.value);
 }
 
 function loadem_setting() { // 埋め込みメディアの表示
@@ -501,6 +558,7 @@ function e_setting() {
   const special_option = document.getElementById('special_option');
   const theme = document.getElementById('theme');
   const send_key = document.getElementById('send_key');
+  const break_key = document.getElementById('break_key');
   const L_side = document.getElementById('L_side');
   const create_room = document.getElementById('create_room');
   const loadmedia = document.getElementById('loadmedia');
@@ -526,7 +584,7 @@ function e_setting() {
     } else {
       loadmedia.checked = false;
     }
-    if (localStorage.getItem("aamode") === '1') { // メディアの表示
+    if (localStorage.getItem("aamode") === '1') { // AAモード
       aamode.checked = true;
     } else {
       aamode.checked = false;
@@ -534,6 +592,7 @@ function e_setting() {
     special_option.value = localStorage.getItem("Notice2");
     theme.value = localStorage.getItem("theme");
     send_key.value = localStorage.getItem("sendKey");
+    break_key.value = localStorage.getItem("breakKey");
   } else {
     setting.style.display = "none";
   }
@@ -655,7 +714,7 @@ function change_room(room) {
 // ----- URLを変更する ----- //
 // 参考: https://www.google.co.jp/ime/___o/
 function change_url(str) {
-  history.replaceState('','',str);
+  history.replaceState('', '', str);
 }
 
 
@@ -732,7 +791,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             cache_m["mes"][exe_room] = JSON.parse(resData); // メッセージ内容を配列に保存しておく
             if (onload_flag["onload"]) { // 初回の読み込み完了(Onload)となったか判定する。 まだだったら、画面更新を先送り
               update_disp(2, cache_m["mes"][exe_room], 1);
-              get_room_data_plus(now_thread,false,exe_room); // 追加読み込み
+              get_room_data_plus(now_thread, false, exe_room); // 追加読み込み
             }
             onload_flag["mes"] = true;
             break;
@@ -756,7 +815,10 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             break;
           case MES_DIF:
             if (resData) {
-              var mes_obj = {...cache_m["mes"][exe_room]["object"], ...JSON.parse(resData)}; // オブジェクト結合
+              var mes_obj = {
+                ...cache_m["mes"][exe_room]["object"],
+                ...JSON.parse(resData)
+              }; // オブジェクト結合
               cache_m["mes"][exe_room]["object"] = Object.entries(mes_obj).map(([key, value]) => (value)); // オブジェクトから配列にして代入
               update_disp(2, cache_m["mes"][exe_room], 1);
             }
@@ -765,7 +827,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
       } else {
         console.log('ServerERROR STAT: ' + req.status);
         if (req.responseText) {
-          document.getElementById('conttt').innerHTML = '<p style="font-size: 0.8em; text-align: center; ">'+ req.responseText +'</p>'; // メッセージ内容の表示部分
+          document.getElementById('conttt').innerHTML = '<p style="font-size: 0.8em; text-align: center; ">' + req.responseText + '</p>'; // メッセージ内容の表示部分
         }
       }
     }
@@ -774,11 +836,11 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
 
 // ----- データ取得後の処理 -----
 function update_disp(sw, str, option1) { // 更新の種類, 更新データ
-if (!option1) {
-  var r_list = JSON.parse(str);
-}  else if (option1 === 1) {
-  var r_list = str;
-}
+  if (!option1) {
+    var r_list = JSON.parse(str);
+  } else if (option1 === 1) {
+    var r_list = str;
+  }
 
   switch (sw) {
     case 1: // Roomリスト更新
@@ -831,7 +893,7 @@ if (!option1) {
 
         if (r_list["id_offset"] || r_list["id_offset"] === 0 || r_list["id"]) {
           // cache_m["mes"][now_room]["id"] = r_list["id_offset"] + r_list["object"].length - 1;
-          cache_m["mes"][now_room]["id"] = r_list["object"][r_list["object"].length-1]["id"];
+          cache_m["mes"][now_room]["id"] = r_list["object"][r_list["object"].length - 1]["id"];
         }
         update_disp_tit(r_list["room_name"], r_list["descr"], r_list["thread"]); // Room名,Titleの更新
 
@@ -854,7 +916,7 @@ if (!option1) {
   }
 }
 
-function update_disp_tit(title, descr, thread) {// 表示部分更新
+function update_disp_tit(title, descr, thread) { // 表示部分更新
   const descr_e = document.getElementById('descr'); // Description部分
   const room_top_name = document.getElementById('room_top_name'); // ページ上部のRoom名表示
   if (thread >= now_thread) { // 追加読み込みの時、古いデータで更新されるのを防ぐ
@@ -878,7 +940,7 @@ function parse_message(r_list) {
   for (let i = list_length; i !== -1; i--) {
     obj_piece = r_list["object"][i];
     if (obj_piece['type'] === 'log') { // ログの時
-      if ( changed_flag === false && obj_piece['contents'][0] === 'ChangeRoomSetting') {
+      if (changed_flag === false && obj_piece['contents'][0] === 'ChangeRoomSetting') {
         update_disp_tit(obj_piece['contents'][1], obj_piece['contents'][2], r_list["thread"]); // Room名,Titleの更新
         changed_flag = true;
       }
@@ -898,7 +960,7 @@ function parse_message(r_list) {
         }
       } else { // 埋め込みメディアの非表示
         out_data = "<li id=list class='li li_media'><span id=u_icon>" + obj_piece["user"] + "</span> <span id=user>" + obj_piece["user"] + "</span> <span id=date>" + obj_piece["date"] + "</span>" + content + "<br>Media: <a href='" + get_link + "' target='_blank' rel='noopener'>" + get_link + "</a>";
-     }
+      }
     }
     list_put += out_data;
   }
@@ -1125,6 +1187,12 @@ function ck_setting() {
     sendKey_set = localStorage.getItem("sendKey");
   }
 
+  if (!localStorage.getItem("breakKey")) { // 改行キーの設定
+    localStorage.setItem("breakKey", breakKey_set);
+  } else {
+    breakKey_set = localStorage.getItem("breakKey");
+  }
+
   if (!localStorage.getItem("loadEm")) { // 埋め込みメディアの読み込み
     localStorage.setItem("loadEm", load_media_set);
   } else {
@@ -1156,25 +1224,41 @@ function ck_user() {
   }
 }
 
-// ----- キー入力を処理する関数 -----
+// ----- キー入力を処理する関数(ショートカットキー) -----
 // Alt+Enter(keyCode==13)が入力されたとき、b_send()を実行
 // B+ オプションは廃止されました
-document.onkeydown = keydown;
+const chat_content = document.getElementById('chat_content');
 
-function keydown() {
-  // const chat_content = document.getElementById('chat_content');
-  // b_value = localStorage.getItem("breakKey");
-  s_value = localStorage.getItem("sendKey");
-  if (s_value === '1' && event.altKey === true && event.keyCode === 13) { // Alt + Enter で送信
-    b_send();
-  } else if (s_value === '2' && event.shiftKey === true && event.keyCode === 13) { // Shift + Enter で送信
-    b_send();
-  } else if (s_value === '3' && event.ctrlKey === true && event.keyCode === 13) { // Ctrl + Enter で送信
-    b_send();
-  } else if (s_value === '4' && event.keyCode === 13) { // Enter で送信
-    b_send();
+chat_content.addEventListener('keydown', function keypress(event) {
+  let b_value = localStorage.getItem("breakKey");
+  let s_value = localStorage.getItem("sendKey");
+  if (event.altKey && !event.shiftKey && !event.ctrlKey && b_value === '1' ||
+    !event.altKey && event.shiftKey && !event.ctrlKey && b_value === '2' ||
+    !event.altKey && !event.shiftKey && event.ctrlKey && b_value === '3' ||
+    !event.altKey && !event.shiftKey && !event.ctrlKey && b_value === '4') {
+    if (event.key === 'Enter') { // 改行をおこなう
+      event.preventDefault();
+      var text_val = chat_content.value;
+      var text_len = text_val.length;
+      var text_pos = chat_content.selectionStart;
+      var text_end = chat_content.selectionEnd;
+      var break_t = "\n"; // 改行文字列
+      chat_content.value = text_val.substr(0, text_pos) + break_t + text_val.substr(text_pos, text_len);
+      chat_content.selectionEnd = text_end + break_t.length;
+      ck_ex_content(0); // テキストエリアのサイズ更新
+      // console.log('b');
+      // document.getElementById("chat_content").dispatchEvent(new KeyboardEvent('keydown', { keyCode: 13 }));
+    }
+  } else if (event.altKey && !event.shiftKey && !event.ctrlKey && s_value === '1' ||
+    !event.altKey && event.shiftKey && !event.ctrlKey && s_value === '2' ||
+    !event.altKey && !event.shiftKey && event.ctrlKey && s_value === '3' ||
+    !event.altKey && !event.shiftKey && !event.ctrlKey && s_value === '4') {
+    if (event.key === 'Enter') { // メッセージの送信
+      event.preventDefault();
+      b_send();
+    }
   }
-}
+});
 
 // ----- 下からのスクロール量 -----
 function from_Bottom() {

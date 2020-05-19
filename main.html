@@ -89,18 +89,29 @@
         <option value="1">Dark</option>
         <option value="2">DeepBlack</option>
         <option value="3">White</option>
-      </select>
-      <h3>Send Key</h3>
-      <select name="send_key" id="send_key" onchange="sendkey_setting()">
-        <option value="1">Alt + Enter</option>
-        <option value="2">Shift + Enter</option>
-        <option value="3">Ctrl + Enter</option>
-        <option value="4">Enter</option>
-        <!-- <option value="5">Alt + B</option> -->
-        <!-- <option value="6">Shift + B</option> -->
-        <!-- <option value="7">Ctrl + B</option> -->
-        <!-- <option value="8">B</option> -->
-      </select>
+      </select><br>
+      <div id="set_block">
+        <h3>Send Key</h3>
+        <select name="send_key" id="send_key" onchange="sendkey_setting()">
+          <option value="1">Alt + Enter</option>
+          <option value="2">Shift + Enter</option>
+          <option value="3">Ctrl + Enter</option>
+          <option value="4">Enter</option>
+          <!-- <option value="5">Alt + B</option> -->
+          <!-- <option value="6">Shift + B</option> -->
+          <!-- <option value="7">Ctrl + B</option> -->
+          <!-- <option value="8">B</option> -->
+        </select>
+      </div>
+      <div id="set_block">
+        <h3>Break Key</h3>
+        <select name="break_key" id="break_key" onchange="breakkey_setting()">
+          <option value="1">Alt + Enter</option>
+          <option value="2">Shift + Enter</option>
+          <option value="3">Ctrl + Enter</option>
+          <option value="4">Enter</option>
+        </select>
+      </div>
       <h3>Load Embedded Media</h3>
       <input type="checkbox" id="loadmedia" class="loadmedia" onchange="loadem_setting()"><label for="loadmedia"
         class="loadmedia">Enable</label>

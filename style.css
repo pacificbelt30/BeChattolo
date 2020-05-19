@@ -716,6 +716,11 @@ h1 {
   font-size: 1.2em;
 }
 
+#set_block {
+  display: inline-block;
+  width: 120px;
+}
+
 #setting select {
   padding: 10px 5px;
   line-height: 1.5;
