@@ -1,6 +1,6 @@
 //# BeChattolo
 # Beちゃっとぉ
-RealtimeWebChatSystem
+RealtimeWebChatSystem プログラミングの練習
 
 
 // メモなど
