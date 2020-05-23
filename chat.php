@@ -122,7 +122,8 @@ define("SAVEFILE2_EXTE", '.json'); // メッセージのバックアップを保
 define("PROTECTED_ROOM", 'PROTECTED'); // Roomのアクセス判定用のファイル
 
 // define("SPLIT_SIZE", 135673); // メッセージの分割条件のファイルサイズ 0xBBBB -> (OCT) Byte
-define("SPLIT_SIZE", 104858); // メッセージの分割条件のファイルサイズ 0.1MiB = 104858Byte
+// define("SPLIT_SIZE", 104858); // メッセージの分割条件のファイルサイズ 0.1MiB = 104858Byte
+define("SPLIT_SIZE", 1024); // メッセージの分割条件のファイルサイズ 0.1MiB = 104858Byte
 //define("MAX_ROOMS", 21474836); // 最大Room数
 define("DEFAULT_PERMISSION", 0777); // アクセス権の制御
 define("COMPRESS_LV", 1); // gzip圧縮レベル
@@ -171,10 +172,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
       break;
       case 'mes_dif': // メッセージ差分取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-        header("Content-Encoding: gzip");
-        echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS))) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
+        // header("Content-Encoding: gzip");
+        // echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS))) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
         // echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
-        // echo json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+        echo json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+        // var_dump(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
       break;
       case 'add': // メッセージ追加
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
@@ -211,6 +213,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
     header('Cache-Control: no-cache');
     header('Content-Encoding: none');
     SseMes(filter_input(INPUT_GET, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
+  } elseif(filter_input(INPUT_GET, 'mes_dif')) {
+    header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
+    echo json_encode(GetMesDif(filter_input(INPUT_GET, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_GET, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_GET, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
   } elseif(filter_input(INPUT_GET, 'room')) {
     echo GetMes(filter_input(INPUT_GET, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_GET, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW));
   } elseif (filter_input(INPUT_GET, 'dir')) {
@@ -666,8 +671,11 @@ function SseMes($room) {
 
 // ----- メッセージ差分の取得 -----
 function GetMesDif($room, $thread, $id) { // $idに指定されたID以降～最新までのメッセージを返します
+  static $res_arr = array(); // return用配列
+  $l_file = latestMes($room, false); // 最新threadの確認用
   $path = "./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE;
   if (is_file($path) && isset($id)) {
+    $id = (int)$id;
     $json_main = json_parse($path);
 
     if (!isset($json_main['id_offset'])) {
@@ -676,32 +684,36 @@ function GetMesDif($room, $thread, $id) { // $idに指定されたID以降～最
     }
 
     if ($json_main) {
-      $arr_no = $id - $json_main['id_offset'];
+      $arr_no = $id - $json_main['id_offset'] + 1;
       $id_cnt = count($json_main['object']);
       $arr_length = $id_cnt - $arr_no; // idと最新のメッセージまでの数
-      $res_arr = array(); // return用配列
       if ($arr_no >= 0 && $arr_no < $id_cnt) {
         if (!isset($json_main['object'][$arr_no]['id'])) { // idがない場合
           setId($room);
-          GetMesDif($room, $thread, $id);
+          return GetMesDif($room, $thread, $id);
         }
-        if ($json_main['object'][$arr_no]['id'] == $id) {
-          for($i=0; $i<$arr_length-1; ++$i) {
-            $set_id = $arr_no+$i+1;
-            $res_arr[$set_id+$json_main['id_offset']] = $json_main['object'][$set_id];
+        if ($json_main['object'][$arr_no]['id'] === $id+1) {
+          for($i=0; $i<$arr_length; ++$i) {
+            $set_id = $arr_no+$i;
+            $res_arr['object'][$set_id+$json_main['id_offset']] = $json_main['object'][$set_id];
           }
+          $res_arr['thread'] = $thread; // $threadも加えて返す。($threadが変わったときにクライアントにも知らせるため)
+          if ($thread < $l_file[1]) return GetMesDif($room, $thread+1, $id+$i); // $threadをまたいだ時は、引き継ぐ
           return $res_arr;
         } elseif ($arr_no+$id-$json_main['object'][$arr_no]['id']<$id_cnt && $arr_no+$id-$json_main['object'][$arr_no]['id'] >= 0 && $json_main['object'][$arr_no+$id-$json_main['object'][$arr_no]['id']]['id'] === $id) { // 振られたidがずれていた場合
           setId($room);
-          GetMesDif($room, $thread, $id);
+          return GetMesDif($room, $thread, $id);
           // return $json_main['object'][$arr_no+$id-$json_main['object'][$arr_no]['id']];
         }
-      } elseif ($arr_no > $id_cnt) { // thread内にidがない場合
-        GetMesDif($room, $thread+1, $id);
+      } elseif ($arr_no >= $id_cnt) { // thread内にidがない場合 // $threadが変わったとき
+        return GetMesDif($room, $thread+1, $id);
       } elseif ($arr_no < 0 && $thread > 0) {
-        GetMesDif($room, $thread-1, $id);
+        return GetMesDif($room, $thread-1, $id);
       }
     }
+  } else {
+    if ($res_arr) return $res_arr; // 次の$threadの['object']が空の時、それまでの差分データを返します
+    exit;
   }
 }
 
