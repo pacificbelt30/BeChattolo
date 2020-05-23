@@ -122,8 +122,8 @@ define("SAVEFILE2_EXTE", '.json'); // メッセージのバックアップを保
 define("PROTECTED_ROOM", 'PROTECTED'); // Roomのアクセス判定用のファイル
 
 // define("SPLIT_SIZE", 135673); // メッセージの分割条件のファイルサイズ 0xBBBB -> (OCT) Byte
-// define("SPLIT_SIZE", 104858); // メッセージの分割条件のファイルサイズ 0.1MiB = 104858Byte
-define("SPLIT_SIZE", 1024); // メッセージの分割条件のファイルサイズ 0.1MiB = 104858Byte
+define("SPLIT_SIZE", 104858); // メッセージの分割条件のファイルサイズ 0.1MiB = 104858Byte
+// define("SPLIT_SIZE", 1024); // メッセージの分割条件のファイルサイズ 0.1MiB = 104858Byte
 //define("MAX_ROOMS", 21474836); // 最大Room数
 define("DEFAULT_PERMISSION", 0777); // アクセス権の制御
 define("COMPRESS_LV", 1); // gzip圧縮レベル
