@@ -1287,7 +1287,7 @@ window.addEventListener('keydown', function keypress2(event) { // 全体で有�
     if (now_room === 'main') {
       if (cache_m["dir"][dir_len-1]["dir_name"] !== 'main') {
       change_room(cache_m["dir"][dir_len-1]["dir_name"]);
-      } else if (dlr_len > 1) {
+      } else if (dir_len > 1) {
       change_room(cache_m["dir"][dir_len-2]["dir_name"]);
       }
     } else if (i === 0 || i===1 && cache_m["dir"][0]["dir_name"] === 'main'){
