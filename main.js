@@ -89,7 +89,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.30 20200523', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.31 20200524', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -311,7 +311,7 @@ function ck_room_data(option) { // タイムアウトを長くするオプショ
 戻り値: なし
 */
 function get_room_data(option) { // タイムアウトを長くするオプション
-  if (!cache_m["mes"][now_room]["id"]) {
+  if (!cache_m["mes"][now_room] || !cache_m["mes"][now_room]["id"]) {
     if (option === true) {
       xhr('req=' + GET_MES + '&thread=false&room=' + now_room, GET_MES, false, true, now_room);
     } else {
@@ -712,7 +712,6 @@ function change_room(room) {
       main(); // 更新+mainループ
     }
     cache_m["mes"][room]["update_caches"] = true;
-    console.log(cache_m["mes"][room]);
   } else { // キャッシュの更新が不要な場合
     update_disp(1, cache_m['dir'], 1); // Room表示更新
     update_disp(2, cache_m['mes'][room], 1); // メッセージ内容を更新
@@ -1243,9 +1242,13 @@ function ck_user() {
 // ----- キー入力を処理する関数(ショートカットキー) -----
 // Alt+Enter(keyCode==13)が入力されたとき、b_send()を実行
 // B+ オプションは廃止されました
-const chat_content = document.getElementById('chat_content');
-
-chat_content.addEventListener('keydown', function keypress(event) {
+document.getElementById('chat_content').addEventListener('keydown', function keypress(event) {
+  shortcut_1(event);
+});
+document.getElementById('chat_url').addEventListener('keydown', function keypress(event) {
+  shortcut_1(event);
+});
+function shortcut_1(event) { // 入力欄のみ有効
   let b_value = localStorage.getItem("breakKey");
   let s_value = localStorage.getItem("sendKey");
   if (event.altKey && !event.shiftKey && !event.ctrlKey && b_value === '1' ||
@@ -1273,6 +1276,52 @@ chat_content.addEventListener('keydown', function keypress(event) {
       event.preventDefault(); // 他の動作をしないようにする
       b_send();
     }
+  }
+}
+window.addEventListener('keydown', function keypress2(event) { // 全体で有効
+  if (event.altKey && event.key === 'ArrowUp') { // 上のRoomに移動
+    let dir_len = cache_m["dir"].length;
+    for (var i = 0; i<dir_len; i++) {
+      if (now_room === cache_m["dir"][i]["dir_name"]) break;
+    }
+    if (now_room === 'main') {
+      if (cache_m["dir"][dir_len-1]["dir_name"] !== 'main') {
+      change_room(cache_m["dir"][dir_len-1]["dir_name"]);
+      } else if (dlr_len > 1) {
+      change_room(cache_m["dir"][dir_len-2]["dir_name"]);
+      }
+    } else if (i === 0 || i===1 && cache_m["dir"][0]["dir_name"] === 'main'){
+      change_room("main");
+    } else {
+      if (cache_m["dir"][i-1]["dir_name"] === 'main' && i>1) {
+        change_room(cache_m["dir"][i-2]["dir_name"]);
+      } else {
+        change_room(cache_m["dir"][i-1]["dir_name"]);
+      }
+    }
+  } else if (event.altKey && event.key === 'ArrowDown') { // 下のRoomに移動
+    let dir_len = cache_m["dir"].length;
+    for (var i = 0; i<dir_len; i++) {
+      if (now_room === cache_m["dir"][i]["dir_name"]) break;
+    }
+    if (now_room === 'main') {
+      if (cache_m["dir"][0]["dir_name"] !== 'main') {
+      change_room(cache_m["dir"][0]["dir_name"]);
+      } else if (dlr_len > 1) {
+      change_room(cache_m["dir"][1]["dir_name"]);
+      }
+    } else if (i === dir_len-1 || i===dir_len-2 && cache_m["dir"][dir_len-1]["dir_name"] === 'main'){
+      change_room("main");
+    } else {
+      if (cache_m["dir"][i+1]["dir_name"] === 'main' && i<dir_len-2) {
+        change_room(cache_m["dir"][i+2]["dir_name"]);
+      } else {
+        change_room(cache_m["dir"][i+1]["dir_name"]);
+      }
+    }
+  } else if (event.key === 'Tab') { // 入力欄にフォーカス
+    console.log('focus');
+    document.getElementById('ex_menu').focus();
   }
 });
 
