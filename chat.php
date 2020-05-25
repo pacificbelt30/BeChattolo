@@ -55,6 +55,10 @@ From: Markdownチートシート
 ## これはH2タグ
 
 // ----- 更新履歴 -----
+Ver.0.8.30?
+IDが追加され、差分取得ができるようになります
+IDのないthreadには、setid_roomを実行しましょう
+
 Ver.0.8.20?
 時間を date('Y-m-d H:i:s') から date('c') ISO8601日付 に変更
 
@@ -172,10 +176,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
       break;
       case 'mes_dif': // メッセージ差分取得
         header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-        // header("Content-Encoding: gzip");
-        // echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS))) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
+        header("Content-Encoding: gzip");
+        echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS))) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
         // echo gzencode(json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
-        echo json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+        // echo json_encode(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
         // var_dump(GetMesDif(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
       break;
       case 'add': // メッセージ追加
@@ -355,7 +359,6 @@ function EdtMes($room, $thread, $no, $name, $type, $contents) { // $no は 配�
     $save_data['i'] = ip_hex();
     $json_main['l_date'] = date('c'); // データを更新
     $json_main['object'][$no] = $save_data; // データ追加
-
   }
 }
 

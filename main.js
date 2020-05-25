@@ -89,7 +89,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.31 20200524', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.32 20200525', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -296,9 +296,9 @@ function ck_indexedDB() {
 */
 function ck_room_data(option) { // タイムアウトを長くするオプション
   if (option === true) {
-    xhr('req=' + GET_DIR, GET_DIR, false, true);
+    xhr('req=' + GET_DIR, GET_DIR, false, true, now_room);
   } else {
-    xhr('req=' + GET_DIR, GET_DIR, false, false);
+    xhr('req=' + GET_DIR, GET_DIR, false, false, now_room);
   }
 }
 
@@ -363,6 +363,10 @@ function get_room_datas(exe_room) {
       update_disp(2, cache_m["mes"][exe_room], 1);
       get_room_data_plus(now_thread, false, now_room);
     });
+    mes_ev.onerror = function () { // エラー時
+      console.log("EventSource failed.");
+      top_stat_col(false); // stat -> bad
+    }
   }
 }
 
@@ -464,11 +468,11 @@ function room_editx(mode) { // 0:Cancel 1:Edit 2:Create 3:exec
       // ServerReq
       console.log('%cREQ_SERVER %c>>> ' + room_name.value, 'color: red;', 'color: #bbb;');
       if (room_edit_mode === 1) { // 編集
-        xhr('req=' + SET_DIR + '&mode=1&name=' + localStorage.getItem("userName") + '&room=' + now_room + '&new_name=' + room_name.value + '&new_descr=' + room_desk_text.value, SET_DIR);
+        xhr('req=' + SET_DIR + '&mode=1&name=' + localStorage.getItem("userName") + '&room=' + now_room + '&new_name=' + room_name.value + '&new_descr=' + room_desk_text.value, SET_DIR, false, true, now_room);
       } else if (room_edit_mode === 2) { // 作成
-        xhr('req=' + SET_DIR + '&mode=2&name=' + localStorage.getItem("userName") + '&room=' + now_room + '&new_name=' + room_name.value + '&new_descr=' + room_desk_text.value, SET_DIR);
+        xhr('req=' + SET_DIR + '&mode=2&name=' + localStorage.getItem("userName") + '&room=' + now_room + '&new_name=' + room_name.value + '&new_descr=' + room_desk_text.value, SET_DIR, false, true, now_room);
       } else if (room_edit_mode === 4) { // 削除
-        xhr('req=' + DEL_DIR + '&name=' + localStorage.getItem("userName") + '&room=' + now_room, DEL_DIR);
+        xhr('req=' + DEL_DIR + '&name=' + localStorage.getItem("userName") + '&room=' + now_room, DEL_DIR, false, true, now_room);
       }
       //main(1);
       change_room(now_room);
@@ -488,7 +492,7 @@ function room_editx(mode) { // 0:Cancel 1:Edit 2:Create 3:exec
 
 // ----- 動作設定 -----
 function noti_setting() { // 通知設定更新
-  const notification_set = document.getElementById('notification');
+  const notification_set = document.getElementById('notification_on');
   if (notification_set.checked) {
     localStorage.setItem("Notice", "1");
     notice_set = 1;
@@ -530,7 +534,7 @@ function breakkey_setting() {
 }
 
 function loadem_setting() { // 埋め込みメディアの表示
-  const loadmedia = document.getElementById('loadmedia');
+  const loadmedia = document.getElementById('loadmedia_on');
   if (loadmedia.checked) {
     localStorage.setItem('loadEm', "1");
     load_media_set = '1';
@@ -543,7 +547,7 @@ function loadem_setting() { // 埋め込みメディアの表示
 }
 
 function aamode_setting() { // ASCIIart Modeの設定
-  const aamode = document.getElementById('aamode');
+  const aamode = document.getElementById('aamode_on');
   aamode_tgg(aamode.checked);
 }
 
@@ -561,15 +565,18 @@ function aamode_tgg(sw) { // ASCIIaer Mode を操作します
 function e_setting() {
   const setting = document.getElementById('setting');
   const user_name2 = document.getElementById('user_name2');
-  const notification_set = document.getElementById('notification');
+  const notification_set_off = document.getElementById('notification_off');
+  const notification_set_on = document.getElementById('notification_on');
   const special_option = document.getElementById('special_option');
   const theme = document.getElementById('theme');
   const send_key = document.getElementById('send_key');
   const break_key = document.getElementById('break_key');
   const L_side = document.getElementById('L_side');
   const create_room = document.getElementById('create_room');
-  const loadmedia = document.getElementById('loadmedia');
-  const aamode = document.getElementById('aamode');
+  const loadmedia_off = document.getElementById('loadmedia_off');
+  const loadmedia_on = document.getElementById('loadmedia_on');
+  const aamode_off = document.getElementById('aamode_off');
+  const aamode_on = document.getElementById('aamode_on');
 
   if (setting.style.display === "none") {
     if (sp_mode) {
@@ -582,19 +589,25 @@ function e_setting() {
     user_name2.value = localStorage.getItem("userName");
     setting.style.display = "block";
     if (localStorage.getItem("Notice") === '1') { // 通知のチェックボックス更新
-      notification_set.checked = true;
+      notification_set_off.checked = false;
+      notification_set_on.checked = true;
     } else {
-      notification_set.checked = false;
+      notification_set_off.checked = true;
+      notification_set_on.checked = false;
     }
     if (localStorage.getItem("loadEm") === '1') { // メディアの表示
-      loadmedia.checked = true;
+      loadmedia_off.checked = false;
+      loadmedia_on.checked = true;
     } else {
-      loadmedia.checked = false;
+      loadmedia_off.checked = true;
+      loadmedia_on.checked = false;
     }
     if (localStorage.getItem("aamode") === '1') { // AAモード
-      aamode.checked = true;
+      aamode_off.checked = false;
+      aamode_on.checked = true;
     } else {
-      aamode.checked = false;
+      aamode_off.checked = true;
+      aamode_on.checked = false;
     }
     special_option.value = localStorage.getItem("Notice2");
     theme.value = localStorage.getItem("theme");
@@ -662,9 +675,11 @@ function b_send() {
   var v_send = esc(div_top.value);
   var v_send_media = esc(chat_url.value);
   if (v_send.length >= MAX_SEND_SIZE || v_send.length <= 0) {
+    top_stat_col(false); // stat -> bad
     console.log('%cPOST_SIZE %c> OVER <', 'color: #fff;', 'color: red;'); // データサイズが大きすぎる場合は拒否
     return 'B';
   } else {
+    top_stat_col(true); // stat -> ok
     var type = MES_TYPE_PLA; // デフォルトは通常テキスト
     if (chat_url.value) { // 送信オプションがついている場合
       if (ex_menu_checked === 1) { // imageオプション
@@ -691,30 +706,36 @@ function change_room(room) {
     before_room = now_room;
     now_room = room;
     change_url('?room=' + room); // 表示URLの変更
-  }
-  if (!cache_m["mes"][room] || !cache_m["mes"][room]["update_caches"] || !cache_m["mes"][room]["object"]) { // キャッシュの更新が必要
-    document.getElementById('conttt').innerHTML = '<h4 id=conttt_loading_ani><span id=conttt_loading_ani0>■</span><span id=conttt_loading_ani1>■</span><span id=conttt_loading_ani2>■</span></h4><p style="font-size: 0.8em; text-align: center; ">NOW LOADING!!!! &ensp; Hold on a second.</p>'; // メッセージ内容の表示部分
-    if (!cache_m["mes"][room]) { // 各Room初回読み込み
-      cache_m["mes"][room] = {};
-      main(2);
+    if (room === 'main') { // Roomの説明の色
+      document.getElementById('descr_tit').style.backgroundColor = "#777";
     } else {
-      get_room_data();
+      document.getElementById('descr_tit').style.backgroundColor = "";
     }
-    if (support_eventsource === 0) { // sseサポート
-      if (close_sse_session) {
-        ck_room_data(true); // 普通にデータを1回取得
-        ck_room_datas();
-        close_sse_session = false;
+
+    if (!cache_m["mes"][room] || !cache_m["mes"][room]["update_caches"] || !cache_m["mes"][room]["object"]) { // キャッシュの更新が必要
+      document.getElementById('conttt').innerHTML = '<h4 id=conttt_loading_ani><span id=conttt_loading_ani0>■</span><span id=conttt_loading_ani1>■</span><span id=conttt_loading_ani2>■</span></h4><p style="font-size: 0.8em; text-align: center; ">NOW LOADING!!!! &ensp; Hold on a second.</p>'; // メッセージ内容の表示部分
+      if (!cache_m["mes"][room]) { // 各Room初回読み込み
+        cache_m["mes"][room] = {};
+        main(2);
       } else {
-        update_disp(1, cache_m['dir'], 1); // Room表示更新
+        get_room_data();
       }
-    } else {
-      main(); // 更新+mainループ
+      if (support_eventsource === 0) { // sseサポート
+        if (close_sse_session) {
+          ck_room_data(true); // 普通にデータを1回取得
+          ck_room_datas();
+          close_sse_session = false;
+        } else {
+          update_disp(1, cache_m['dir'], 1); // Room表示更新
+        }
+      } else {
+        main(); // 更新+mainループ
+      }
+      cache_m["mes"][room]["update_caches"] = true;
+    } else { // キャッシュの更新が不要な場合
+      update_disp(1, cache_m['dir'], 1); // Room表示更新
+      update_disp(2, cache_m['mes'][room], 1); // メッセージ内容を更新
     }
-    cache_m["mes"][room]["update_caches"] = true;
-  } else { // キャッシュの更新が不要な場合
-    update_disp(1, cache_m['dir'], 1); // Room表示更新
-    update_disp(2, cache_m['mes'][room], 1); // メッセージ内容を更新
   }
 }
 
@@ -779,6 +800,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
     if (req.readyState === 4) {
       if (req.status === 200) {
         resData = req.responseText;
+        top_stat_col(true); // stat -> ok
         switch (send_mode) {
           case ADD_MES:
             console.log('%cPOST_OK!', 'color: #00a0e9;');
@@ -835,6 +857,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             break;
         }
       } else {
+        top_stat_col(false); // stat -> bad
         if (exec_room && cache_m["mes"][exec_room]) cache_m["mes"][exec_room]["update_caches"] = false; // ダメだったら
         console.log('ServerERROR STAT: ' + req.status);
         if (req.responseText) {
@@ -904,8 +927,8 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
 
         if (r_list["id_offset"] || r_list["id_offset"] === 0 || r_list["id"]) {
           if (r_list["object"][r_list["object"].length - 1]) {
-          // cache_m["mes"][now_room]["id"] = r_list["id_offset"] + r_list["object"].length - 1;
-          cache_m["mes"][now_room]["id"] = r_list["object"][r_list["object"].length - 1]["id"];
+            // cache_m["mes"][now_room]["id"] = r_list["id_offset"] + r_list["object"].length - 1;
+            cache_m["mes"][now_room]["id"] = r_list["object"][r_list["object"].length - 1]["id"];
           }
         }
         update_disp_tit(r_list["room_name"], r_list["descr"], r_list["thread"]); // Room名,Titleの更新
@@ -918,7 +941,7 @@ function update_disp(sw, str, option1) { // 更新の種類, 更新データ
             list_put = "<li id=list2>Info: There is no message.</li>";
           }
         } else {
-          if (!r_list){
+          if (!r_list) {
             list_put = "<li id=list2>Info: There was no response from the server.</li>";
           }
         }
@@ -936,7 +959,8 @@ function update_disp_tit(title, descr, thread) { // 表示部分更新
   const room_top_name = document.getElementById('room_top_name'); // ページ上部のRoom名表示
   if (thread >= now_thread) { // 追加読み込みの時、古いデータで更新されるのを防ぐ
     room_show = title; // 変数更新
-    room_top_name.innerHTML = ' / ' + title; // 表示更新
+    // room_top_name.innerHTML = ' / ' + title; // 表示更新
+    room_top_name.innerHTML = title; // 表示更新
     document.title = title + ' / Beちゃっとぉ'; // title更新
     descrip_text = descr;
     if (descr) {
@@ -1248,6 +1272,7 @@ document.getElementById('chat_content').addEventListener('keydown', function key
 document.getElementById('chat_url').addEventListener('keydown', function keypress(event) {
   shortcut_1(event);
 });
+
 function shortcut_1(event) { // 入力欄のみ有効
   let b_value = localStorage.getItem("breakKey");
   let s_value = localStorage.getItem("sendKey");
@@ -1281,42 +1306,42 @@ function shortcut_1(event) { // 入力欄のみ有効
 window.addEventListener('keydown', function keypress2(event) { // 全体で有効
   if (event.altKey && event.key === 'ArrowUp') { // 上のRoomに移動
     let dir_len = cache_m["dir"].length;
-    for (var i = 0; i<dir_len; i++) {
+    for (var i = 0; i < dir_len; i++) {
       if (now_room === cache_m["dir"][i]["dir_name"]) break;
     }
     if (now_room === 'main') {
-      if (cache_m["dir"][dir_len-1]["dir_name"] !== 'main') {
-      change_room(cache_m["dir"][dir_len-1]["dir_name"]);
+      if (cache_m["dir"][dir_len - 1]["dir_name"] !== 'main') {
+        change_room(cache_m["dir"][dir_len - 1]["dir_name"]);
       } else if (dir_len > 1) {
-      change_room(cache_m["dir"][dir_len-2]["dir_name"]);
+        change_room(cache_m["dir"][dir_len - 2]["dir_name"]);
       }
-    } else if (i === 0 || i===1 && cache_m["dir"][0]["dir_name"] === 'main'){
+    } else if (i === 0 || i === 1 && cache_m["dir"][0]["dir_name"] === 'main') {
       change_room("main");
     } else {
-      if (cache_m["dir"][i-1]["dir_name"] === 'main' && i>1) {
-        change_room(cache_m["dir"][i-2]["dir_name"]);
+      if (cache_m["dir"][i - 1]["dir_name"] === 'main' && i > 1) {
+        change_room(cache_m["dir"][i - 2]["dir_name"]);
       } else {
-        change_room(cache_m["dir"][i-1]["dir_name"]);
+        change_room(cache_m["dir"][i - 1]["dir_name"]);
       }
     }
   } else if (event.altKey && event.key === 'ArrowDown') { // 下のRoomに移動
     let dir_len = cache_m["dir"].length;
-    for (var i = 0; i<dir_len; i++) {
+    for (var i = 0; i < dir_len; i++) {
       if (now_room === cache_m["dir"][i]["dir_name"]) break;
     }
     if (now_room === 'main') {
       if (cache_m["dir"][0]["dir_name"] !== 'main') {
-      change_room(cache_m["dir"][0]["dir_name"]);
+        change_room(cache_m["dir"][0]["dir_name"]);
       } else if (dir_len > 1) {
-      change_room(cache_m["dir"][1]["dir_name"]);
+        change_room(cache_m["dir"][1]["dir_name"]);
       }
-    } else if (i === dir_len-1 || i===dir_len-2 && cache_m["dir"][dir_len-1]["dir_name"] === 'main'){
+    } else if (i === dir_len - 1 || i === dir_len - 2 && cache_m["dir"][dir_len - 1]["dir_name"] === 'main') {
       change_room("main");
     } else {
-      if (cache_m["dir"][i+1]["dir_name"] === 'main' && i<dir_len-2) {
-        change_room(cache_m["dir"][i+2]["dir_name"]);
+      if (cache_m["dir"][i + 1]["dir_name"] === 'main' && i < dir_len - 2) {
+        change_room(cache_m["dir"][i + 2]["dir_name"]);
       } else {
-        change_room(cache_m["dir"][i+1]["dir_name"]);
+        change_room(cache_m["dir"][i + 1]["dir_name"]);
       }
     }
   } else if (event.key === 'Tab') { // 入力欄にフォーカス
@@ -1456,6 +1481,7 @@ var chat_content2;
 var chat_content_tgg = 0;
 chat_content.addEventListener("input", function con_ex_content() {
   ck_ex_content(0);
+  ck_content_length();
 }, true);
 
 function ck_ex_content(op) {
@@ -1481,7 +1507,6 @@ function ck_ex_content(op) {
     ck_ex_content2(); // メインコンテンツの位置変更
   }
 }
-
 function ck_ex_content2() { // メインコンテンツの位置変更
   const main_contents = document.getElementById('main_contents');
   var top_default = 100;
@@ -1493,9 +1518,28 @@ function ck_ex_content2() { // メインコンテンツの位置変更
   }
   main_contents.style.top = top_default + "px";
 }
+function ck_content_length() { // 入力上限サイズのチェック
+  const chat_content = document.getElementById('chat_content');
+  if (chat_content.value.length > MAX_SEND_SIZE) {
+    chat_content.style.borderColor = "orange";
+  } else {
+    chat_content.style.borderColor = "";
+  }
+}
 
 // ----- メッセージ編集/削除 -----
 function edit_message(type, v_send, thread, id) { // id は 編集対象のメッセージID
-  xhr('req=' + EDT_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send + '&thread=' + thread + '&id=' + id, EDT_MES, false, true);
+  xhr('req=' + EDT_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send + '&thread=' + thread + '&id=' + id, EDT_MES, false, true, now_room);
   // xhr('req=' + EDT_MES + '&room=' + now_room, EDT_MES, false, true);
+}
+
+// ----- ステータスによって上部のborderの色を変える
+function top_stat_col(stat) {
+  const top_stat = document.getElementById("top_stat");
+  if (stat) {
+    // top_stat.style.borderTopColor = "#00a0e9";
+    top_stat.style.borderTopColor = "#BBB";
+  } else {
+    top_stat.style.borderTopColor = "orange";
+  }
 }

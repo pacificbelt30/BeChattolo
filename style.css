@@ -14,11 +14,11 @@
  * Play by Jonas Hecksher
  * License - http://scripts.sil.org/OFL (Fonts: SIL OFL 1.1)
  */
- @font-face {
+/* @font-face {
   font-family: "font-play";
-  /* src: url("https://u2dev.blob.core.windows.net/doc/play.woff2") format("woff2"); */
+  src: url("https://u2dev.blob.core.windows.net/doc/play.woff2") format("woff2");
   src: url("./res/play.woff2") format("woff2");
-}
+} */
 
 
 body {
@@ -35,8 +35,13 @@ body {
   font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif;
 }
 
-#descr_tit, #edit_room, #time_b, button, a {
-  font-family: 'font-play',Meiryo, sans-serif;
+#descr_tit,
+#edit_room,
+#time_b,
+button,
+a {
+  font-size: 0.93em;
+  /* font-family: 'font-play',Meiryo, sans-serif; */
 }
 
 header h1 {
@@ -45,6 +50,8 @@ header h1 {
   padding: 10px 0;
   height: 20px;
   border-top: solid 2px #BBB;
+  /* background: #333; */
+  /* background: rgba(34,34,34,0.97); */
 }
 
 #L_side::-webkit-scrollbar,
@@ -59,7 +66,7 @@ header h1 {
 
 #L_side {
   padding: 10px 0;
-  background: #222;
+  background: #161616;
   width: 150px;
   height: calc(100% - 20px - 42px);
   position: fixed;
@@ -77,7 +84,7 @@ header h1 {
 
 #R_side {
   padding: 10px;
-  background: #222;
+  background: #161616;
   width: 150px;
   height: calc(100% - 20px - 42px);
   position: fixed;
@@ -108,6 +115,7 @@ header h1 {
   color: #aaa;
   /* background: #333340; */
   background: #555;
+  border-right: solid 4px #666;
   cursor: pointer;
   width: 100%;
   text-align: right;
@@ -122,8 +130,10 @@ header h1 {
 }
 
 .L_side .on_butt {
-  background: #BBB;
-  color: #222;
+  /* background: #BBB; */
+  /* background: #00a0e9; */
+  background: #008ecf;
+  color: #ffF;
   border-right: solid 4px #ddd;
 }
 
@@ -147,7 +157,10 @@ header h1 {
   margin-bottom: 0;
   margin-top: 5px;
   padding: 5px;
-  background: #333340;
+  /* background: #333340; */
+  /* background: #00a0e9; */
+  background: #008ecf;
+  color: #ffF;
   /* cursor: pointer; */
   cursor: default;
   width: 100%;
@@ -183,7 +196,7 @@ h1 {
 }
 
 .li {
-  background: #1B1B1B;
+  background: #191919;
   color: #FFF;
   margin: 2px 0;
   padding: 3px 10px 6px 10px;
@@ -218,11 +231,12 @@ h1 {
 #list2 {
   color: #777;
   border-left: solid 2px #111;
-  font-family: 'font-play',Meiryo, sans-serif;
+  /* font-family: 'font-play',Meiryo, sans-serif; */
 }
 
 #conttt .li_media {
-  border-left: solid 2px orange;
+  /* border-left: solid 2px orange; */
+  border-left: solid 2px #BBB;
 }
 
 #conttt .media {
@@ -252,7 +266,7 @@ h1 {
   left: 10px;
   overflow: hidden;
   /* font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; */
-  font-family: 'font-play',Meiryo, sans-serif;
+  /* font-family: 'font-play',Meiryo, sans-serif; */
 }
 
 #user {
@@ -261,12 +275,12 @@ h1 {
   font-weight: bold;
   font-size: 0.9em;
   position: relative;
-  font-family: 'font-play',Meiryo, sans-serif;
+  /* font-family: 'font-play',Meiryo, sans-serif; */
 }
 
 #user:before {
   /* font-family: 'font-awe_sol'; */
-  content: '>';
+  /* content: '>'; */
   padding-right: 4px;
   color: #555;
   font-size: 0.7em;
@@ -277,16 +291,24 @@ h1 {
   font-size: 0.7em;
   color: #999;
   /* font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif; */
-  font-family: 'font-play',Meiryo, sans-serif;
+  /* font-family: 'font-play',Meiryo, sans-serif; */
 }
 
+#date:before {
+  content: '@';
+  padding-left: 5px;
+  padding-right: 0;
+  color: #555;
+}
+
+/* 
 #date:before {
   font-family: 'font-awe_sol';
   content: '\f017';
   padding-left: 5px;
   padding-right: 2px;
   color: #555;
-}
+} */
 
 #date:after {
   content: "\A";
@@ -307,8 +329,10 @@ h1 {
   margin: 0;
   /* background: #0B0B0B; */
   background: #eee;
+  /* background: #444; */
   color: #000;
-  border: solid 1px #444;
+  /* color: #fff; */
+  border: solid 1px #555;
   border-radius: 3px;
   height: 22px;
   resize: none;
@@ -327,7 +351,9 @@ h1 {
   margin: 0;
   /* background: #0B0B0B; */
   background: #eee;
+  /* background: #777; */
   color: #000;
+  /* color: #fff; */
   border: solid 1px #444;
   border-radius: 3px;
   height: 26px;
@@ -425,9 +451,11 @@ h1 {
   padding: 5px 5px 5px 0;
   margin: 0;
   background: #ccc;
+  /* background: #444; */
   border: solid 1px #222;
   border-radius: 3px;
   color: #444;
+  /* color: #ccc; */
   cursor: pointer;
 
   position: absolute;
@@ -589,12 +617,15 @@ h1 {
 
 #user_name {
   padding: 10px 15px;
+  /* padding: 5px 10px; */
   font-size: 1.5em;
   margin-top: 20px;
   color: #FFF;
   background: #555;
-  border: solid 1px #bbb;
+  /* border: solid 1px #bbb; */
+  border: solid 1px #00a0e9;
   border-radius: 2px;
+  text-align: center;
 }
 
 #submit_b {
@@ -641,8 +672,8 @@ h1 {
   /* background: #1B1B1B; */
   color: #aaa;
   text-align: center;
-  padding: 10px 0;
-  background: rgba(17,17,17,0.9);
+  padding: 60px 0;
+  background: rgba(17, 17, 17, 0.9);
   -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
 }
@@ -690,18 +721,22 @@ h1 {
 }
 
 #user_name2 {
-  padding: 10px 15px;
-  font-size: 1.5em;
+  /* padding: 10px 15px; */
+  padding: 5px 10px;
+  font-size: 1em;
   color: #FFF;
-  background: #555;
-  border: solid 1px #bbb;
-  border-radius: 2px;
+  background: #333;
+  /* border: solid 1px #bbb; */
+  border: solid 1px #00a0e9;
+  /* border-radius: 2px; */
+  text-align: center;
 }
 
 #setting h3 {
   font-weight: 100;
-  color: #bbb;
-  margin-bottom: 0;
+  font-size: 1em;
+  color: #ddd;
+  margin-bottom: 1px;
 }
 
 #setting p {
@@ -716,18 +751,44 @@ h1 {
   font-size: 1.2em;
 }
 
+input[type=radio] {
+  display: none;
+}
+
+input[type="radio"]:checked+label {
+  background: #00a0e9;
+}
+
+label {
+  color: #fff;
+  margin: 15px 0;
+  padding: 3px 20px;
+  border: solid 1px #BBB;
+  background: #444;
+}
+
 #set_block {
   display: inline-block;
-  width: 120px;
+  width: 110px;
 }
 
 #setting select {
-  padding: 10px 5px;
-  line-height: 1.5;
-  background: #666;
+  padding: 7px 10px;
+  /* line-height: 1.5; */
+  /* background: #666; */
+  background: #444;
   color: #FFF;
   border: none;
   box-shadow: 0 0 3px #000;
+  -webkit-appearance: none;
+  /* ベンダープレフィックス(Google Chrome、Safari用) */
+  -moz-appearance: none;
+  /* ベンダープレフィックス(Firefox用) */
+  appearance: none;
+  /* 標準のスタイルを無効にする */
+  text-align: center;
+  align-items: center;
+  border: solid 1px #BBB;
 }
 
 header {
@@ -736,7 +797,8 @@ header {
   top: 0;
   width: inherit;
   /* background: #222; */
-  background: rgba(34,34,34,0.97);
+  background: #2B2B2B;
+  /* background: rgba(34,34,34,0.97); */
   box-shadow: 0 0 3px #000;
 }
 
@@ -779,6 +841,7 @@ span#dot {
   font-size: 1;
   color: #00a0e9;
 }
+
 #conttt_loading_ani0,
 #conttt_loading_ani1,
 #conttt_loading_ani2 {
@@ -789,15 +852,23 @@ span#dot {
   /* text-decoration: underline;
   text-decoration-color: #bbb; */
 }
+
+#conttt_loading_ani1 {
+  color: #fff;
+}
+
 #conttt_loading_ani0 {
   animation: anim4 0.9s 0s infinite;
 }
+
 #conttt_loading_ani1 {
   animation: anim4 0.9s 0.3s infinite;
 }
+
 #conttt_loading_ani2 {
   animation: anim4 0.9s 0.6s infinite;
 }
+
 @keyframes anim4 {
   0% {
     opacity: 1;
@@ -882,6 +953,7 @@ span#dot {
     position: relative;
     height: 48px;
   }
+
   #user_name {
     position: absolute;
     top: 0;
@@ -889,6 +961,7 @@ span#dot {
     margin: 0;
     width: calc(80% - 32px);
   }
+
   #submit_b {
     position: absolute;
     top: 0;
