@@ -144,7 +144,8 @@ header h1 {
 }
 
 .L_side .new_mes {
-  color: #00a0e9;
+  /* color: #00a0e9; */
+  color: #ffF;
 }
 
 /* .L_side button:hover {
@@ -243,6 +244,9 @@ h1 {
   height: 300px;
   max-width: 100%;
 }
+.media_img {
+  border-radius: 3px;
+}
 
 #conttt .media_ifr {
   width: 533.3px;
@@ -310,10 +314,23 @@ h1 {
   color: #555;
 } */
 
+.editing {
+  border: solid 1px orange;
+}
+.edit_button {
+  border: none;
+  background: none;
+  color: #00a0e9;
+  font-size: 0.8em;
+}
 #date:after {
   content: "\A";
   white-space: pre;
 }
+/* .edit_button:after {
+  content: "\A\A";
+  white-space: pre;
+} */
 
 #input_area {
   position: relative;
@@ -813,6 +830,7 @@ header {
 span#dot {
   animation: anim3 1s infinite;
 }
+
 
 @keyframes anim3 {
   0% {

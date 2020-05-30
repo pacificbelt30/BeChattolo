@@ -15,6 +15,7 @@ JSON化、関数化、WebAPI向けに修正
 
 
 // ----- 予定 -----
+データベースにしようとしているけど、データベースサーバがないーーーーー (･_･、)
 ピン固定
 スタンプ機能追加
 RoomListの並び替え
@@ -190,6 +191,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
         echo gzencode(json_encode(GetDir()) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
       break;
       case 'edt': // メッセージ編集(削除)
+        // header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
+        // header("Content-Encoding: gzip");
+        // echo gzencode(json_encode(EdtMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS))) , COMPRESS_LV);
+        // echo json_encode(EdtMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
         EdtMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
       break;
       case 'del': // ルーム(削除) // アクセス不可にする
@@ -297,16 +302,7 @@ function AddMes($room, $name, $type, $contents, $media) {
       // (array)$json_main["object"][] = $save_data; // データを追加
       // var_dump($json_main["object"]);
       // array_push($json_main["object"], $save_data);
-      $open_json = fopen($save_f, 'w');
-      $write_stat = fwrite($open_json, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
-      fclose($open_json);
-      if ($write_stat === false) {
-        header("HTTP/1.0 500 Internal Server Error");
-        echo 'ERROR: Unwritable';
-      } else {
-        // echo 'ok';
-      }
-      chmod($save_f, DEFAULT_PERMISSION);
+      json_write($save_f, $json_main); // データ書き込み
       // file_put_contents($save_f, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)); // ファイル上書き保存, LOCK_EXだと同時接続不可説
 
       // echo file_get_contents($save_f); // ファイルを出力
@@ -334,17 +330,28 @@ function GetMes($room, $thread) { // $threadは分割されたスレッド番号
 }
 
 // ------ メッセージの編集/削除 -----
-function EdtMes($room, $thread, $no, $name, $type, $contents) { // $no は 配列番
+function EdtMes($room, $thread, $id, $name, $type, $contents) { // $no は 配列番
+  $ck_return = check_id($room, $thread, $id);
+  if ($ck_return) {
+    $thread = $ck_return[1];
+    $id = $ck_return[2];
+  } else {
+    header("HTTP/1.0 500 Internal Server Error");
+    echo 'ERROR: Thread inaccessible.';
+    exit;
+  }
   $save_f = "./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE;
-  if (is_file($save_f)) { // 保存ファイルが既存の場合
+  if (is_file($save_f) && filesize($save_f)) { // 保存ファイルが既存の場合
     $json_main = json_parse($save_f);
 
+    $no = $id - $json_main['id_offset'];
     $save_data = array( // 保存ファイルに追加するデータ
       'user' => $name,
       'type' => $type,
       'contents' => $contents,
       'date' => date('c'),
-      'edit_log' => array()
+      'edit_log' => array(),
+      'id' => $json_main['object'][$no]['id']
     );
     if (isset($json_main['object'][$no]['edit_log'])) {
       $save_data['edit_log'] = $json_main['object'][$no]['edit_log'];
@@ -359,6 +366,24 @@ function EdtMes($room, $thread, $no, $name, $type, $contents) { // $no は 配�
     $save_data['i'] = ip_hex();
     $json_main['l_date'] = date('c'); // データを更新
     $json_main['object'][$no] = $save_data; // データ追加
+
+    $id_added = count($json_main['object']) + $json_main['id_offset'];
+    $update_log = array(
+      'user' => $name,
+      'type' => 'update',
+      'contents' => array(
+        'id' => $id,
+        'type' => $type,
+        'contents' => $contents,
+      ),
+      'date' => date('c'),
+      'i' => ip_hex(),
+      'id' => $id_added
+    );
+    $json_main['object'][] = $update_log;
+    json_write($save_f, $json_main); // データ書き込み
+
+    // return $update_log[$id_added];
   }
 }
 
@@ -425,21 +450,13 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
           ),
           'date' => date('c'),
           'i' => ip_hex(),
-          'id' => count($json_main2['object'])
+          'id' => count($json_main2['object']) + $json_main2['id_offset']
         );
         $json_main2['object'][] = $up_log;
         $json_main2['room_name'] = $new_name;
         $json_main2['descr'] = $new_descr;
-        $open_json = fopen($save_f, 'w');
-        $write_stat = fwrite($open_json, json_encode($json_main2, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
-        fclose($open_json);
+        json_write($save_f, $json_main2); // データ書き込み
         // file_put_contents($save_f2, json_encode($json_main2, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)); // ファイル上書き保存, LOCK_EXだと同時接続不可説
-        if ($write_stat === false) {
-          header("HTTP/1.0 500 Internal Server Error");
-          echo 'ERROR: Unwritable';
-        } else {
-          echo 'ok';
-        }
         exit;
       }
     }
@@ -477,19 +494,7 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
           'id' => 0
         );
         $json_main['object'][] = $up_log;
-        $save_f2 = "./".BBS_FOLDER."/".$new_folder_no."/".SAVEFILE_NAME.'0'.SAVEFILE_EXTE;
-        $open_json = fopen($save_f2, 'w');
-        $write_stat = fwrite($open_json, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
-        fclose($open_json);
-        // file_put_contents($save_f2, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)); // ファイル上書き保存
-        if ($write_stat === false) {
-          header("HTTP/1.0 500 Internal Server Error");
-          echo 'ERROR: Unwritable';
-        } else {
-          echo 'ok';
-        }
-        chmod($save_f2, DEFAULT_PERMISSION);
-        exit;
+        json_write("./".BBS_FOLDER."/".$new_folder_no."/".SAVEFILE_NAME.'0'.SAVEFILE_EXTE, $json_main); // データ書き込み
       }
     }
   }
@@ -557,11 +562,7 @@ function autoSplit($room) {
       'thread' => $l_file[1]+1,
       'id_offset' => count($json_main['object'])+$json_main['id_offset']
     );
-    $open_json = fopen("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, 'w');
-    $write_stat = fwrite($open_json, json_encode($n_format, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
-    fclose($open_json);
-    chmod("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, DEFAULT_PERMISSION);
-    // file_put_contents("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, json_encode($n_format, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
+    json_write ("./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.($l_file[1]+1).SAVEFILE_EXTE, $n_format); // データ書き込み
   }
 }
 
@@ -730,6 +731,58 @@ function json_parse($path) {
   return json_decode( $read_json, true); // JSONファイルを連想配列でデコード
 }
 
+// ----- JSONをファイルに書き込む (+パーミッション設定) -----
+function json_write($path, $json_main) {
+  $open_json = fopen($path, 'w');
+  $write_stat = fwrite($open_json, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
+  fclose($open_json);
+  chmod($path, DEFAULT_PERMISSION); // パーミッション設定
+  if ($write_stat === false) { // 書き込めない場合
+    header("HTTP/1.0 500 Internal Server Error");
+    echo 'ERROR: Unwritable';
+    exit;
+  }
+}
+
+// ----- $threadに指定された$idが存在するか確認し、違う場合は$threadを修正する
+function check_id($room, $thread, $id) {
+  $l_file = latestMes($room, false); // 最新threadの確認用
+  $path = "./".BBS_FOLDER."/".$room."/".SAVEFILE_NAME.$thread.SAVEFILE_EXTE;
+
+  if (is_file($path) && isset($id)) {
+    $id = (int)$id;
+    $json_main = json_parse($path);
+
+    if (!isset($json_main['id_offset'])) {
+      setId($room);
+      $json_main = json_parse($path);
+    }
+
+    if ($json_main) {
+      $arr_no = $id - $json_main['id_offset'] + 1;
+      $id_cnt = count($json_main['object']);
+      if ($arr_no >= 0 && $arr_no < $id_cnt) {
+        if (!isset($json_main['object'][$arr_no]['id'])) { // idがない場合
+          setId($room);
+          return check_id($room, $thread, $id);
+        }
+        if ($json_main['object'][$arr_no]['id'] === $id+1) {
+          return array($room, $thread, $id);
+        } else {
+          setId($room);
+          return check_id($room, $thread, $id);
+        }
+      } elseif ($arr_no >= $id_cnt) { // thread内にidがない場合 // $threadが変わったとき
+        return check_id($room, $thread+1, $id);
+      } elseif ($arr_no < 0 && $thread > 0) {
+        return check_id($room, $thread-1, $id);
+      }
+    }
+  } else {
+    return 0;
+  }
+}
+
 // ----- IDがないとき付ける -----
 /*
 _____ IDとは? _____
@@ -753,10 +806,7 @@ function setId($room) {
       $json_main['id_offset'] = $id_off;
       $id_off += $id_cnt;
 
-      $open_json = fopen($path, 'w');
-      $write_stat = fwrite($open_json, json_encode($json_main, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
-      fclose($open_json);
-      chmod($path, DEFAULT_PERMISSION); // パーミッション設定
+      json_write($path, $json_main); // データ書き込み
     }
   }
 }

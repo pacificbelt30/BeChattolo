@@ -68,7 +68,7 @@ var onload_flag = {
 }; // ページが読み込まれたかのフラグ
 var cache_m = {};
 cache_m["mes"] = {}; // メッセージ保管用の配列 (キャッシュ)
-var out_cache = {}; // 画面更新用の文字列保存用の配列 (画面更新用キャッシュ?)
+// var out_cache = {}; // 画面更新用の文字列保存用の配列 (画面更新用キャッシュ?) // 廃止されました
 var skip_hidden_count = 0; // パッシブ時の負荷を下げる ためにカウントしておく
 var close_sse_session = true; // セッションが閉じられているかのフラグ
 var old_date; // 時刻更新比較用
@@ -89,12 +89,12 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.32 20200525', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.33 20200530', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
 ck_EventSource(); // EventSourceのサポート確認
-change_room(getParam('room')); // GET_valueでRoom変更 + main()に処理が渡される
+change_room((getParam('room') ? getParam('room') : now_room)); // GET_valueでRoom変更 + main()に処理が渡される
 window.onload = function Begin() {
   // c_page(1); // 表示更新
   onload_flag["onload"] = true; // 反映待ち
@@ -362,6 +362,7 @@ function get_room_datas(exe_room) {
       cache_m["mes"][exe_room] = JSON.parse(event.data); // メッセージ内容を配列に保存しておく
       update_disp(2, cache_m["mes"][exe_room], 1);
       get_room_data_plus(now_thread, false, now_room);
+      top_stat_col(true); // stat -> good
     });
     mes_ev.onerror = function () { // エラー時
       console.log("EventSource failed.");
@@ -843,6 +844,16 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
           case JOINT_MES:
             get_room_data_plus(param1, resData, exe_room); // 追加読み込み
             break;
+          case EDT_MES:
+            // if (resData) {
+            //   var mes_par = JSON.parse(resData);
+            //   var edit_id = mes_par["contents"]["id"];
+            //   cache_m["mes"][exe_room]["object"][edit_id]["contents"] = mes_par["contents"]["contents"];
+            //   cache_m["mes"][exe_room]["object"][edit_id]["id"] = mes_par["contents"]["id"];
+            //   cache_m["mes"][exe_room]["object"][edit_id]["type"] = mes_par["contents"]["type"];
+            //   update_disp(2, cache_m["mes"][exe_room], 1);
+            // }
+            break;
           case MES_DIF:
             if (resData) {
               var mes_par = JSON.parse(resData);
@@ -972,38 +983,57 @@ function update_disp_tit(title, descr, thread) { // 表示部分更新
 // ----- メッセージの表示部分を取得データから生成する -----
 // r_listは配列で渡す必要があります
 function parse_message(r_list) {
+  r_list = parse_message_filter(r_list); // 編集イベント用の処理
   var list_put = ''; // 出力用の変数
   var list_length = r_list["object"].length - 1;
-  var out_data, content, obj_piece, get_link; // temporary variable
+  var out_data, content, obj_piece, get_link, edit_mark=''; // temporary variable
   var changed_flag = false; // Room名,Titleの更新フラグ
   for (let i = list_length; i !== -1; i--) {
     obj_piece = r_list["object"][i];
-    if (obj_piece['type'] === 'log') { // ログの時
+    if (obj_piece['type'] === 'log' || obj_piece['type'] === 'update') { // ログの時
       if (changed_flag === false && obj_piece['contents'][0] === 'ChangeRoomSetting') {
         update_disp_tit(obj_piece['contents'][1], obj_piece['contents'][2], r_list["thread"]); // Room名,Titleの更新
         changed_flag = true;
       }
       continue;
     }
+    if (obj_piece["edit_log"]) edit_mark = ' *';
     content = obj_piece["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
     content = AutoLink(content); // リンクをAnchorに変換
     if (obj_piece['type'] === 'plain') { // 通常のテキスト
-      out_data = "<li id=list class='li li_pla'><span id=u_icon>" + obj_piece["user"] + "</span> <span id=user>" + obj_piece["user"] + "</span> <span id=date>" + obj_piece["date"] + "</span>" + content;
+      // out_data = '<li class="li li_pla" id="edit_'+ obj_piece['id'] +'"><span id=u_icon>' + obj_piece["user"] + '</span> <span id=user>' + obj_piece["user"] + '</span> <span id=date>' + obj_piece["date"]+edit_mark + '</span><button class="edit_button" onclick="edit_start('+ obj_piece['id'] +')">🖊</button><span id="edit_val_'+obj_piece['id']+'">' + content +'</span></li>';
+      out_data = '<li class="li li_pla" id="edit_'+ obj_piece['id'] +'"><span id=u_icon>' + obj_piece["user"] + '</span> <span id=user>' + obj_piece["user"] + '</span> <span id=date>' + obj_piece["date"]+edit_mark + '</span><span id="edit_val_'+obj_piece['id']+'">' + content +'</span></li>';
     } else if (getLink(obj_piece["media"])) {
       get_link = getLink(obj_piece["media"]);
       if (load_media_set === '1') { // メディアを表示するか
         if (obj_piece['type'] === 'image') { // 画像
-          out_data = "<li id=list class='li li_img li_media'><span id=u_icon>" + obj_piece["user"] + "</span> <span id=user>" + obj_piece["user"] + "</span> <span id=date>" + obj_piece["date"] + "</span>" + content + "<br><br><img src='" + get_link + "' alt class='media media_img'>";
+          out_data = '<li class="li li_img li_media" id="edit_'+ obj_piece['id'] +'"><span id=u_icon>' + obj_piece["user"] + '</span> <span id=user>' + obj_piece["user"] + '</span> <span id=date>' + obj_piece["date"] + '</span>' + content + '<br><br><img src="' + get_link + '" alt class="media media_img"></li>';
         } else if (obj_piece['type'] === 'iframe') { // iframe
-          out_data = "<li id=list class='li li_ifr li_media'><span id=u_icon>" + obj_piece["user"] + "</span> <span id=user>" + obj_piece["user"] + "</span> <span id=date>" + obj_piece["date"] + "</span>" + content + "<br><br><iframe src='" + get_link + "' frameborder=0 class='media media_ifr'></iframe>";
+          out_data = '<li class="li li_ifr li_media" id="edit_'+ obj_piece['id'] +'"><span id=u_icon>' + obj_piece["user"] + '</span> <span id=user>' + obj_piece["user"] + '</span> <span id=date>' + obj_piece["date"] + '</span>' + content + '<br><br><iframe src="' + get_link + '" frameborder=0 class="media media_ifr"></iframe></li>';
         }
       } else { // 埋め込みメディアの非表示
-        out_data = "<li id=list class='li li_media'><span id=u_icon>" + obj_piece["user"] + "</span> <span id=user>" + obj_piece["user"] + "</span> <span id=date>" + obj_piece["date"] + "</span>" + content + "<br>Media: <a href='" + get_link + "' target='_blank' rel='noopener'>" + get_link + "</a>";
+        out_data = '<li class="li li_media" id="edit_'+ obj_piece['id'] +'"><span id=u_icon>' + obj_piece["user"] + '</span> <span id=user>' + obj_piece["user"] + '</span> <span id=date>' + obj_piece["date"] + '</span>' + content + '<br>Media: <a href="' + get_link + '" target="_blank" rel="noopener">' + get_link + '</a></li>';
       }
     }
     list_put += out_data;
   }
   return list_put;
+}
+
+// ----- 編集イベントがあった時、対象の配列の要素を編集する -----
+function parse_message_filter(r_list) {
+  var list_length = r_list["object"].length;
+  for (let i = 0; i < list_length; i++) {
+    obj_piece = r_list["object"][i];
+    if (obj_piece['type'] === 'update') { // 編集, 削除など
+      var edit_id = i - (obj_piece['id'] - obj_piece['contents']['id']);
+      if (r_list["object"][edit_id] && Date.parse(r_list["object"][edit_id]["date"]) < Date.parse(obj_piece['date'])) {
+        r_list["object"][edit_id]['contents'] = obj_piece['contents']['contents'];
+        r_list["object"][edit_id]['type'] = obj_piece['contents']['type'];
+      }
+    }
+  }
+  return r_list;
 }
 
 // ----- 文字列からURLを取り出す関数 -----
@@ -1529,8 +1559,36 @@ function ck_content_length() { // 入力上限サイズのチェック
 
 // ----- メッセージ編集/削除 -----
 function edit_message(type, v_send, thread, id) { // id は 編集対象のメッセージID
+  console.log(type);
   xhr('req=' + EDT_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send + '&thread=' + thread + '&id=' + id, EDT_MES, false, true, now_room);
   // xhr('req=' + EDT_MES + '&room=' + now_room, EDT_MES, false, true);
+}
+
+// ----- メッセージ編集開始 -----
+function edit_start(id) {
+  const chat_content = document.getElementById('chat_content');
+  const edit_contents = document.getElementById('edit_'+id);
+  const edit_contents_val = document.getElementById('edit_val_'+id);
+  const ex_menu = document.getElementById('ex_menu');
+  clear_class("editing");
+  edit_contents.classList.add("editing");
+  ex_menu.onclick = new Function("edit_message('plain','','',"+id+")");
+  chat_content.value = edit_contents_val.innerHTML;
+}
+
+// ----- メッセージ編集キャンセル -----
+function edit_cancel() {
+  clear_class("editing");
+  const ex_menu = document.getElementById('ex_menu');
+  ex_menu.onclick = "ex_b_send(0)";
+}
+
+// ----- 特定のclassを消す -----
+function clear_class(str) {
+  var targetElements = document.getElementsByClassName(str);
+  [].forEach.call(targetElements, function(elem) {
+    elem.classList.remove(str);
+  })
 }
 
 // ----- ステータスによって上部のborderの色を変える
