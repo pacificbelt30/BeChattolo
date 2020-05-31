@@ -21,6 +21,16 @@
 } */
 
 
+/*
+ * Play by Jonas Hecksher
+ * License - http://scripts.sil.org/OFL (Fonts: SIL OFL 1.1)
+ */
+ @font-face {
+  font-family: "font-play";
+  src: url("play.woff2") format("woff2");
+}
+
+
 body {
   width: 100%;
   margin: 0;
@@ -241,6 +251,7 @@ h1 {
 #conttt .li_media {
   /* border-left: solid 2px orange; */
   border-left: solid 2px #BBB;
+
 }
 
 #conttt .media {
