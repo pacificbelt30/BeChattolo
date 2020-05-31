@@ -89,9 +89,6 @@ var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, �
 var support_push = 0; // NotificationAPI(Push通知)が利用可能:0, 非サポート:1, 許可されていない:2, 無視:3
 var support_eventsource = 0; // EventSource(SSE)が利用可能:0, 非サポート:1 <- サーバの問題でSSEが使えないときは1にすることでAjax動作
 
-var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, サポートされているが、アクセス不可:2
-var support_push = 0; // NotificationAPI(Push通知)が利用可能:0, 非サポート:1, 許可されていない:2, 無視:3
-
 // ----- 設定情報用変数 デフォルト値 -----
 var notice_set = 0; // 通知の設定
 var notice2_set = 0; // 特殊な通知の設定
@@ -126,7 +123,6 @@ window.onload = function Begin() {
   }
   sub_routine(); // サブ(時刻更新など)開始
   console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', '');
-
 }
 
 // ----- メイン処理 -----
@@ -154,7 +150,6 @@ function main(option) {
     } else {
       ck_room_data(); // Room更新確認
     }
-
 
     skip_hidden_count = 0;
   }
@@ -1366,7 +1361,6 @@ function shortcut_1(event) { // 入力欄のみ有効
         edit_message(disp_emode[0], disp_emode[1], disp_emode[2], disp_emode[3]);
       }
     }
-
   }
 }
 window.addEventListener('keydown', function keypress2(event) { // 全体で有効
