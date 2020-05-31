@@ -1,0 +1,33 @@
+@charset "UTF-8";
+
+.li,
+#list,
+#list2 {
+  background: #fff;
+  color: #111;
+  border-top: none;
+}
+
+body {
+  background: #BBB;
+}
+
+#R_side {
+  color: #111;
+}
+
+#R_side,
+#L_side {
+  background: rgba(238, 238, 238, 0.97);
+}
+
+#descr_tit {
+  background: #BBB;
+  color: #222;
+}
+
+#u_icon {
+  background: #fff;
+  color: #666;
+  box-shadow: 0 0 5px #BBB;
+}
