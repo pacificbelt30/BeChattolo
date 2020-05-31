@@ -16,12 +16,12 @@ const SKIP_COUNT = 6; // タブがパッシブのmain関数を実行しない間
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
 const PUSH_TIMER = 3000; // Push通知の表示時間
-const SEND_SERVER = 'chat.php';
+// const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
 // const SEND_SERVER = 'http://fukube.biz.ht/chat/chat.php'; // POSTする本番サーバ2URL
 // const SEND_SERVER = 'http://fukube.biz.ht/chat_dev/chat.php';
-// const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
+const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
 // const SEND_SERVER = 'https://u2dev.azurewebsites.net/chat/chat.php'; // 新しい試験サーバ
 const M_NOTICE_JS = './res/m_notice.min.js'; // 通知用のjsファイル
 // const M_NOTICE_JS = 'https://cdn.discordapp.com/attachments/705099416083890281/705100136950530188/m_notice.min.js';
@@ -100,7 +100,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.9.0 20200531', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.9.1 20200531', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -1625,7 +1625,8 @@ function edit_start(id) {
   ex_menu.innerHTML = '<i class="fas fa-times"></i>';
   bbbutton.onclick = new Function("edit_message('plain','',"+cache_m['mes'][now_room]['thread']+","+id+")");
   ex_menu.onclick = new Function('edit_cancel(); document.getElementById("chat_content").value = "";');
-  chat_content.value = edit_contents_val.innerHTML;
+  chat_content.value = edit_contents_val.innerHTML.replace(/<br>/g, "\n"); // 改行を置換
+  ck_ex_content(0); // メッセージ入力欄調整
 }
 
 // ----- メッセージ編集キャンセル -----
