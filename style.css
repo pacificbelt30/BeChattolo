@@ -141,6 +141,8 @@ header h1 {
   font-family: 'font-awe_sol';
   content: '\f4ad';
   padding-right: 5px;
+  font-size: 0.8em;
+  color: #bbb;
 }
 
 .L_side .new_mes {
@@ -208,7 +210,8 @@ h1 {
   font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* font-family: 'M+IPAモナ','Mona','mona-gothic-jisx0208.1990-0',IPAMonaPGothic,'IPA モナー Pゴシック','MS PGothic AA','MS PGothic','ＭＳ Ｐゴシック',sans-serif; */
   /* font-family: 'ＭＳ Ｐゴシック','MS PGothic',RobotoJAA,Monapo,'IPA モナー Pゴシック',IPAMonaPGothic,Mona,'梅Pゴシック',Textar,sans-serif; */
-  position: static;
+  /* position: static; */
+  position: relative;
   padding-left: 55px;
 }
 
@@ -318,10 +321,18 @@ h1 {
   border: solid 1px orange;
 }
 .edit_button {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  padding: 0;
   border: none;
   background: none;
+  /* color: #00a0e9; */
+  color: #999;
+  font-size: 0.7em;
+}
+.edit_button:hover {
   color: #00a0e9;
-  font-size: 0.8em;
 }
 #date:after {
   content: "\A";

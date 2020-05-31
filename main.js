@@ -67,6 +67,7 @@ var onload_flag = {
   "dir": false
 }; // ページが読み込まれたかのフラグ
 var cache_m = {};
+var disp_emode = 0; // 0 = 通常, 他 = メッセージ編集モード
 cache_m["mes"] = {}; // メッセージ保管用の配列 (キャッシュ)
 // var out_cache = {}; // 画面更新用の文字列保存用の配列 (画面更新用キャッシュ?) // 廃止されました
 var skip_hidden_count = 0; // パッシブ時の負荷を下げる ためにカウントしておく
@@ -89,7 +90,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.33 20200530', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.34 20200531', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -703,6 +704,7 @@ function b_send() {
 
 // ----- アクティブなRoomを変更
 function change_room(room) {
+  if (room !== now_room) edit_cancel(); // メッセージ編集中の場合は終了
   if (room) {
     before_room = now_room;
     now_room = room;
@@ -845,6 +847,8 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             get_room_data_plus(param1, resData, exe_room); // 追加読み込み
             break;
           case EDT_MES:
+            document.getElementById('chat_content').value = '';
+            edit_cancel();
             // if (resData) {
             //   var mes_par = JSON.parse(resData);
             //   var edit_id = mes_par["contents"]["id"];
@@ -863,8 +867,8 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
                 ...mes_par["object"]
               }; // オブジェクト結合
               cache_m["mes"][exe_room]["object"] = Object.entries(mes_obj).map(([key, value]) => (value)); // オブジェクトから配列にして代入
-              update_disp(2, cache_m["mes"][exe_room], 1);
             }
+            update_disp(2, cache_m["mes"][exe_room], 1);
             break;
         }
       } else {
@@ -997,12 +1001,12 @@ function parse_message(r_list) {
       }
       continue;
     }
-    if (obj_piece["edit_log"]) edit_mark = ' *';
+    if (obj_piece["edit_log"] && obj_piece["edit_log"].length) edit_mark = ' *';
     content = obj_piece["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
     content = AutoLink(content); // リンクをAnchorに変換
     if (obj_piece['type'] === 'plain') { // 通常のテキスト
-      // out_data = '<li class="li li_pla" id="edit_'+ obj_piece['id'] +'"><span id=u_icon>' + obj_piece["user"] + '</span> <span id=user>' + obj_piece["user"] + '</span> <span id=date>' + obj_piece["date"]+edit_mark + '</span><button class="edit_button" onclick="edit_start('+ obj_piece['id'] +')">🖊</button><span id="edit_val_'+obj_piece['id']+'">' + content +'</span></li>';
-      out_data = '<li class="li li_pla" id="edit_'+ obj_piece['id'] +'"><span id=u_icon>' + obj_piece["user"] + '</span> <span id=user>' + obj_piece["user"] + '</span> <span id=date>' + obj_piece["date"]+edit_mark + '</span><span id="edit_val_'+obj_piece['id']+'">' + content +'</span></li>';
+      out_data = '<li class="li li_pla" id="edit_'+ obj_piece['id'] +'"><span id=u_icon>' + obj_piece["user"] + '</span> <span id=user>' + obj_piece["user"] + '</span> <span id=date>' + obj_piece["date"]+edit_mark + '</span><button class="edit_button" onclick="edit_start('+ obj_piece['id'] +')">//</button><span id="edit_val_'+obj_piece['id']+'">' + content +'</span></li>';
+      // out_data = '<li class="li li_pla" id="edit_'+ obj_piece['id'] +'"><span id=u_icon>' + obj_piece["user"] + '</span> <span id=user>' + obj_piece["user"] + '</span> <span id=date>' + obj_piece["date"]+edit_mark + '</span><span id="edit_val_'+obj_piece['id']+'">' + content +'</span></li>';
     } else if (getLink(obj_piece["media"])) {
       get_link = getLink(obj_piece["media"]);
       if (load_media_set === '1') { // メディアを表示するか
@@ -1089,9 +1093,14 @@ function update_disp_db(up_info, i, r_list) {
     // console.log(up_info["up_date"]+' '+r_list[i]["l_date"]);
     if (up_info["up_date"] !== r_list[i]["l_date"]) {
       // 最終更新時が古い場合
-      if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれ、タブがアクティブ
-        temp_id.classList.remove("new_mes"); // 通知削除
-        favicon(0); // 通知オフ
+      if (now_room === r_list[i]["dir_name"] && !document.hidden) { // Roomが開かれている
+        if (!document.hidden) { // タブがアクティブ
+          temp_id.classList.remove("new_mes"); // 通知削除
+          favicon(0); // 通知オフ
+        } else { // タブがパッシブ
+          temp_id.classList.add("new_mes"); // 通知追加
+          favicon(1); // 通知オン
+        }
         get_room_data(); // アクティブなRoomのメッセージ取得
         // RoomがアクティブになったらIndexedDB更新
         db_connect(DB_N, OBJ_STORE_LAST, 'last', r_list[i]["dir_name"], r_list[i]["l_date"], 0, r_list[i]["room_name"], r_list[i]["thread"]);
@@ -1329,7 +1338,13 @@ function shortcut_1(event) { // 入力欄のみ有効
     !event.altKey && !event.shiftKey && !event.ctrlKey && s_value === '4') {
     if (event.key === 'Enter') { // メッセージの送信
       event.preventDefault(); // 他の動作をしないようにする
-      b_send();
+      // Function(document.getElementById("bbbutton").getAttribute('onclick'))() // bbbuttonのonclickの動作を実行
+      // b_send();
+      if (disp_emode === 0) {
+        b_send();
+      } else {
+        edit_message(disp_emode[0], disp_emode[1], disp_emode[2], disp_emode[3]);
+      }
     }
   }
 }
@@ -1376,6 +1391,8 @@ window.addEventListener('keydown', function keypress2(event) { // 全体で有�
     }
   } else if (event.key === 'Tab') { // 入力欄にフォーカス
     document.getElementById('ex_menu').focus();
+  } else if (event.key === 'Escape' && disp_emode !== 0) { // Escでメッセージ編集をキャンセル
+    edit_cancel();
   }
 });
 
@@ -1559,28 +1576,37 @@ function ck_content_length() { // 入力上限サイズのチェック
 
 // ----- メッセージ編集/削除 -----
 function edit_message(type, v_send, thread, id) { // id は 編集対象のメッセージID
-  console.log(type);
+  if (!v_send) v_send = document.getElementById('chat_content').value;
+  console.log(type+' '+v_send+' '+thread+' '+id);
   xhr('req=' + EDT_MES + '&room=' + now_room + '&name=' + localStorage.getItem("userName") + '&type=' + type + '&contents=' + v_send + '&thread=' + thread + '&id=' + id, EDT_MES, false, true, now_room);
   // xhr('req=' + EDT_MES + '&room=' + now_room, EDT_MES, false, true);
 }
 
 // ----- メッセージ編集開始 -----
 function edit_start(id) {
+  disp_emode = Array('plain', '', cache_m['mes'][now_room]['thread'], id); // メッセージ編集モードにする
   const chat_content = document.getElementById('chat_content');
   const edit_contents = document.getElementById('edit_'+id);
   const edit_contents_val = document.getElementById('edit_val_'+id);
   const ex_menu = document.getElementById('ex_menu');
+  const bbbutton = document.getElementById('bbbutton');
   clear_class("editing");
   edit_contents.classList.add("editing");
-  ex_menu.onclick = new Function("edit_message('plain','','',"+id+")");
+  ex_menu.innerHTML = '<i class="fas fa-times"></i>';
+  bbbutton.onclick = new Function("edit_message('plain','',"+cache_m['mes'][now_room]['thread']+","+id+")");
+  ex_menu.onclick = new Function('edit_cancel(); document.getElementById("chat_content").value = "";');
   chat_content.value = edit_contents_val.innerHTML;
 }
 
 // ----- メッセージ編集キャンセル -----
 function edit_cancel() {
   clear_class("editing");
+  disp_emode = 0; // メッセージ編集モード終了
+  const bbbutton = document.getElementById('bbbutton');
   const ex_menu = document.getElementById('ex_menu');
-  ex_menu.onclick = "ex_b_send(0)";
+  bbbutton.onclick = new Function("b_send()");
+  ex_menu.innerHTML = '<i class="fas fa-angle-double-down"></i>';
+  ex_menu.onclick = new Function('ex_b_send(0)');
 }
 
 // ----- 特定のclassを消す -----
