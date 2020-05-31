@@ -56,6 +56,8 @@ From: Markdownチートシート
 ## これはH2タグ
 
 // ----- 更新履歴 -----
+Ver.0.8.36?でメッセージの編集ができるようになりました
+
 Ver.0.8.30?
 IDが追加され、差分取得ができるようになります
 IDのないthreadには、setid_roomを実行しましょう
@@ -362,6 +364,8 @@ function EdtMes($room, $thread, $id, $name, $type, $contents) { // $no は 配�
         'type' => $json_main['object'][$no]['type'],
         'contents' => $json_main['object'][$no]['contents'],
         'date' => $json_main['object'][$no]['date'],
+        'id' => $json_main['object'][$no]['id'],
+        'i' => $json_main['object'][$no]['i']
     );
     // IPv4 > int 変換
     $save_data['i'] = ip_hex();
