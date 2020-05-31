@@ -24,9 +24,15 @@ const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
 // const SEND_SERVER = 'https://u2dev.azurewebsites.net/chat/chat.php'; // 新しい試験サーバ
 const M_NOTICE_JS = './res/m_notice.min.js'; // 通知用のjsファイル
+// const M_NOTICE_JS = 'https://cdn.discordapp.com/attachments/705099416083890281/705100136950530188/m_notice.min.js';
 const STYLE_CSS = 'style.css'; // メインのCSS
-const THEME_DEEPBLACK_CSS = './res/theme_deepblack.css';
-const THEME_WHITE_CSS = './res/theme_white.css';
+// const STYLE_CSS = 'https://cdn.discordapp.com/attachments/705099416083890281/716599609107021864/style.min.css';
+// const THEME_DEEPBLACK_CSS = './res/theme_deepblack.css';
+const THEME_DEEPBLACK_CSS = './res/theme_deepblack.min.css';
+// const THEME_DEEPBLACK_CSS = 'https://cdn.discordapp.com/attachments/705099416083890281/716625749678751744/theme_deepblack.min.css';
+// const THEME_WHITE_CSS = './res/theme_white.css';
+const THEME_WHITE_CSS = './res/theme_white.min.css';
+// const THEME_WHITE_CSS = 'https://cdn.discordapp.com/attachments/705099416083890281/716625740820512788/theme_white.min.css';
 
 // phpへのリクエスト種類
 const ADD_MES = 'add'; // メッセージの追加
@@ -94,7 +100,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.35 20200531', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.36 20200531', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -879,7 +885,7 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
         }
       } else {
         top_stat_col(false); // stat -> bad
-        if (exec_room && cache_m["mes"][exec_room]) cache_m["mes"][exec_room]["update_caches"] = false; // ダメだったら
+        if (exe_room && cache_m["mes"][exe_room]) cache_m["mes"][exe_room]["update_caches"] = false; // ダメだったら
         console.log('ServerERROR STAT: ' + req.status);
         if (req.responseText) {
           document.getElementById('conttt').innerHTML = '<p style="font-size: 0.8em; text-align: center; ">' + req.responseText + '</p>'; // メッセージ内容の表示部分
