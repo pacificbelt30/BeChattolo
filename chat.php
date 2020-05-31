@@ -191,11 +191,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
         echo gzencode(json_encode(GetDir()) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
       break;
       case 'edt': // メッセージ編集(削除)
-        // header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
-        // header("Content-Encoding: gzip");
+        header( "Content-Type: application/json; charset=utf-8" ); // JSONデータであることをヘッダ追加する
+        header("Content-Encoding: gzip");
         // echo gzencode(json_encode(EdtMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS))) , COMPRESS_LV);
         // echo json_encode(EdtMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
         EdtMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        echo gzencode(json_encode(GetDir()) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
       break;
       case 'del': // ルーム(削除) // アクセス不可にする
         DelRoom(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS));

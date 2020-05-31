@@ -23,6 +23,10 @@ const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'http://fukube.biz.ht/chat_dev/chat.php';
 // const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
 // const SEND_SERVER = 'https://u2dev.azurewebsites.net/chat/chat.php'; // 新しい試験サーバ
+const M_NOTICE_JS = './res/m_notice.min.js'; // 通知用のjsファイル
+const STYLE_CSS = 'style.css'; // メインのCSS
+const THEME_DEEPBLACK_CSS = './res/theme_deepblack.css';
+const THEME_WHITE_CSS = './res/theme_white.css';
 
 // phpへのリクエスト種類
 const ADD_MES = 'add'; // メッセージの追加
@@ -90,7 +94,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.8.34 20200531', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.8.35 20200531', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -507,6 +511,9 @@ function noti_setting() { // 通知設定更新
 
 function noti2_setting() { // 通知設定2更新
   const special_option = document.getElementById('special_option');
+  if (special_option.value > 0 && notice2_set == 0) { // 通知する場合はjs追加読み込み
+    load_add_js(M_NOTICE_JS);
+  }
   notice2_set = special_option.value;
   localStorage.setItem("Notice2", notice2_set);
 }
@@ -805,6 +812,17 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
         resData = req.responseText;
         top_stat_col(true); // stat -> ok
         switch (send_mode) {
+          case EDT_MES:
+            // document.getElementById('chat_content').value = '';
+            // if (resData) {
+            //   var mes_par = JSON.parse(resData);
+            //   var edit_id = mes_par["contents"]["id"];
+            //   cache_m["mes"][exe_room]["object"][edit_id]["contents"] = mes_par["contents"]["contents"];
+            //   cache_m["mes"][exe_room]["object"][edit_id]["id"] = mes_par["contents"]["id"];
+            //   cache_m["mes"][exe_room]["object"][edit_id]["type"] = mes_par["contents"]["type"];
+            //   update_disp(2, cache_m["mes"][exe_room], 1);
+            // }
+            edit_cancel();
           case ADD_MES:
             console.log('%cPOST_OK!', 'color: #00a0e9;');
             cache_m["dir"] = JSON.parse(resData); // Room情報を配列に保存しておく
@@ -845,18 +863,6 @@ function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内�
             break;
           case JOINT_MES:
             get_room_data_plus(param1, resData, exe_room); // 追加読み込み
-            break;
-          case EDT_MES:
-            document.getElementById('chat_content').value = '';
-            edit_cancel();
-            // if (resData) {
-            //   var mes_par = JSON.parse(resData);
-            //   var edit_id = mes_par["contents"]["id"];
-            //   cache_m["mes"][exe_room]["object"][edit_id]["contents"] = mes_par["contents"]["contents"];
-            //   cache_m["mes"][exe_room]["object"][edit_id]["id"] = mes_par["contents"]["id"];
-            //   cache_m["mes"][exe_room]["object"][edit_id]["type"] = mes_par["contents"]["type"];
-            //   update_disp(2, cache_m["mes"][exe_room], 1);
-            // }
             break;
           case MES_DIF:
             if (resData) {
@@ -1252,6 +1258,9 @@ function ck_setting() {
   } else {
     notice2_set = localStorage.getItem("Notice2");
   }
+  if (notice2_set > 0) { // 通知する場合はjs追加読み込み
+    load_add_js(M_NOTICE_JS);
+  }
 
   if (!localStorage.getItem("theme")) { // Themeの設定
     localStorage.setItem("theme", theme_set);
@@ -1406,18 +1415,33 @@ function from_Bottom() {
 
 // ----- Theme変更 -----
 function change_theme(no) {
-  const style_c = document.getElementById('style_c');
   switch (no) {
     case '1':
-      style_c.innerHTML = "";
+      load_add_css(STYLE_CSS);
       break;
     case '2':
-      style_c.innerHTML = "#list, #list2, #list:first-child {background: #000; color: #fff;} #body{background: #111;} #R_side{color: #BBB;} #R_side,#L_side{background: rgba(0,0,0,0.97);}";
+      load_add_css(THEME_DEEPBLACK_CSS);
       break;
     case '3':
-      style_c.innerHTML = "#list, #list2 {background: #fff!important; color: #111!important; border-top: none;} #body{background: #BBB;} #R_side{color: #111;} #R_side,#L_side{background: rgba(238,238,238,0.97);} #descr_tit{background: #BBB!important; color: #222;} #u_icon{background: #fff; color: #666; box-shadow: 0 0 5px #BBB;}";
+      load_add_css(THEME_WHITE_CSS);
       break;
   }
+}
+
+// ----- 追加css読み込み -----
+function load_add_css(href) {
+  var theme_css = document.createElement('link');
+  theme_css.setAttribute('rel', 'stylesheet');
+  theme_css.setAttribute('type', 'text/css');
+  theme_css.setAttribute('href', href);
+  document.getElementsByTagName('head')[0].appendChild(theme_css);
+}
+
+// ----- 追加js読み込み -----
+function load_add_js(href) {
+  var add_js = document.createElement('script');
+  add_js.setAttribute('src', href);
+  document.getElementsByTagName('head')[0].appendChild(add_js);
 }
 
 // ----- GET GET_Value -----
