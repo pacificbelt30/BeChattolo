@@ -13,10 +13,11 @@
  * Play by Jonas Hecksher
  * License - http://scripts.sil.org/OFL (Fonts: SIL OFL 1.1)
  */
- @font-face {
+/* @font-face {
   font-family: "font-play";
-  src: url("play.woff2") format("woff2");
-}
+  src: url("https://u2dev.blob.core.windows.net/doc/play.woff2") format("woff2");
+  src: url("./res/play.woff2") format("woff2");
+} */
 
 
 body {
@@ -215,7 +216,8 @@ h1 {
 }
 
 #conttt .li_media {
-  border-left: solid 2px orange;
+  /* border-left: solid 2px orange; */
+  border-left: solid 2px #BBB;
 }
 
 #conttt .media {

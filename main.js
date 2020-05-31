@@ -50,9 +50,6 @@ var now_thread = 0; // 現在アクティブなRoomのthread
 var exec_cnt = 0; // main()の重複実行を抑えるために実行数をカウントする変数
 var sub_DB = []; // IndexedDBが使用できない場合、更新状態を配列で保持する. そのため確保しておく
 
-var support_indexedDB = 0; // IndexedDBが利用可能:0 , 非サポート:1, サポートされているが、アクセス不可:2
-var support_push = 0; // NotificationAPI(Push通知)が利用可能:0, 非サポート:1, 許可されていない:2, 無視:3
-
 // ----- 設定情報用変数 デフォルト値 -----
 var notice_set = 0; // 通知の設定
 var notice2_set = 0; // 特殊な通知の設定
@@ -69,20 +66,29 @@ window.onload = function Begin() {
   ck_user(); // ユーザー名確認
   client_width(true); // リスト表示するか
   change_theme(localStorage.getItem("theme")); // Theme適用
-  change_room(getParam('room')); // GET_valueでRoom変更
-  ck_indexedDB(); // IndexedDBのサポート確認
-  main(1); // main()に処理を渡す
-  console.log('%cＢｅちゃっとぉ%c Ver.0.8.9 20200403', 'color: #BBB; font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
-  console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', 'color: #bbb;');
+  if (change_font_aa === 1 || change_font_aa === '1') { // AAモード?
+    aamode_tgg(true);
+  }
+  sub_routine(); // サブ(時刻更新など)開始
+  console.log('%cSessionBegin %c> ' + nowD(), 'color: orange;', '');
 }
 
 // ----- メイン処理 -----
 function main(option) {
-  ck_user(); // ユーザー名確認
-  ck_room_data(); // Room更新確認
-  sp_mode = client_width(false);
-  if (option === 1) { // Roomのメッセージ取得が必要な時
-    get_room_data(true); // タイムアウト長い
+  if (document.hidden && skip_hidden_count < SKIP_COUNT) {
+    skip_hidden_count++
+  } else {
+    sp_mode = client_width(false);
+    if (option === 1) { // Roomのメッセージ取得が必要な時
+      get_room_data(true); // タイムアウト長い
+      ck_room_data(true); // Room更新確認
+    } else if (option === 2) {
+      get_room_data(true); // タイムアウト長い
+    } else {
+      ck_room_data(); // Room更新確認
+    }
+
+    skip_hidden_count = 0;
   }
   date_update(); // 表示時刻の更新
 
@@ -921,18 +927,47 @@ function ck_user() {
 // ----- キー入力を処理する関数 -----
 // Alt+Enter(keyCode==13)が入力されたとき、b_send()を実行
 // B+ オプションは廃止されました
-document.onkeydown = keydown;
+document.getElementById('chat_content').addEventListener('keydown', function keypress(event) {
+  shortcut_1(event);
+});
+document.getElementById('chat_url').addEventListener('keydown', function keypress(event) {
+  shortcut_1(event);
+});
 
-function keydown() {
-  s_value = localStorage.getItem("sendKey");
-  if (s_value === '1' && event.altKey === true && event.keyCode === 13) { // Alt + Enter で送信
-    b_send();
-  } else if (s_value === '2' && event.shiftKey === true && event.keyCode === 13) { // Shift + Enter で送信
-    b_send();
-  } else if (s_value === '3' && event.ctrlKey === true && event.keyCode === 13) { // Ctrl + Enter で送信
-    b_send();
-  } else if (s_value === '4' && event.keyCode === 13) { // Enter で送信
-    b_send();
+function shortcut_1(event) { // 入力欄のみ有効
+  let b_value = localStorage.getItem("breakKey");
+  let s_value = localStorage.getItem("sendKey");
+  if (event.altKey && !event.shiftKey && !event.ctrlKey && b_value === '1' ||
+    !event.altKey && event.shiftKey && !event.ctrlKey && b_value === '2' ||
+    !event.altKey && !event.shiftKey && event.ctrlKey && b_value === '3' ||
+    !event.altKey && !event.shiftKey && !event.ctrlKey && b_value === '4') {
+    if (event.key === 'Enter') { // 改行をおこなう
+      event.preventDefault(); // 他の動作をしないようにする
+      var text_val = chat_content.value;
+      var text_len = text_val.length;
+      var text_pos = chat_content.selectionStart;
+      var text_end = chat_content.selectionEnd;
+      var break_t = "\n"; // 改行文字列
+      chat_content.value = text_val.substr(0, text_pos) + break_t + text_val.substr(text_pos, text_len);
+      chat_content.selectionEnd = text_end + break_t.length;
+      ck_ex_content(0); // テキストエリアのサイズ更新
+      // console.log('b');
+      // document.getElementById("chat_content").dispatchEvent(new KeyboardEvent('keydown', { keyCode: 13 }));
+    }
+  } else if (event.altKey && !event.shiftKey && !event.ctrlKey && s_value === '1' ||
+    !event.altKey && event.shiftKey && !event.ctrlKey && s_value === '2' ||
+    !event.altKey && !event.shiftKey && event.ctrlKey && s_value === '3' ||
+    !event.altKey && !event.shiftKey && !event.ctrlKey && s_value === '4') {
+    if (event.key === 'Enter') { // メッセージの送信
+      event.preventDefault(); // 他の動作をしないようにする
+      // Function(document.getElementById("bbbutton").getAttribute('onclick'))() // bbbuttonのonclickの動作を実行
+      // b_send();
+      if (disp_emode === 0) {
+        b_send();
+      } else {
+        edit_message(disp_emode[0], disp_emode[1], disp_emode[2], disp_emode[3]);
+      }
+    }
   }
 }
 
