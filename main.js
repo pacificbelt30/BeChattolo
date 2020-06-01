@@ -25,7 +25,7 @@ const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新し�
 // const SEND_SERVER = 'https://u2dev.azurewebsites.net/chat/chat.php'; // 新しい試験サーバ
 const M_NOTICE_JS = './res/m_notice.min.js'; // 通知用のjsファイル
 // const M_NOTICE_JS = 'https://cdn.discordapp.com/attachments/705099416083890281/705100136950530188/m_notice.min.js';
-const STYLE_CSS = 'style.css'; // メインのCSS
+const STYLE_CSS = 'style.min.css'; // メインのCSS
 // const STYLE_CSS = 'https://cdn.discordapp.com/attachments/705099416083890281/716599609107021864/style.min.css';
 // const THEME_DEEPBLACK_CSS = './res/theme_deepblack.css';
 const THEME_DEEPBLACK_CSS = './res/theme_deepblack.min.css';
@@ -100,7 +100,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.9.1 20200531', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.9.2 20200601', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -400,8 +400,9 @@ function get_room_data_plus(thr, str, exe_room) {
   // 追加読み込み
   var b_height = from_Bottom(); // ページ下部からのpx
   // console.log(b_height + ' ' + thr);
-  if (thr > 0 && b_height < READ_AHEAD || thr > 0 && now_thread === thr) {
-    // console.log("Load: Old Thread");
+  // if (thr > 0 && b_height < READ_AHEAD || thr > 0 && now_thread === thr) {
+  if (thr > 0 && b_height < READ_AHEAD) {
+      // console.log("Load: Old Thread");
     xhr('req=' + GET_MES + '&room=' + now_room + '&thread=' + (thr - 1), JOINT_MES, thr - 1, true, exe_room);
   } else if (thr > 0) {
     ready_getDataNo = thr;
