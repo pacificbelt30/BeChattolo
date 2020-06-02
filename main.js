@@ -16,12 +16,12 @@ const SKIP_COUNT = 6; // タブがパッシブのmain関数を実行しない間
 const MAX_SEND_SIZE = 3003; // 最大送信サイズ 0xBBB
 const READ_AHEAD = 400; // 先読みを行う残りpx条件
 const PUSH_TIMER = 3000; // Push通知の表示時間
-// const SEND_SERVER = 'chat.php';
+const SEND_SERVER = 'chat.php';
 // const SEND_SERVER = 'https://u2api.azurewebsites.net/chat/chat.php'; // POSTする試験サーバURL
 // const SEND_SERVER = 'https://u2net.azurewebsites.net/chat/chat.php'; // POSTする本番サーバURL
 // const SEND_SERVER = 'http://fukube.biz.ht/chat/chat.php'; // POSTする本番サーバ2URL
 // const SEND_SERVER = 'http://fukube.biz.ht/chat_dev/chat.php';
-const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
+// const SEND_SERVER = 'https://u2star.azurewebsites.net/chat/chat.php'; // 新しい本番サーバ
 // const SEND_SERVER = 'https://u2dev.azurewebsites.net/chat/chat.php'; // 新しい試験サーバ
 const M_NOTICE_JS = './res/m_notice.min.js'; // 通知用のjsファイル
 // const M_NOTICE_JS = 'https://cdn.discordapp.com/attachments/705099416083890281/705100136950530188/m_notice.min.js';
@@ -100,7 +100,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.9.2 20200601', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.9.3 20200602', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -141,7 +141,6 @@ function main(option) {
   if (document.hidden && skip_hidden_count < SKIP_COUNT) {
     skip_hidden_count++
   } else {
-    sp_mode = client_width(false);
     if (option === 1) { // Roomのメッセージ取得が必要な時
       get_room_data(true); // タイムアウト長い
       ck_room_data(true); // Room更新確認
@@ -169,6 +168,7 @@ function main(option) {
 戻り値: なし
 */
 function sub_routine() { // 定期実行する関数
+  sp_mode = client_width(false); // スマホモードか幅で判定
   ck_user(); // ユーザー名確認
   date_update(); // 表示時刻の更新
   setTimeout(sub_routine, SUBLOOP_TIMER);

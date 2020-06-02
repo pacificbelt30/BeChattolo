@@ -26,6 +26,7 @@ body {
   margin: 0;
   /* background: #1B1B1B; */
   background: #2B2B30;
+  /* background: #101214; */
   color: #BBB;
   font-size: 0.9em;
   /* font-family: Whitney, "Hiragino Sans", "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", メイリオ, Meiryo, Osaka, "MS PGothic", "Helvetica Neue", Helvetica, Arial, sans-serif; */
@@ -33,6 +34,36 @@ body {
   /* font-family: flop,"\30D2\30E9\30AE\30CE\89D2\30B4 Pro W3",Hiragino Kaku Gothic Pro,"\30E1\30A4\30EA\30AA",Meiryo,"\FF2D\FF33 \FF30\30B4\30B7\30C3\30AF",MS P,sans-serif!important; */
   /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
   font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif;
+}
+
+#top_bar_com {
+  background: #333;
+  border-right: solid 1px #484848;
+  border-left: solid 1px #484848;
+  color: #BBB;
+  position: absolute;
+  top: 2px;
+  left: 8px;
+  padding: 0 10px;
+  height: calc(100% - 2px);
+}
+#top_bar_com:hover {
+  background: #3B3B3B;
+}
+#top_bar_logo {
+  position: relative;
+  top: 10px;
+  height: 20px;
+  width: 20px;
+}
+#top_bar_logo_tit {
+  position: relative;
+  top: 6px;
+  margin-left: 4px;
+  font-size: 1em;
+  /* font-weight: 100; */
+  font-family: Whitney, "Hiragino Sans", "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", メイリオ, Meiryo, Osaka, "MS PGothic", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* font-family: Cambria, Georgia, serif; */
 }
 
 #descr_tit,
@@ -296,7 +327,8 @@ h1 {
 #date {
   right: 0;
   font-size: 0.7em;
-  color: #999;
+  /* color: #999; */
+  color: #666;
   /* font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif; */
   /* font-family: 'font-play',Meiryo, sans-serif; */
 }
@@ -356,9 +388,10 @@ h1 {
   padding: 7px 5px;
   margin: 0;
   /* background: #0B0B0B; */
-  background: #eee;
+  /* background: #494949; */
+  background: #ddd;
   /* background: #444; */
-  color: #000;
+  /* color: #fff; */
   /* color: #fff; */
   border: solid 1px #555;
   border-radius: 3px;
@@ -1002,4 +1035,7 @@ span#dot {
     height: 100%;
   }
 
+  #top_bar_com {
+    display: none;
+  }
 }
