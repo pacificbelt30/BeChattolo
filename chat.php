@@ -130,7 +130,7 @@ define("PROTECTED_ROOM", 'PROTECTED'); // Roomのアクセス判定用のファ�
 
 // define("SPLIT_SIZE", 135673); // メッセージの分割条件のファイルサイズ 0xBBBB -> (OCT) Byte
 define("SPLIT_SIZE", 104858); // メッセージの分割条件のファイルサイズ 0.1MiB = 104858Byte
-// define("SPLIT_SIZE", 1024); // メッセージの分割条件のファイルサイズ 0.1MiB = 104858Byte
+// define("SPLIT_SIZE", 1024); // メッセージの分割条件のファイルサイズ
 //define("MAX_ROOMS", 21474836); // 最大Room数
 define("DEFAULT_PERMISSION", 0777); // アクセス権の制御
 define("COMPRESS_LV", 1); // gzip圧縮レベル
@@ -199,6 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // POSTでは全関数実行可能
         // echo json_encode(EdtMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
         EdtMes(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'thread', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS), filter_input(INPUT_POST, 'contents', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
         echo gzencode(json_encode(GetDir()) , COMPRESS_LV);  // .htaccessを操作できずgzipできないサーバー向け
+        // echo json_encode(GetDir());  // .htaccessを操作できずgzipできないサーバー向け
       break;
       case 'del': // ルーム(削除) // アクセス不可にする
         DelRoom(filter_input(INPUT_POST, 'room', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW), filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
@@ -764,14 +765,14 @@ function check_id($room, $thread, $id) {
     }
 
     if ($json_main) {
-      $arr_no = $id - $json_main['id_offset'] + 1;
+      $arr_no = $id - $json_main['id_offset'];
       $id_cnt = count($json_main['object']);
       if ($arr_no >= 0 && $arr_no < $id_cnt) {
         if (!isset($json_main['object'][$arr_no]['id'])) { // idがない場合
           setId($room);
           return check_id($room, $thread, $id);
         }
-        if ($json_main['object'][$arr_no]['id'] === $id+1) {
+        if ($json_main['object'][$arr_no]['id'] === $id) {
           return array($room, $thread, $id);
         } else {
           setId($room);

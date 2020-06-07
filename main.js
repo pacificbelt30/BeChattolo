@@ -100,7 +100,7 @@ var change_font_aa = 0; // アスキーアート向けのフォントに変更
 var sp_mode = false; // スマホモード
 
 // ----- 初期処理 -----
-console.log('%cＢｅちゃっとぉ%c Ver.0.9.3 20200602', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
+console.log('%cＢｅちゃっとぉ%c Ver.0.9.4 20200607', 'font-size: 2em; font-weight: bold;', 'color: #00a0e9;');
 ck_setting(); // Localstrage内の設定情報確認
 ck_user(); // ユーザー名確認
 ck_indexedDB(); // IndexedDBのサポート確認
@@ -401,7 +401,7 @@ function get_room_data_plus(thr, str, exe_room) {
   var b_height = from_Bottom(); // ページ下部からのpx
   // console.log(b_height + ' ' + thr);
   // if (thr > 0 && b_height < READ_AHEAD || thr > 0 && now_thread === thr) {
-  if (thr > 0 && b_height < READ_AHEAD) {
+  if (thr > 0 && b_height < READ_AHEAD || thr > 0) {
       // console.log("Load: Old Thread");
     xhr('req=' + GET_MES + '&room=' + now_room + '&thread=' + (thr - 1), JOINT_MES, thr - 1, true, exe_room);
   } else if (thr > 0) {
@@ -804,8 +804,8 @@ function zerosli(no) {
 function xhr(send_data, send_mode, param1, option, exe_room) { // POSTする内容, リクエストの種類, 追加読み込みの引継ぎ, 通信のタイムアウトを長くするか, 実行するRoom名(非同期なのでnew_roomは使えない)
   const req = new XMLHttpRequest();
   req.open('POST', SEND_SERVER, true);
-  req.setRequestHeader('Pragma', 'no-cache_m'); // キャッシュを無効にするためのヘッダ指定
-  req.setRequestHeader('cache_m-Control', 'no-cach');
+  req.setRequestHeader('Pragma', 'no-cache'); // キャッシュを無効にするためのヘッダ指定
+  req.setRequestHeader('Cache-Control', 'no-cache');
   req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
   if (option === true) {
     req.timeout = XHR_TIMEOUT_L; // サーバリクエストのタイムアウト時間(長い)の指定
@@ -1003,9 +1003,10 @@ function parse_message(r_list) {
   r_list = parse_message_filter(r_list); // 編集イベント用の処理
   var list_put = ''; // 出力用の変数
   var list_length = r_list["object"].length - 1;
-  var out_data, content, obj_piece, get_link, edit_mark=''; // temporary variable
+  var out_data, content, obj_piece, get_link; // temporary variable
   var changed_flag = false; // Room名,Titleの更新フラグ
   for (let i = list_length; i !== -1; i--) {
+    var edit_mark=''; // 編集されたかのマーク
     obj_piece = r_list["object"][i];
     if (obj_piece['type'] === 'log' || obj_piece['type'] === 'update') { // ログの時
       if (changed_flag === false && obj_piece['contents'][0] === 'ChangeRoomSetting') {
@@ -1014,7 +1015,7 @@ function parse_message(r_list) {
       }
       continue;
     }
-    if (obj_piece["edit_log"] && obj_piece["edit_log"].length) edit_mark = ' *';
+    if (obj_piece["edit_log"]) edit_mark = ' *';
     content = obj_piece["contents"].replace(/\r?\n/g, '<br>'); // 改行を置換
     content = AutoLink(content); // リンクをAnchorに変換
     if (obj_piece['type'] === 'plain') { // 通常のテキスト
@@ -1041,7 +1042,7 @@ function parse_message(r_list) {
 function parse_message_filter(r_list) {
   var list_length = r_list["object"].length;
   for (let i = 0; i < list_length; i++) {
-    obj_piece = r_list["object"][i];
+    var obj_piece = r_list["object"][i];
     if (obj_piece['type'] === 'update') { // 編集, 削除など
       var edit_id = i - (obj_piece['id'] - obj_piece['contents']['id']);
       if (r_list["object"][edit_id] && Date.parse(r_list["object"][edit_id]["date"]) < Date.parse(obj_piece['date'])) {
@@ -1051,6 +1052,16 @@ function parse_message_filter(r_list) {
     }
   }
   return r_list;
+}
+
+// ----- メッセージを流す -----
+function flow_message(r_list) {
+  var list_length = r_list["object"].length;
+  for (let i=0; i < list_length; i++) {
+    var obj_piece = r_list["object"][i];
+    var new_flow = document.createElement("p");
+    // new_flow.appendChild();
+  }
 }
 
 // ----- 文字列からURLを取り出す関数 -----
