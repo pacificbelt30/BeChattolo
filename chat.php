@@ -467,7 +467,7 @@ function SetRoom($mode, $name, $room, $new_name, $new_descr) {
       }
     }
   } elseif ($mode === '2') { // 作成モード
-    $new_folder_no = false; // 最大Room数を超えてforを抜けてしまった時、Roomが作成されるのを防止
+    $new_folder_no = 1; // まだRoom(MainRoomを除く)がないとき"1"から始める
     $count_s = count(scandir("./".BBS_FOLDER."/"));
     for($i=$count_s; $i>0; --$i) {
       if(is_dir("./".BBS_FOLDER."/".$i)) {
