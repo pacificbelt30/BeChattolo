@@ -1,1 +1,1041 @@
+@charset "UTF-8";
 
+/*
+ * Font Awesome Free 5.12.1 by @fontawesome - https://fontawesome.com
+ * License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
+ */
+@font-face {
+  font-family: "font-awe_sol";
+  /* src: url("https://u2dev.blob.core.windows.net/doc/fa-solid.woff2") format("woff2"); */
+  src: url("./res/fa-solid.woff2") format("woff2");
+}
+
+/*
+ * Play by Jonas Hecksher
+ * License - http://scripts.sil.org/OFL (Fonts: SIL OFL 1.1)
+ */
+/* @font-face {
+  font-family: "font-play";
+  src: url("https://u2dev.blob.core.windows.net/doc/play.woff2") format("woff2");
+  src: url("./res/play.woff2") format("woff2");
+} */
+
+
+body {
+  width: 100%;
+  margin: 0;
+  /* background: #1B1B1B; */
+  background: #2B2B30;
+  /* background: #101214; */
+  color: #BBB;
+  font-size: 0.9em;
+  /* font-family: Whitney, "Hiragino Sans", "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", メイリオ, Meiryo, Osaka, "MS PGothic", "Helvetica Neue", Helvetica, Arial, sans-serif; */
+  /* font-family: -apple-system,BlinkMacSystemFont,"Helvetica Neue","Hiragino Kaku Gothic ProN",YuGothic,"Yu Gothic",Meiryo,sans-serif; */
+  /* font-family: flop,"\30D2\30E9\30AE\30CE\89D2\30B4 Pro W3",Hiragino Kaku Gothic Pro,"\30E1\30A4\30EA\30AA",Meiryo,"\FF2D\FF33 \FF30\30B4\30B7\30C3\30AF",MS P,sans-serif!important; */
+  /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
+  font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif;
+}
+
+#top_bar_com {
+  background: #333;
+  border-right: solid 1px #484848;
+  border-left: solid 1px #484848;
+  color: #BBB;
+  position: absolute;
+  top: 2px;
+  left: 8px;
+  padding: 0 10px;
+  height: calc(100% - 2px);
+}
+#top_bar_com:hover {
+  background: #3B3B3B;
+}
+#top_bar_logo {
+  position: relative;
+  top: 10px;
+  height: 20px;
+  width: 20px;
+}
+#top_bar_logo_tit {
+  position: relative;
+  top: 6px;
+  margin-left: 4px;
+  font-size: 1em;
+  /* font-weight: 100; */
+  font-family: Whitney, "Hiragino Sans", "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", メイリオ, Meiryo, Osaka, "MS PGothic", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* font-family: Cambria, Georgia, serif; */
+}
+
+#descr_tit,
+#edit_room,
+#time_b,
+button,
+a {
+  font-size: 0.93em;
+  /* font-family: 'font-play',Meiryo, sans-serif; */
+}
+
+header h1 {
+  width: 100%;
+  margin: 0;
+  padding: 10px 0;
+  height: 20px;
+  border-top: solid 2px #BBB;
+  /* background: #333; */
+  /* background: rgba(34,34,34,0.97); */
+}
+
+#L_side::-webkit-scrollbar,
+#R_side::-webkit-scrollbar {
+  width: 7px;
+}
+
+#L_side::-webkit-scrollbar-thumb,
+#R_side::-webkit-scrollbar-thumb {
+  background: #666;
+}
+
+#L_side {
+  padding: 10px 0;
+  background: #161616;
+  width: 150px;
+  height: calc(100% - 20px - 42px);
+  position: fixed;
+  top: 42px;
+  left: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  /* background: rgba(17,17,17,0.97); */
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  box-shadow: 0 0 3px #000;
+}
+
+#R_side {
+  padding: 10px;
+  background: #161616;
+  width: 150px;
+  height: calc(100% - 20px - 42px);
+  position: fixed;
+  top: 42px;
+  right: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  /* background: rgba(17,17,17,0.97); */
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  box-shadow: 0 0 3px #000;
+}
+
+.L_side button:first-child {
+  margin-top: 60px;
+}
+
+.L_side button {
+  border: none;
+  border-radius: 0;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+  margin-bottom: 0;
+  margin-top: 5px;
+  padding: 10px 10px 10px 0;
+  color: #aaa;
+  /* background: #333340; */
+  background: #555;
+  border-right: solid 4px #666;
+  cursor: pointer;
+  width: 100%;
+  text-align: right;
+  font-weight: bolder;
+  font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.L_side #romain {
+  position: absolute;
+  top: 10px;
+  left: 0;
+}
+
+.L_side .on_butt {
+  /* background: #BBB; */
+  /* background: #00a0e9; */
+  background: #008ecf;
+  color: #ffF;
+  border-right: solid 4px #ddd;
+}
+
+.L_side .new_mes::before {
+  font-family: 'font-awe_sol';
+  content: '\f4ad';
+  padding-right: 5px;
+  font-size: 0.8em;
+  color: #bbb;
+}
+
+.L_side .new_mes {
+  /* color: #00a0e9; */
+  color: #ffF;
+}
+
+/* .L_side button:hover {
+  color: #ddd;
+  background: #555;
+} */
+
+#R_side #descr_tit {
+  border-radius: 1px;
+  margin-bottom: 0;
+  margin-top: 5px;
+  padding: 5px;
+  /* background: #333340; */
+  /* background: #00a0e9; */
+  background: #008ecf;
+  color: #ffF;
+  /* cursor: pointer; */
+  cursor: default;
+  width: 100%;
+}
+
+.fa-edit:before {
+  font-style: normal;
+  font-family: 'font-awe_sol';
+  content: '\f044';
+  padding-right: 5px;
+  cursor: pointer;
+}
+
+section {
+  position: absolute;
+  left: 200px;
+  top: 0;
+  width: calc(100% - 400px);
+}
+
+a {
+  color: #00a0e9;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+h1 {
+  text-align: center;
+}
+
+#main_conttt {
+  list-style-type: none;
+}
+
+.li {
+  background: #191919;
+  color: #FFF;
+  margin: 2px 0;
+  padding: 3px 10px 6px 10px;
+  border: none;
+  border-top: dashed 1px #111;
+  border-left: solid 2px #444;
+  word-break: break-all;
+  font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* font-family: 'M+IPAモナ','Mona','mona-gothic-jisx0208.1990-0',IPAMonaPGothic,'IPA モナー Pゴシック','MS PGothic AA','MS PGothic','ＭＳ Ｐゴシック',sans-serif; */
+  /* font-family: 'ＭＳ Ｐゴシック','MS PGothic',RobotoJAA,Monapo,'IPA モナー Pゴシック',IPAMonaPGothic,Mona,'梅Pゴシック',Textar,sans-serif; */
+  /* position: static; */
+  position: relative;
+  padding-left: 55px;
+}
+
+#list2,
+#list:first-child {
+  background: #1B1B1B;
+  color: #FFF;
+  margin: 2px 0;
+  padding: 3px 10px 6px 10px;
+  /* border: solid 1px #00a0e9; */
+  /* border-top: dashed 1px #111; */
+  border-left: solid 2px #00a0e9;
+  word-break: break-all;
+  font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* font-family: Mona,IPAMonaPGothic,'IPA モナー Pゴシック','MS PGothic AA','MS PGothic','ＭＳ Ｐゴシック',sans-serif; */
+  /* font-family: 'ＭＳ Ｐゴシック','MS PGothic',RobotoJAA,Monapo,'IPA モナー Pゴシック',IPAMonaPGothic,Mona,'梅Pゴシック',Textar,sans-serif; */
+  position: static;
+  padding-left: 55px;
+}
+
+#list2 {
+  color: #777;
+  border-left: solid 2px #111;
+  /* font-family: 'font-play',Meiryo, sans-serif; */
+}
+
+#conttt .li_media {
+  /* border-left: solid 2px orange; */
+  border-left: solid 2px #BBB;
+}
+
+#conttt .media {
+  height: 300px;
+  max-width: 100%;
+}
+.media_img {
+  border-radius: 3px;
+}
+
+#conttt .media_ifr {
+  width: 533.3px;
+}
+
+#u_icon {
+  display: block;
+  color: #ddd;
+  text-align: center;
+  font-size: 0.75em;
+  line-height: 31px;
+  font-weight: 900;
+  width: 31px;
+  height: 31px;
+  background: #1B1B1B;
+  border-radius: 50%;
+  border: solid 2px #888;
+  box-shadow: 0 0 5px #000;
+  position: absolute;
+  margin-top: 3px;
+  left: 10px;
+  overflow: hidden;
+  /* font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; */
+  /* font-family: 'font-play',Meiryo, sans-serif; */
+}
+
+#user {
+  /* color: #00a0e9; */
+  color: #999;
+  font-weight: bold;
+  font-size: 0.9em;
+  position: relative;
+  /* font-family: 'font-play',Meiryo, sans-serif; */
+}
+
+#user:before {
+  /* font-family: 'font-awe_sol'; */
+  /* content: '>'; */
+  padding-right: 4px;
+  color: #555;
+  font-size: 0.7em;
+}
+
+#date {
+  right: 0;
+  font-size: 0.7em;
+  /* color: #999; */
+  color: #666;
+  /* font-family: "メイリオ", "Hiragino Kaku Gothic Pro", Meiryo, "ヒラギノ角ゴ Pro W3", "MS PGothic", "MS UI Gothic", Helvetica, Arial, sans-serif; */
+  /* font-family: 'font-play',Meiryo, sans-serif; */
+}
+
+#date:before {
+  content: '@';
+  padding-left: 5px;
+  padding-right: 0;
+  color: #555;
+}
+
+/* 
+#date:before {
+  font-family: 'font-awe_sol';
+  content: '\f017';
+  padding-left: 5px;
+  padding-right: 2px;
+  color: #555;
+} */
+
+.editing {
+  border: solid 1px orange;
+}
+.edit_button {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  /* color: #00a0e9; */
+  color: #999;
+  font-size: 0.7em;
+}
+.edit_button:hover {
+  color: #00a0e9;
+}
+#date:after {
+  content: "\A";
+  white-space: pre;
+}
+/* .edit_button:after {
+  content: "\A\A";
+  white-space: pre;
+} */
+
+#input_area {
+  position: relative;
+  width: calc(100% - 400px);
+  left: 200px;
+}
+
+#chat_content {
+  /* font-family: inherit; */
+  font-size: 1.0em;
+  width: calc(100% - 92px);
+  padding: 7px 5px;
+  margin: 0;
+  /* background: #0B0B0B; */
+  /* background: #494949; */
+  background: #ddd;
+  /* background: #444; */
+  /* color: #fff; */
+  /* color: #fff; */
+  border: solid 1px #555;
+  border-radius: 3px;
+  height: 22px;
+  resize: none;
+
+  position: absolute;
+  top: 15px;
+  left: 40px;
+  font-family: 'Segoe UI', SegoeUI, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+#chat_url {
+  width: calc(100% - 132px);
+  font-family: inherit;
+  font-size: 0.9em;
+  padding: 5px;
+  margin: 0;
+  /* background: #0B0B0B; */
+  background: #eee;
+  /* background: #777; */
+  color: #000;
+  /* color: #fff; */
+  border: solid 1px #444;
+  border-radius: 3px;
+  height: 26px;
+  position: absolute;
+  top: 55px;
+  left: 80px;
+  display: none;
+}
+
+#ex_menu,
+#ex_menu1,
+#ex_menu2,
+#ex_menu3 {
+  width: 39px;
+  height: 38px;
+  padding: 5px;
+  margin: 0;
+  background: #444;
+  border: solid 1px #222;
+  border-radius: 3px;
+  color: #ccc;
+  cursor: pointer;
+
+  position: absolute;
+  top: 15px;
+  left: 0;
+}
+
+#ex_menu {
+  color: #444;
+  background: #ccc;
+}
+
+#ex_menu:hover {
+  color: #222;
+}
+
+#ex_menu1 {
+  position: absolute;
+  top: 55px;
+  display: none;
+}
+
+#ex_menu2 {
+  position: absolute;
+  top: 55px;
+  left: 40px;
+  display: none;
+}
+
+#ex_menu3 {
+  position: absolute;
+  top: 55px;
+  left: calc(100% - 39px);
+  display: none;
+}
+
+.fa-angle-double-down:before {
+  font-style: normal;
+  font-family: 'font-awe_sol';
+  content: '\f103';
+  font-size: 1.2em;
+}
+
+.fa-image:before {
+  font-style: normal;
+  font-family: 'font-awe_sol';
+  content: '\f03e';
+  font-size: 1.2em;
+}
+
+.fa-times:before {
+  font-style: normal;
+  font-family: 'font-awe_sol';
+  content: '\f00d';
+  font-size: 1.2em;
+}
+
+.fa-window-maximize:before {
+  font-style: normal;
+  font-family: 'font-awe_sol';
+  content: '\f2d0';
+  font-size: 1.2em;
+}
+
+#ex_menu_gr {
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+#bbbutton {
+  width: 39px;
+  height: 38px;
+  padding: 5px 5px 5px 0;
+  margin: 0;
+  background: #ccc;
+  /* background: #444; */
+  border: solid 1px #222;
+  border-radius: 3px;
+  color: #444;
+  /* color: #ccc; */
+  cursor: pointer;
+
+  position: absolute;
+  top: 15px;
+  right: 0;
+}
+
+#bbbutton:hover {
+  color: #222;
+}
+
+#bbbutton:active {
+  background: #333;
+  color: #aaa;
+}
+
+.fa-paper-plane:before {
+  font-family: 'font-awe_sol';
+  content: '\f1d8';
+  font-size: 1.2em;
+}
+
+#main_contents {
+  width: 98%;
+  position: absolute;
+  top: 100px;
+  left: 1%;
+}
+
+#update_notice {
+  background: orange;
+  color: #FFF;
+  text-align: center;
+  display: none;
+}
+
+#load {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  background: #000;
+  color: #aaa;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#load video {
+  height: 150px;
+  width: 150px;
+  display: block;
+  margin: auto;
+  margin-top: 100px;
+  background: #000;
+  color: #000;
+}
+
+#first_sc {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  /* background: #222; */
+  color: #aaa;
+  text-align: center;
+  background: rgba(17, 17, 17, 0.95);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  display: none;
+}
+
+#first_sc h1 {
+  color: #FFF;
+  font-size: 1.7em;
+  font-weight: 100;
+}
+
+#edit_room {
+  /* background: rgb(180, 0, 0); */
+  background: #444;
+  color: #FFF;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 6;
+  display: none;
+}
+
+#edit_room h2 {
+  font-size: 2em;
+  text-align: center;
+}
+
+#edit_room p {
+  font-size: 1.5em;
+  text-align: center;
+}
+
+#edit_room #room_name {
+  width: 300px;
+  padding: 10px 5px;
+  margin-left: calc(50% - 150px);
+  border: none;
+}
+
+#edit_room #room_desk_text {
+  resize: none;
+  width: 300px;
+  height: 240px;
+  padding: 10px 5px;
+  margin-left: calc(50% - 150px);
+  margin-top: 10px;
+  border: none;
+}
+
+#cancel,
+#create,
+#apply,
+#delete button {
+  border: none;
+  display: inline-table;
+  width: 100px;
+  padding: 10px;
+}
+
+#cancel {
+  position: fixed;
+  left: calc(50% - 140px);
+  top: 600px;
+}
+
+#delete {
+  position: fixed;
+  left: calc(50% + 47px);
+  top: 500px;
+  border: solid 3px orangered;
+  background: orangered;
+  margin: 0;
+}
+
+#delete p {
+  font-weight: bold;
+  color: #000;
+  font-size: 0.9em;
+}
+
+#create,
+#apply {
+  position: fixed;
+  left: calc(50% + 50px);
+  top: 600px;
+}
+
+#user_name {
+  padding: 10px 15px;
+  /* padding: 5px 10px; */
+  font-size: 1.5em;
+  margin-top: 20px;
+  color: #FFF;
+  background: #555;
+  /* border: solid 1px #bbb; */
+  border: solid 1px #00a0e9;
+  border-radius: 2px;
+  text-align: center;
+}
+
+#submit_b {
+  font-size: 1.5em;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 3px;
+}
+
+#show_roomlist {
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 2px;
+  left: 7px;
+  z-index: 5;
+  text-align: center;
+  display: none;
+  color: #ddd;
+}
+
+.bars:before {
+  font-family: 'font-awe_sol';
+  content: '\f0c9';
+  cursor: pointer;
+  margin: 0;
+  line-height: 40px;
+  font-size: 1.4em;
+  font-style: normal;
+  z-index: 5;
+  vertical-align: baseline;
+  text-align: center;
+}
+
+#setting {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  /* background: #222; */
+  /* background: #1B1B1B; */
+  color: #aaa;
+  text-align: center;
+  padding: 60px 0;
+  background: rgba(17, 17, 17, 0.9);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+#enter_setting {
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 2px;
+  right: 7px;
+  z-index: 5;
+  text-align: center;
+}
+
+.fa-cog:before {
+  font-family: 'font-awe_sol';
+  content: '\f013';
+  cursor: pointer;
+  margin: 0;
+  line-height: 40px;
+  font-size: 1.4em;
+  font-style: normal;
+  z-index: 5;
+  color: #ddd;
+  vertical-align: baseline;
+  text-align: center;
+}
+
+.fa-plus-circle:before {
+  font-family: 'font-awe_sol';
+  content: '\f055';
+  cursor: pointer;
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  font-size: 2em;
+  color: #666;
+  font-style: normal;
+}
+
+#setting h2 {
+  color: #FFF;
+}
+
+#user_name2 {
+  /* padding: 10px 15px; */
+  padding: 5px 10px;
+  font-size: 1em;
+  color: #FFF;
+  background: #333;
+  /* border: solid 1px #bbb; */
+  border: solid 1px #00a0e9;
+  /* border-radius: 2px; */
+  text-align: center;
+}
+
+#setting h3 {
+  font-weight: 100;
+  font-size: 1em;
+  color: #ddd;
+  margin-bottom: 1px;
+}
+
+#setting p {
+  color: #00a0e9;
+}
+
+.notice,
+.aamode,
+.loadmedia {
+  padding: 10px;
+  color: #00a0e9;
+  font-size: 1.2em;
+}
+
+input[type=radio] {
+  display: none;
+}
+
+input[type="radio"]:checked+label {
+  background: #00a0e9;
+}
+
+label {
+  color: #fff;
+  margin: 15px 0;
+  padding: 3px 20px;
+  border: solid 1px #BBB;
+  background: #444;
+}
+
+#set_block {
+  display: inline-block;
+  width: 110px;
+}
+
+#setting select {
+  padding: 7px 10px;
+  /* line-height: 1.5; */
+  /* background: #666; */
+  background: #444;
+  color: #FFF;
+  border: none;
+  box-shadow: 0 0 3px #000;
+  -webkit-appearance: none;
+  /* ベンダープレフィックス(Google Chrome、Safari用) */
+  -moz-appearance: none;
+  /* ベンダープレフィックス(Firefox用) */
+  appearance: none;
+  /* 標準のスタイルを無効にする */
+  text-align: center;
+  align-items: center;
+  border: solid 1px #BBB;
+}
+
+header {
+  z-index: 2;
+  position: fixed;
+  top: 0;
+  width: inherit;
+  /* background: #222; */
+  background: #2B2B2B;
+  /* background: rgba(34,34,34,0.97); */
+  box-shadow: 0 0 3px #000;
+}
+
+#time_b {
+  position: fixed;
+  top: 0;
+  right: 80px;
+  color: #BBB;
+  z-index: 3;
+}
+
+span#dot {
+  animation: anim3 1s infinite;
+}
+
+
+@keyframes anim3 {
+  0% {
+    opacity: 1;
+  }
+
+  40% {
+    opacity: 0.8;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  60% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+#conttt_loading_ani {
+  text-align: center;
+  font-size: 1;
+  color: #00a0e9;
+}
+
+#conttt_loading_ani0,
+#conttt_loading_ani1,
+#conttt_loading_ani2 {
+  margin: 1px;
+  padding: 0;
+  /* border-top:dashed 1px #bbb;
+  border-bottom:dashed 1px #bbb; */
+  /* text-decoration: underline;
+  text-decoration-color: #bbb; */
+}
+
+#conttt_loading_ani1 {
+  color: #fff;
+}
+
+#conttt_loading_ani0 {
+  animation: anim4 0.9s 0s infinite;
+}
+
+#conttt_loading_ani1 {
+  animation: anim4 0.9s 0.3s infinite;
+}
+
+#conttt_loading_ani2 {
+  animation: anim4 0.9s 0.6s infinite;
+}
+
+@keyframes anim4 {
+  0% {
+    opacity: 1;
+  }
+
+  40% {
+    opacity: 0.8;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  60% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@media screen and (max-width:768px) {
+  #main_contents {
+    position: absolute;
+    z-index: -3;
+  }
+
+  #R_side,
+  #L_side,
+  #time_b {
+    display: none;
+  }
+
+  #input_area {
+    width: 98%;
+    left: 1%;
+  }
+
+  #chat_content,
+  #ex_menu,
+  #bbbutton {
+    z-index: -3;
+  }
+
+  section {
+    width: 98%;
+    left: 1%;
+  }
+
+  #create_room {
+    display: none;
+    z-index: 5;
+  }
+
+  #R_side {
+    display: none;
+  }
+
+  #L_side {
+    display: none;
+    /* z-index: 2; */
+    z-index: 2;
+  }
+
+  #show_roomlist {
+    display: block;
+    z-index: 5;
+  }
+
+  #conttt .media {
+    max-height: 250px;
+    max-width: 100%;
+    height: auto;
+  }
+
+  #conttt .media_ifr {
+    height: auto;
+  }
+
+  #user_name_input {
+    position: relative;
+    height: 48px;
+  }
+
+  #user_name {
+    position: absolute;
+    top: 0;
+    left: 13px;
+    margin: 0;
+    width: calc(80% - 32px);
+  }
+
+  #submit_b {
+    position: absolute;
+    top: 0;
+    right: 13px;
+    margin: 0;
+    width: calc(20% - 30px);
+    text-align: center;
+    font-size: 0.6em;
+    height: 100%;
+  }
+
+  #top_bar_com {
+    display: none;
+  }
+}
